@@ -1,0 +1,211 @@
+// old code
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useTeachers } from "../../QueriesAndMutations/QueryHooks";
+
+export default function Student() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [animatedItems, setAnimatedItems] = useState([]);
+
+  const {
+    data: teachers,
+    isLoading: isTeachersLoading,
+    error: teachersError,
+  } = useTeachers();
+
+  console.log(teachers);
+
+  useEffect(() => {
+    // Animate items when data is loaded
+    if (teachers && !isTeachersLoading) {
+      const timer = setTimeout(() => {
+        setAnimatedItems(teachers.map((teacher) => teacher.id));
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [teachers, isTeachersLoading]);
+
+  const filteredTeachers = searchTerm.trim()
+    ? teachers?.filter((teacher) =>
+        teacher.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : teachers;
+
+  if (isTeachersLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-lg font-medium text-gray-600">
+            جاري التحميل...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (teachersError) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md text-center">
+          <svg
+            className="w-16 h-16 mx-auto text-red-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <h2 className="text-xl font-bold text-red-600 mt-4">
+            {teachersError.message}
+          </h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!teachers || teachers.length === 0) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow-md p-6 text-center">
+          <svg
+            className="w-16 h-16 mx-auto text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+            ></path>
+          </svg>
+          <h2 className="text-xl font-medium text-gray-700 mt-4">
+            لا يوجد معلمين حاليا
+          </h2>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="bg-gradient-to-r from-green-500 to-green-400 rounded-lg shadow-lg p-6 mb-6">
+        <h1 className="text-2xl font-bold text-white text-center">
+          قائمة المعلمين
+        </h1>
+        <div className="w-24 h-1 bg-white mx-auto rounded-full mt-2 opacity-50"></div>
+
+        {/* Search box */}
+        <div className="relative mt-4" dir="rtl">
+          <input
+            className="w-full bg-white bg-opacity-20 text-white placeholder-white placeholder-opacity-70 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all"
+            placeholder="ابحث عن معلم..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+            <svg
+              className="w-5 h-5 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {filteredTeachers.map((teacher, index) => (
+          <Link
+            className={`transition-all duration-500 transform bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg border-2 border-transparent hover:border-green-400 ${
+              animatedItems.includes(teacher.id)
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+            style={{ transitionDelay: `${index * 100}ms` }}
+            dir="rtl"
+            to={"/teacherProfile/" + teacher.id}
+            key={teacher.id}
+          >
+            <div className="flex items-center p-4 gap-2">
+              <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center mr-4 flex-shrink-0">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  ></path>
+                </svg>
+              </div>
+              <div className="flex-grow">
+                <h3 className="font-medium text-lg text-gray-800">
+                  {teacher.name}
+                </h3>
+                <p className="text-sm text-gray-500">معلم</p>
+              </div>
+              <div className="text-green-600">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* No results message */}
+      {searchTerm && filteredTeachers.length === 0 && (
+        <div className="text-center p-8 bg-gray-50 rounded-lg mt-4">
+          <p className="text-gray-600" dir="rtl">
+            لا توجد نتائج للبحث "{searchTerm}"
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}

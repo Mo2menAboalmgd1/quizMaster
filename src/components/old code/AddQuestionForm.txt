@@ -1,0 +1,393 @@
+// old code
+
+
+
+
+
+
+
+
+import React, { useState } from "react";
+import { useCurrentUser } from "../store/useStore";
+import { useQueryClient } from "@tanstack/react-query";
+import { useInsertQuestionMutation } from "../QueriesAndMutations/mutationsHooks";
+
+export default function AddQuestionForm({ examData, examId }) {
+  const { currentUser } = useCurrentUser();
+  const queryClient = useQueryClient();
+  const [questionText, setQuestionText] = useState("");
+  const [isNewAns, setIsNewAns] = useState(false);
+  const [isEditAns, setIsEditAns] = useState(null);
+  const [editedAns, setEditedAns] = useState({
+    ans: "",
+    isCorrect: false,
+  });
+  const [newAns, setNewAns] = useState({
+    ans: "",
+    isCorrect: false,
+  });
+  const [allAnswers, setAllAnswers] = useState([]);
+
+  const handleAddNewAnswer = () => {
+    if (!newAns.ans) return;
+    const isThereAnotherAnsWithTheSameText = allAnswers.some(
+      (ans) => ans.ans === newAns.ans
+    );
+    if (isThereAnotherAnsWithTheSameText) {
+      return alert("هذه الإجابة موجودة بالفعل");
+    }
+    if (newAns.isCorrect) {
+      const isThereAnotherCorrectAns = allAnswers.some((ans) => ans.isCorrect);
+      if (isThereAnotherCorrectAns) {
+        return alert("يجب ان يكون هناك إجابة صحيحة واحدة فقط");
+      }
+    }
+    setAllAnswers([...allAnswers, newAns]);
+    setNewAns({
+      ans: "",
+      isCorrect: false,
+    });
+  };
+
+  const handleDeleteFromAllAnswers = (index) => {
+    const editedAllAnswers = allAnswers.filter((ans, i) => i !== index);
+    setAllAnswers(editedAllAnswers);
+    setIsEditAns(null);
+  };
+
+  const handleSubmitEditAnswers = (index) => {
+    if (!editedAns.ans) return alert("لا يمكن أن يكون الإجابة فارغة");
+    const isThereAnotherAnsWithTheSameText = allAnswers.some(
+      (answer, i) => answer.ans === editedAns.ans && i !== index
+    );
+    if (isThereAnotherAnsWithTheSameText) {
+      return alert("هذه الإجابة موجودة بالفعل");
+    }
+    const isThereAnotherCorrectAns = allAnswers.some(
+      (ans, i) => ans.isCorrect && i !== index
+    );
+    if (editedAns.isCorrect && isThereAnotherCorrectAns) {
+      return alert("يجب ان يكون هناك إجابة صحيحة واحدة فقط");
+    }
+    setAllAnswers((prev) =>
+      prev.map((ans, i) => {
+        if (i === index) {
+          return editedAns;
+        }
+        return ans;
+      })
+    );
+    setIsEditAns(null);
+    setEditedAns({
+      ans: "",
+      isCorrect: false,
+    });
+  };
+
+  const { mutate: addQuestionMutation } = useInsertQuestionMutation(
+    examData,
+    examId,
+    queryClient
+  );
+
+  const handleAddNewQuestion = () => {
+    if (!questionText) return alert("لا يمكن أن يكون السؤال فارغًا");
+    if (allAnswers.length < 2) {
+      return alert("يجب ان يكون السؤال مكون من إجابتين على الأقل");
+    }
+    const isThereCorrectAns = allAnswers.some((ans) => ans.isCorrect);
+    if (!isThereCorrectAns) {
+      return alert("يجب إن يحتوى السؤال على إجابة صحيحة");
+    }
+    addQuestionMutation({ questionText, allAnswers });
+    setQuestionText("");
+    setAllAnswers([]);
+  };
+
+  return (
+    <div className="max-full mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-gradient-to-r from-green-500 to-green-400 p-4">
+        <h2 className="text-xl font-bold text-white text-center" dir="rtl">
+          اختبار {examData.title} ({currentUser.subject})
+        </h2>
+        <div className="w-24 h-1 bg-white mx-auto rounded-full mt-2 opacity-50"></div>
+      </div>
+
+      <div className="p-6 space-y-6" dir="rtl">
+        {/* Question Input */}
+        <div className="space-y-2">
+          <label
+            className="block text-gray-700 font-medium"
+            htmlFor="questionText"
+          >
+            السؤال:
+          </label>
+          <textarea
+            id="questionText"
+            className="w-full min-h-24 rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all outline-none"
+            value={questionText}
+            onChange={(e) => setQuestionText(e.target.value)}
+            placeholder="اكتب السؤال هنا"
+          ></textarea>
+        </div>
+
+        {/* Answers List */}
+        {allAnswers.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-700">الإجابات</h3>
+            <div className="space-y-3">
+              {allAnswers.map((ans, index) => (
+                <div
+                  key={index}
+                  className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200"
+                >
+                  {isEditAns === index ? (
+                    <div className="p-4 space-y-3">
+                      <textarea
+                        autoFocus
+                        className={`w-full min-h-24 rounded-lg p-3 border ${
+                          editedAns.isCorrect
+                            ? "border-green-500 bg-green-50"
+                            : "border-gray-300"
+                        } focus:ring-2 focus:ring-green-400 outline-none transition-all`}
+                        value={editedAns.ans}
+                        onChange={(e) =>
+                          setEditedAns({
+                            ...editedAns,
+                            ans: e.target.value,
+                          })
+                        }
+                      ></textarea>
+
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`editCorrect-${index}`}
+                            className="w-4 h-4 text-green-500 rounded focus:ring-green-400"
+                            checked={editedAns.isCorrect}
+                            onChange={(e) =>
+                              setEditedAns({
+                                ...editedAns,
+                                isCorrect: e.target.checked,
+                              })
+                            }
+                          />
+                          <label
+                            htmlFor={`editCorrect-${index}`}
+                            className="ml-2 text-sm text-gray-700"
+                          >
+                            تعيين كإجابة صحيحة
+                          </label>
+                        </div>
+
+                        <div className="flex gap-2 ml-auto">
+                          <button
+                            onClick={() => handleSubmitEditAnswers(index)}
+                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                          >
+                            حفظ
+                          </button>
+                          <button
+                            onClick={() => setIsEditAns(null)}
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                          >
+                            إلغاء
+                          </button>
+                          <button
+                            onClick={() => handleDeleteFromAllAnswers(index)}
+                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                          >
+                            حذف
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-stretch">
+                      <div
+                        className={`flex items-center justify-center px-4 ${
+                          ans.isCorrect
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-200 text-gray-700"
+                        }`}
+                      >
+                        <span className="font-medium">{index + 1}</span>
+                      </div>
+
+                      <div className="flex-grow p-4">
+                        <p
+                          className={`${
+                            ans.isCorrect
+                              ? "text-green-600 font-medium"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {ans.ans}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setEditedAns(ans);
+                          setIsEditAns(index);
+                        }}
+                        className="px-4 text-green-500 hover:bg-green-50 flex items-center transition-colors"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          ></path>
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* New Answer Form */}
+        {isNewAns ? (
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3">
+            <h3 className="text-lg font-medium text-gray-700">
+              إضافة إجابة جديدة
+            </h3>
+            <textarea
+              className={`w-full min-h-24 rounded-lg p-3 border ${
+                newAns.isCorrect
+                  ? "border-green-500 bg-green-50"
+                  : "border-gray-300"
+              } focus:ring-2 focus:ring-green-400 outline-none transition-all`}
+              placeholder="اكتب الإجابة هنا"
+              value={newAns.ans}
+              onChange={(e) =>
+                setNewAns({
+                  ...newAns,
+                  ans: e.target.value,
+                })
+              }
+            ></textarea>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="newCorrect"
+                  className="w-4 h-4 text-green-500 rounded focus:ring-green-400"
+                  checked={newAns.isCorrect}
+                  onChange={(e) =>
+                    setNewAns({
+                      ...newAns,
+                      isCorrect: e.target.checked,
+                    })
+                  }
+                />
+                <label
+                  htmlFor="newCorrect"
+                  className="ml-2 text-sm text-gray-700"
+                >
+                  تعيين كإجابة صحيحة
+                </label>
+              </div>
+
+              <div className="flex gap-2 ml-auto">
+                <button
+                  onClick={handleAddNewAnswer}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                >
+                  إضافة
+                </button>
+                <button
+                  onClick={() => setIsNewAns(false)}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsNewAns(true)}
+            className="flex items-center justify-center gap-2 py-2 px-4 w-full bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              ></path>
+            </svg>
+            إضافة إجابة
+          </button>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-4">
+          <button
+            onClick={handleAddNewQuestion}
+            className="flex-1 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              ></path>
+            </svg>
+            إضافة السؤال
+          </button>
+          <button
+            onClick={() => {
+              setQuestionText("");
+              setAllAnswers([]);
+              setIsNewAns(false);
+            }}
+            className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              ></path>
+            </svg>
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

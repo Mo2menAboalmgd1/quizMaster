@@ -1,0 +1,151 @@
+// old code
+
+
+
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  useDeleteExamMutation,
+  useEditExamDataMutation,
+} from "../QueriesAndMutations/mutationsHooks";
+import { useCurrentUser } from "../store/useStore";
+import toast from "react-hot-toast";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
+
+export default function TeacherExamsList({ list, isDone }) {
+  const { currentUser } = useCurrentUser();
+  const [animatedItems, setAnimatedItems] = useState([]);
+
+  // Set animated items on component mount
+  React.useEffect(() => {
+    if (list && list.length > 0) {
+      const timer = setTimeout(() => {
+        setAnimatedItems(list.map((exam) => exam.id));
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [list]);
+
+  const { mutate: deleteExamMutation } = useDeleteExamMutation(currentUser.id);
+
+  const handleDeleteExam = async (examId) => {
+    deleteExamMutation(examId);
+    toast.success("تم حذف الامتحان بنجاح", { duration: 1500 });
+  };
+
+  const { mutateAsync: undoPublishMutation } = useEditExamDataMutation();
+
+  const handleUndoPublish = async (examId) => {
+    const testData = {
+      done: false,
+    };
+
+    await undoPublishMutation({ testData, examId });
+    toast.success("تم إعادة الاختبار إلى قائمة الغير المكتملة", {
+      duration: 1500,
+    });
+  };
+
+  if (list.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <svg
+          className="w-16 h-16 mx-auto text-gray-300 mb-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          ></path>
+        </svg>
+        <p className="text-gray-500">لا يوجد امتحانات حالياً</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4" dir="rtl">
+      {list.map((exam, index) => (
+        <div
+          key={exam.id}
+          className={`transition-all duration-500 transform ${
+            animatedItems.includes(exam.id)
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-8"
+          }`}
+          style={{ transitionDelay: `${index * 100}ms` }}
+        >
+          <div className="bg-white rounded-lg shadow-md overflow-hidden border-2 border-transparent hover:border-green-400 flex flex-col">
+            <div className="bg-gray-50 p-4 border-b border-gray-100 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center mr-4 flex-shrink-0">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  ></path>
+                </svg>
+              </div>
+              <div className="flex-grow">
+                <h3 className="font-medium text-lg text-gray-800">
+                  {exam.title}
+                </h3>
+              </div>
+            </div>
+            <div className="p-4 flex items-center justify-between">
+              <div className="flex space-x-2 rtl:space-x-reverse gap-3">
+                <button
+                  onClick={() => handleDeleteExam(exam.id)}
+                  className="px-4 py-2 bg-red-500 text-white font-medium rounded-md hover:bg-red-600 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faTrash}/>
+                </button>
+                {isDone && (
+                  <button
+                    onClick={() => handleUndoPublish(exam.id)}
+                    className="px-4 py-2 bg-yellow-400 text-yellow-900 font-medium rounded-md hover:bg-yellow-500 transition-colors"
+                  >
+                    إلغاء النشر
+                  </button>
+                )}
+              </div>
+              <Link
+                to={"/resumeCreateTest/" + exam.id}
+                className="flex items-center text-green-600 font-medium hover:text-green-700"
+              >
+                <span className="ml-2">تعديل</span>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  ></path>
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}

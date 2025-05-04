@@ -1,0 +1,169 @@
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
+import { useExamsByTeacherId } from "../../QueriesAndMutations/QueryHooks";
+
+export default function TeacherProfile() {
+  const { id: teacherId } = useParams();
+  const [animatedItems, setAnimatedItems] = useState([]);
+
+  const {
+    data: exams,
+    isLoading: isExamsLoading,
+    error: examsError,
+  } = useExamsByTeacherId(teacherId, true);
+
+  console.log(exams);
+
+  useEffect(() => {
+    // Animate items when data is loaded
+    if (exams && !isExamsLoading) {
+      const timer = setTimeout(() => {
+        setAnimatedItems(exams.map((exam) => exam.id));
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [exams, isExamsLoading]);
+
+  if (isExamsLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-lg font-medium text-gray-600">
+            جاري التحميل...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (examsError) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md text-center">
+          <svg
+            className="w-16 h-16 mx-auto text-red-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <h2 className="text-xl font-bold text-red-600 mt-4">
+            {examsError.message}
+          </h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!exams || exams.length === 0) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow-md p-6 text-center">
+          <svg
+            className="w-16 h-16 mx-auto text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            ></path>
+          </svg>
+          <h2 className="text-xl font-medium text-gray-700 mt-4">
+            لا يوجد امتحانات حاليا
+          </h2>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="bg-gradient-to-r from-green-500 to-green-400 rounded-lg shadow-lg p-6 mb-6">
+        <h1 className="text-2xl font-bold text-white text-center">
+          قائمة الامتحانات
+        </h1>
+        <div className="w-24 h-1 bg-white mx-auto rounded-full mt-2 opacity-50"></div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {exams.map((exam, index) => (
+          <Link
+            className={`transition-all duration-500 transform bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg border-2 border-transparent hover:border-green-400 flex flex-col ${
+              animatedItems.includes(exam.id)
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+            style={{ transitionDelay: `${index * 100}ms` }}
+            dir="rtl"
+            to={"/exam/" + exam.id}
+            key={exam.id}
+          >
+            <div className="bg-gray-50 p-4 border-b border-gray-100 flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center mr-4 flex-shrink-0">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  ></path>
+                </svg>
+              </div>
+              <div className="flex-grow">
+                <h3 className="font-medium text-lg text-gray-800">
+                  {exam.title}
+                </h3>
+              </div>
+            </div>
+            <div className="p-4 flex items-center justify-between text-green-600">
+              <span className="text-sm font-medium">عرض الامتحان</span>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                ></path>
+              </svg>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
