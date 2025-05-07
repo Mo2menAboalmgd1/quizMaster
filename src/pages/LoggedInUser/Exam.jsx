@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import clsx from "clsx";
 import {
   useAnswersByStudentIdAndExamId,
+  useColumnByUserId,
   useExamByItsId,
   useExamsResultsByStudentIdAndExamId,
   useQuestionsByExamId,

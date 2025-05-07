@@ -1,83 +1,18 @@
 import React, { useState } from "react";
 import { useCurrentUser } from "../store/useStore";
-import { useQueryClient } from "@tanstack/react-query";
-import clsx from "clsx";
-import { faPlus, faSave, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faSave, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useInsertQuestionMutation } from "../QueriesAndMutations/mutationsHooks";
 import { useQuestionsByExamId } from "../QueriesAndMutations/QueryHooks";
+import AddNewAnswerForm from "./AddNewAnswerForm";
 
 export default function AddQuestionForm({ examData, examId }) {
   const { currentUser } = useCurrentUser();
-  const queryClient = useQueryClient();
   const [questionText, setQuestionText] = useState("");
-  const [isNewAns, setIsNewAns] = useState(false);
-  const [isEditAns, setIsEditAns] = useState(null);
-  const [editedAns, setEditedAns] = useState({
-    ans: "",
-    isCorrect: false,
-  });
-  const [newAns, setNewAns] = useState({
-    ans: "",
-    isCorrect: false,
-  });
   const [allAnswers, setAllAnswers] = useState([]);
+  const [correctIndex, setCorrectIndex] = useState(null); // 🔥 أضفنا دي
 
-  const handleAddNewAnswer = () => {
-    if (!newAns.ans) return;
-    const isThereAnotherAnsWithTheSameText = allAnswers.some(
-      (ans) => ans.ans === newAns.ans
-    );
-    if (isThereAnotherAnsWithTheSameText) {
-      return alert("هذه الإجابة موجودة بالفعل");
-    }
-    if (newAns.isCorrect) {
-      const isThereAnotherCorrectAns = allAnswers.some((ans) => ans.isCorrect);
-      if (isThereAnotherCorrectAns) {
-        return alert("يجب ان يكون هناك إجابة صحيحة واحدة فقط");
-      }
-    }
-    setAllAnswers([...allAnswers, newAns]);
-    setNewAns({
-      ans: "",
-      isCorrect: false,
-    });
-  };
-
-  const handleDeleteFromAllAnswers = (index) => {
-    const editedAllAnswers = allAnswers.filter((ans, i) => i !== index);
-    setAllAnswers(editedAllAnswers);
-    setIsEditAns(null);
-  };
-
-  const handleSubmitEditAnswers = (index) => {
-    if (!editedAns.ans) return alert("لا يمكن أن يكون الإجابة فارغة");
-    const isThereAnotherAnsWithTheSameText = allAnswers.some(
-      (answer, i) => answer.ans === editedAns.ans && i !== index
-    );
-    if (isThereAnotherAnsWithTheSameText) {
-      return alert("هذه الإجابة موجودة بالفعل");
-    }
-    const isThereAnotherCorrectAns = allAnswers.some(
-      (ans, i) => ans.isCorrect && i !== index
-    );
-    if (editedAns.isCorrect && isThereAnotherCorrectAns) {
-      return alert("يجب ان يكون هناك إجابة صحيحة واحدة فقط");
-    }
-    setAllAnswers((prev) =>
-      prev.map((ans, i) => {
-        if (i === index) {
-          return editedAns;
-        }
-        return ans;
-      })
-    );
-    setIsEditAns(null);
-    setEditedAns({
-      ans: "",
-      isCorrect: false,
-    });
-  };
+  const { data: questions } = useQuestionsByExamId(examId);
 
   const { mutateAsync: addQuestionMutation } = useInsertQuestionMutation(
     examData,
@@ -89,13 +24,19 @@ export default function AddQuestionForm({ examData, examId }) {
     if (allAnswers.length < 2) {
       return alert("يجب ان يكون السؤال مكون من إجابتين على الأقل");
     }
-    const isThereCorrectAns = allAnswers.some((ans) => ans.isCorrect);
-    if (!isThereCorrectAns) {
-      return alert("يجب إن يحتوى السؤال على إجابة صحيحة");
+    if (correctIndex === null) {
+      return alert("يجب إن تحتوى السؤال على إجابة صحيحة");
     }
-    await addQuestionMutation({ questionText, allAnswers });
+
+    const updatedAnswers = allAnswers.map((ans, i) => ({
+      ...ans,
+      isCorrect: i === correctIndex,
+    }));
+
+    await addQuestionMutation({ questionText, allAnswers: updatedAnswers });
     setQuestionText("");
     setAllAnswers([]);
+    setCorrectIndex(null);
   };
 
   return (
@@ -115,205 +56,43 @@ export default function AddQuestionForm({ examData, examId }) {
           >
             السؤال:
           </label>
-          <textarea
-            className="w-full min-h-18 max-h-32 border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all shadow-sm"
-            name="quesName"
-            type="text"
-            onChange={(e) => setQuestionText(e.target.value)}
-            value={questionText}
-            placeholder="اكتب السؤال هنا"
-          ></textarea>
-        </div>
-        {allAnswers.length > 0 && (
-          <div className="w-full rounded-lg" dir="rtl">
-            <h3 className="mb-3 font-medium text-gray-700 border-b border-gray-200 pb-1">
-              الإجابات
+          <div className="flex gap-3 items-start">
+            <h3 className="bg-gradient-to-r from-green-500 to-emerald-600 h-10 w-10 rounded-lg flex items-center justify-center font-bold text-white">
+              {questions?.length > 0 ? questions.length + 1 : "1"}
             </h3>
-            <div className="space-y-3">
-              {allAnswers.map((ans, index) => (
-                <div
-                  key={index}
-                  className="w-full space-y-2 flex gap-3 items-center"
-                >
-                  <div className="flex w-full">
-                    <p
-                      className={clsx(
-                        "py-2 px-4 flex items-center justify-center rounded-l-lg",
-                        ans.isCorrect
-                          ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-sm"
-                          : "bg-gray-200 text-gray-700"
-                      )}
-                    >
-                      {index + 1}
-                    </p>
-                    {isEditAns === index ? (
-                      <div className="flex gap-2 w-full items-center">
-                        <textarea
-                          autoFocus
-                          name="editAnsText"
-                          id="editAnsTextArea"
-                          onChange={(e) => {
-                            setEditedAns({
-                              ...editedAns,
-                              ans: e.target.value,
-                            });
-                          }}
-                          value={editedAns.ans}
-                          className={clsx(
-                            "w-full min-h-24 max-h-32 p-3 rounded-r-lg focus:outline-none focus:ring-2 transition-all",
-                            ans.isCorrect
-                              ? "border-green-500 bg-green-50 focus:ring-green-500"
-                              : "border-gray-300 focus:ring-blue-500"
-                          )}
-                        ></textarea>
-                        <div className="flex flex-col md:flex-row gap-2 shrink-0">
-                          <div className="flex items-center gap-1 shrink-0">
-                            <input
-                              onChange={(e) =>
-                                setEditedAns({
-                                  ...editedAns,
-                                  isCorrect: e.target.checked,
-                                })
-                              }
-                              type="checkbox"
-                              name="inCorrectAns"
-                              id="ansCheckBox"
-                              checked={editedAns.isCorrect}
-                              className="w-4 h-4 accent-green-600"
-                            />
-                            <label
-                              htmlFor="ansCheckBox"
-                              className="select-none text-gray-700"
-                            >
-                              تعيين كإجابة صحيحة
-                            </label>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleSubmitEditAnswers(index)}
-                              className="h-10 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm transition-all flex items-center justify-center cursor-pointer"
-                            >
-                              حفظ التعديل
-                            </button>
-                            <button
-                              onClick={() => setIsEditAns(null)}
-                              className="h-10 px-3 bg-yellow-400 hover:bg-yellow-500 text-gray-800 rounded-lg shadow-sm transition-all cursor-pointer"
-                            >
-                              تجاهل
-                            </button>
-                            <button
-                              onClick={() => handleDeleteFromAllAnswers(index)}
-                              className="h-10 px-3 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-sm transition-all cursor-pointer"
-                            >
-                              <FontAwesomeIcon icon={faTrash} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex gap-2 w-full">
-                        <p
-                          className={clsx(
-                            "py-2 px-4 border grow rounded-r-lg",
-                            ans.isCorrect
-                              ? "border-green-500 bg-green-50 text-gray-800"
-                              : "border-gray-300 bg-white text-gray-700"
-                          )}
-                        >
-                          {ans.ans}
-                        </p>
-                        <button
-                          onClick={() => {
-                            console.log(ans);
-                            setEditedAns(ans);
-                            setIsEditAns(index);
-                          }}
-                          className="border border-blue-500 text-blue-500 hover:bg-blue-50 px-4 rounded-lg shrink-0 h-10 transition-all cursor-pointer flex items-center"
-                        >
-                          تعديل الإجابة
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <textarea
+              className="w-full field-sizing-content font-bold text-emerald-600 rounded-lg pt-2 outline-none transition-all resize-none"
+              id="quesName"
+              name="quesName"
+              type="text"
+              onChange={(e) => setQuestionText(e.target.value)}
+              value={questionText}
+              placeholder="اكتب السؤال هنا"
+            ></textarea>
           </div>
-        )}
-        {isNewAns && (
-          <div
-            className="w-full space-y-2 border-t border-gray-200 pt-4"
-            dir="rtl"
-          >
-            <h3 className="font-medium text-gray-700">إضافة أجابة جديدة</h3>
-            <div>
-              <textarea
-                name="newAnsText"
-                placeholder="اكتب الإجابة هنا"
-                id="newAnsTextArea"
-                onChange={(e) =>
-                  setNewAns({
-                    ...newAns,
-                    ans: e.target.value,
-                  })
-                }
-                value={newAns.ans}
-                className={clsx(
-                  "w-full min-h-24 max-h-32 border p-3 rounded-lg focus:outline-none focus:ring-2 transition-all",
-                  newAns.isCorrect
-                    ? "border-green-500 bg-green-50 focus:ring-green-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                )}
-              ></textarea>
-              <div className="flex flex-col md:flex-row justify-between gap-3 mt-3">
-                <div className="flex items-center gap-1 order-2 md:order-1">
-                  <input
-                    onChange={(e) =>
-                      setNewAns((prev) => ({
-                        ...prev,
-                        isCorrect: e.target.checked,
-                      }))
-                    }
-                    type="checkbox"
-                    name="inCorrectAns"
-                    id="ansCheckBox"
-                    checked={newAns.isCorrect}
-                    className="w-4 h-4 accent-green-600"
-                  />
-                  <label
-                    htmlFor="ansCheckBox"
-                    className="select-none text-gray-700"
-                  >
-                    تعيين كإجابة صحيحة
-                  </label>
-                </div>
-                <div className="space-x-2 flex order-1 md:order-2">
-                  <button
-                    onClick={() => setIsNewAns(false)}
-                    className="py-2 px-4 text-red-500 border border-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                  >
-                    إغلاق
-                  </button>
-                  <button
-                    onClick={handleAddNewAnswer}
-                    className="py-2 px-4 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm transition-colors cursor-pointer"
-                  >
-                    تأكيد أضافة الإجابة
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        {!isNewAns && (
-          <button
-            onClick={() => setIsNewAns(!isNewAns)}
-            className="h-10 w-full md:w-44 bg-white text-blue-600 border border-blue-500 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-2"
-          >
-            <FontAwesomeIcon icon={faPlus} /> إضافة إجابة
-          </button>
-        )}
-        <div className="flex gap-3 w-full">
+        </div>
+
+        {allAnswers.map((ans, index) => (
+          <AddNewAnswerForm
+            key={index}
+            answer={ans}
+            index={index}
+            allAnswers={allAnswers}
+            setAllAnswers={setAllAnswers}
+            correctIndex={correctIndex}
+            setCorrectIndex={setCorrectIndex}
+          />
+        ))}
+
+        <AddNewAnswerForm
+          isAdding={true}
+          allAnswers={allAnswers}
+          setAllAnswers={setAllAnswers}
+          correctIndex={correctIndex}
+          setCorrectIndex={setCorrectIndex}
+        />
+
+        <div className="flex gap-3 w-full border-t border-gray-400 pt-4">
           <button
             onClick={handleAddNewQuestion}
             className="h-10 flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
@@ -324,7 +103,7 @@ export default function AddQuestionForm({ examData, examId }) {
             onClick={() => {
               setQuestionText("");
               setAllAnswers([]);
-              setIsNewAns(false);
+              setCorrectIndex(null);
             }}
             className="h-10 flex-1 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
           >

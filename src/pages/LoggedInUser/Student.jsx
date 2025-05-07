@@ -1,17 +1,25 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useTeachers } from "../../QueriesAndMutations/QueryHooks";
-import { faChalkboardTeacher, faChevronLeft, faUser } from "@fortawesome/free-solid-svg-icons";
+import {
+  useTeachers,
+} from "../../QueriesAndMutations/QueryHooks";
+import {
+  faChalkboardTeacher,
+  faChevronLeft,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Loader from "../../components/Loader";
+import { useCurrentUser } from "../../store/useStore";
 
 export default function Student() {
+  const { currentUser } = useCurrentUser();
+
   const {
     data: teachers,
     isLoading: isTeachersLoading,
     error: teachersError,
   } = useTeachers();
-
 
   if (isTeachersLoading) return <Loader message="جري تحميل المعلمين" />;
 

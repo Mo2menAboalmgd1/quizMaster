@@ -11,14 +11,32 @@ import Exam from "./pages/LoggedInUser/Exam";
 import ResumeCreateTest from "./pages/LoggedInUser/ResumeCreateTest";
 import { Toaster } from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faSignOut } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faBell, faSignOut } from "@fortawesome/free-solid-svg-icons";
 import Loader from "./components/Loader";
+import Requests from "./pages/LoggedInUser/Requests";
+import {
+  useNotificationsByUserId,
+  useStudentsAndRequestsByTeacherId,
+} from "./QueriesAndMutations/QueryHooks";
+import Notifications from "./pages/LoggedInUser/Notifications";
+import Stages from "./pages/LoggedInUser/Stages";
+import Stage from "./pages/LoggedInUser/Stage";
 
 export default function App() {
   const { getSession, session } = useSession();
   const { getCurrentUser, currentUser } = useCurrentUser();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
+
+  const {
+    data: notifications,
+    isLoading: isNotificationsLoading,
+    error: notificationsError,
+  } = useNotificationsByUserId(currentUser?.id);
+
+  const unReadNotifications = notifications?.filter(
+    (notification) => !notification.isRead
+  );
 
   // Close sidebar when route changes
   useEffect(() => {
@@ -67,13 +85,11 @@ export default function App() {
     getCurrentUserData();
   }, [session?.user?.id, getCurrentUser]);
 
-  console.log(currentUser);
-
-  useEffect(() => {
-    if (session && location.pathname !== "/") {
-      window.history.replaceState(null, "", "/");
-    }
-  }, [session]);
+  const {
+    data: studentsAndRequests,
+    isLoading: isStudentsAndRequestsLoading,
+    error: studentsAndRequestsError,
+  } = useStudentsAndRequestsByTeacherId(currentUser?.id);
 
   if (!session)
     return (
@@ -145,6 +161,19 @@ export default function App() {
                   )}
                 </div>
               </div>
+              <div className="relative">
+                <Link
+                  to={"/notifications"}
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md shadow-sm text-orange-600 border-2 border-orange-600 focus:outline-none transition-all duration-150 h-10 w-10 cursor-pointer"
+                >
+                  <FontAwesomeIcon icon={faBell} />
+                </Link>
+                {unReadNotifications?.length > 0 && (
+                  <span className="h-6 rounded-full px-2 bg-red-500 flex items-center justify-center text-white text-sm absolute -left-2.5 -top-1">
+                    {unReadNotifications?.length || 0}
+                  </span>
+                )}
+              </div>
               <button
                 onClick={async () => await supabase.auth.signOut()}
                 className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 focus:outline-none transition-all duration-150 h-10 w-10 cursor-pointer"
@@ -186,49 +215,116 @@ export default function App() {
             </button>
           </div>
 
-          <div className="py-4 flex flex-col md:flex-row md:items-center md:space-x-4 md:rtl:space-x-reverse md:px-4">
+          <div className="py-4 flex flex-col md:flex-row md:justify-center md:items-center md:space-x-2 md:rtl:space-x-reverse md:px-4">
             <Link
               to="/"
-              className="px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md flex items-center transition-colors md:py-1"
+              className="px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md flex items-center gap-1 transition-colors md:py-1"
             >
               <svg
-                className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                className="w-6 h-6"
+                aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="none"
+                viewBox="0 0 24 24"
               >
                 <path
+                  stroke="currentColor"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  strokeWidth="2"
+                  d="m4 12 8-8 8 8M6 10.5V19a1 1 0 0 0 1 1h3v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h3a1 1 0 0 0 1-1v-8.5"
                 />
               </svg>
+
               <span dir="rtl">الرئيسية</span>
             </Link>
 
             {currentUser.type === "teacher" && (
-              <Link
-                to="/createTest"
-                className="px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md flex items-center transition-colors md:py-1"
-              >
-                <svg
-                  className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
+              <>
+                <Link
+                  to="/createTest"
+                  className="px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md flex items-center transition-colors md:py-1"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                <span dir="rtl">إضافة امتحان</span>
-              </Link>
+                  <svg
+                    className="w-6 h-6"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M5 12h14m-7 7V5"
+                    />
+                  </svg>
+
+                  <span dir="rtl">إضافة امتحان</span>
+                </Link>
+                <Link
+                  to="/requests"
+                  className="px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md flex items-center gap-2 transition-colors md:py-1 relative"
+                >
+                  {studentsAndRequests?.requests?.length > 0 && (
+                    <span className="h-6 rounded-full px-2 bg-red-500 flex items-center justify-center text-white text-sm absolute left-0 -top-1">
+                      {studentsAndRequests?.requests?.length || 0}
+                    </span>
+                  )}
+                  <svg
+                    className="w-6 h-6"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="square"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"
+                    />
+                  </svg>
+
+                  <span dir="rtl">طلبات الانضمام</span>
+                </Link>
+                <Link
+                  to="/stages"
+                  className="px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md flex items-center gap-2 transition-colors md:py-1 relative"
+                >
+                  {studentsAndRequests?.students?.length > 0 && (
+                    <span className="h-6 rounded-full px-2 bg-red-500 flex items-center justify-center text-white text-sm absolute left-0 -top-1">
+                      {studentsAndRequests?.students?.length || 0}
+                    </span>
+                  )}
+                  <svg
+                    className="w-6 h-6"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeWidth="2"
+                      d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                    />
+                  </svg>
+
+                  <span dir="rtl">المراحل الدراسية</span>
+                </Link>
+              </>
             )}
           </div>
         </div>
@@ -244,6 +340,10 @@ export default function App() {
                 currentUser.type === "student" ? <Student /> : <Teacher />
               }
             />
+            <Route path="/requests" element={<Requests />} />
+            <Route path="/stages" element={<Stages />} />
+            <Route path="/stages/:stage" element={<Stage />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/createTest" element={<CreateTest />} />
             <Route
               path="/resumeCreateTest/:id"

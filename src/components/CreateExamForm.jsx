@@ -1,13 +1,22 @@
 import React from "react";
 import { useCurrentUser } from "../store/useStore";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   useCreateNewExamMutation,
   useEditExamDataMutation,
 } from "../QueriesAndMutations/mutationsHooks";
-import { useQuestionsByExamId } from "../QueriesAndMutations/QueryHooks";
+import {
+  useColumnByUserId,
+  useQuestionsByExamId,
+} from "../QueriesAndMutations/QueryHooks";
 import toast from "react-hot-toast";
-import { faBook, faChevronDown, faEdit, faGraduationCap, faPlus, faUpload } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBook,
+  faChevronDown,
+  faEdit,
+  faGraduationCap,
+  faPlus,
+  faUpload,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function CreateExamForm({
@@ -17,18 +26,16 @@ export default function CreateExamForm({
   isCreate,
 }) {
   const { currentUser } = useCurrentUser();
-  const queryClient = useQueryClient();
-  console.log(examData);
 
-  const { mutate: newExamMutation } = useCreateNewExamMutation(
-    setExamId,
-    queryClient
-  );
+  const {
+    data: stages,
+    isLoading: isStagesLoading,
+    error: stagesError,
+  } = useColumnByUserId(currentUser?.id, "teachers", "stages");
 
-  const { mutate: editExamMutation } = useEditExamDataMutation(
-    examId,
-    queryClient
-  );
+  const { mutate: newExamMutation } = useCreateNewExamMutation(setExamId);
+
+  const { mutateAsync: editExamMutation } = useEditExamDataMutation();
 
   const handleCreateNewExam = (e) => {
     e.preventDefault();
@@ -36,43 +43,45 @@ export default function CreateExamForm({
     const testData = {
       subject: currentUser.subject,
       title: formData.get("examName"),
-      grade: Number(formData.get("examGrade")),
+      stage: formData.get("stage"),
       teacherId: currentUser.id,
     };
-    if (!testData.title || !testData.grade) return;
+    if (!testData.title || !testData.stage) return;
     newExamMutation(testData);
   };
 
-  const handleEditExam = (e) => {
+  const handleEditExam = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const testData = {
       title: formData.get("examName"),
-      grade: Number(formData.get("examGrade")),
+      stage: formData.get("stage"),
       teacherId: currentUser.id,
     };
-    editExamMutation({ testData, examId: examData.id });
+    await editExamMutation({ testData, examId: examData.id, isEdit: true });
   };
 
-  const { data } = useQuestionsByExamId(examId);
-  const { mutateAsync: publishExamMutation } = useEditExamDataMutation(
-    examId,
-    queryClient
-  );
+  const { data: questions } = useQuestionsByExamId(examId);
 
   const handlePublishExam = async () => {
-    console.log(data);
-    if (!data || data.length < 1) {
+    console.log(questions);
+    if (!questions || questions.length < 1) {
       return toast.error("لا يوجد أسئلة في الاختبار");
     }
 
-    const testData = {
-      done: true,
-    };
+    const testData = { done: true };
 
-    await publishExamMutation({ testData, examId: examData.id });
-    toast.success("تم نشر الاختبار بنجاح");
+    await editExamMutation({ testData, examId: examData.id, isEdit: false });
   };
+
+  if (isStagesLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (stagesError) {
+    toast.error("حدث خطأ أثناء تحميل المراحل");
+    return null; // Render nothing or handle the error appropriately
+  }
 
   return (
     <form
@@ -107,21 +116,16 @@ export default function CreateExamForm({
 
         <div className="relative">
           <select
-            name="examGrade"
-            id="examGrade"
+            name="stage"
+            id="stage"
             defaultValue={examData ? examData.grade : ""}
             className="text-center h-12 border border-gray-300 bg-white w-full rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all shadow-sm appearance-none"
           >
-            <optgroup label="المرحلة الإعدادية">
-              <option value="7">الصف الأول الاعدادي</option>
-              <option value="8">الصف الثاني الاعدادي</option>
-              <option value="9">الصف الثالث الاعدادي</option>
-            </optgroup>
-            <optgroup label="المرحلة الثانوية">
-              <option value="10">الصف الأول الثانوي</option>
-              <option value="11">الصف الثاني الثانوي</option>
-              <option value="12">الصف الثالث الثانوي</option>
-            </optgroup>
+            {stages?.map((stage, index) => (
+              <option key={index} value={stage}>
+                {stage}
+              </option>
+            ))}
           </select>
           <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
             <FontAwesomeIcon icon={faGraduationCap} className="text-gray-400" />

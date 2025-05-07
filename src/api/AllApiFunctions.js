@@ -1,7 +1,10 @@
 import { supabase } from "../config/supabase";
 
 export const register = async (userData) => {
-  const { error, data } = await supabase.auth.signUp(userData);
+  const { error, data } = await supabase.auth.signUp({
+    email: userData.email,
+    password: userData.password,
+  });
   if (error) throw new Error(error.message);
   return { ...userData, id: data.user.id };
 };
@@ -21,7 +24,6 @@ export const handleCreateStudent = async (data) => {
     userName: data.userName,
     gender: data.gender,
     phoneNumber: data.phoneNumber,
-    grade: Number(data.grade),
     email: data.email,
   });
   if (error) throw new Error(error.message);
@@ -35,7 +37,7 @@ export const handleCreateTeacher = async (data) => {
     gender: data.gender,
     subject: data.subject,
     phoneNumber: data.phoneNumber,
-    grade: data.grade,
+    stages: data.stages,
     email: data.email,
   });
   if (error) throw new Error(error.message);
@@ -44,6 +46,152 @@ export const handleCreateTeacher = async (data) => {
 export const signIn = async (userData) => {
   const { error } = await supabase.auth.signInWithPassword(userData);
   if (error) throw new Error(error.message);
+};
+
+export const sendNotification = async (notificationData) => {
+  const { error } = await supabase.from("notifications").insert({
+    userId: notificationData.studentId,
+    text: notificationData.text,
+  });
+
+  if (error) throw new Error(error.message);
+};
+
+export const getNotifications = async (userId) => {
+  const { error, data } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("userId", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
+export const readNotification = async (notificationId) => {
+  const { error } = await supabase
+    .from("notifications")
+    .update({ isRead: true })
+    .eq("id", notificationId);
+
+  if (error) throw new Error(error.message);
+};
+
+export const deleteNotification = async (notificationId) => {
+  const { error } = await supabase
+    .from("notifications")
+    .delete()
+    .eq("id", notificationId);
+
+  if (error) throw new Error(error.message);
+};
+
+export const joinTeacher = async ({ teacherId, requestData }) => {
+  const { error } = await supabase
+    .from("teachers")
+    .update({ requests: requestData })
+    .eq("id", teacherId);
+
+  if (error) throw new Error(error.message);
+};
+
+export const removeRequest = async ({
+  teacherId,
+  requestData,
+  teacherName,
+  studentId,
+}) => {
+  const { error } = await supabase
+    .from("teachers")
+    .update({ requests: requestData })
+    .eq("id", teacherId);
+
+  if (error) throw new Error(error.message);
+
+  // لازم ترجعهم عشان onSuccess تلاقيهم
+  return { teacherId, teacherName, studentId };
+};
+
+export const acceptRequest = async ({
+  teacherId,
+  requestData,
+  studentsData,
+  teacherName,
+  studentId,
+}) => {
+  // 1️⃣ تحديث جدول المعلمين (teachers)
+  const { error: teacherError } = await supabase
+    .from("teachers")
+    .update({
+      requests: requestData,
+      students: studentsData,
+    })
+    .eq("id", teacherId);
+
+  if (teacherError) throw new Error(teacherError.message);
+
+  // 2️⃣ تحديث جدول الطلاب (students): إضافة teacherId للـ teachers[]
+  // أول حاجة نجيب الـ teachers الحالية
+  const { data: studentData, error: studentFetchError } = await supabase
+    .from("students")
+    .select("teachers")
+    .eq("id", studentId)
+    .single();
+
+  if (studentFetchError) throw new Error(studentFetchError.message);
+
+  // لو الطالب عنده teachers قديمة، نضيف عليها، لو لأ، نبدأ مصفوفة جديدة
+  const currentTeachers = studentData?.teachers || [];
+  const updatedTeachers = currentTeachers.includes(teacherId)
+    ? currentTeachers
+    : [...currentTeachers, teacherId];
+
+  const { error: studentUpdateError } = await supabase
+    .from("students")
+    .update({ teachers: updatedTeachers })
+    .eq("id", studentId);
+
+  if (studentUpdateError) throw new Error(studentUpdateError.message);
+
+  // ✅ رجع البيانات للاستخدام في onSuccess
+  return { teacherId, teacherName, studentId };
+};
+
+export const getColumn = async (userId, table, column) => {
+  const { error, data } = await supabase
+    .from(table)
+    .select(column)
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+
+  return data[column];
+};
+
+export const getStudent = async (studentId) => {
+  const { error, data } = await supabase
+    .from("students")
+    .select("*")
+    .eq("id", studentId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
+export const getUser = async (userId, table) => {
+  const { error, data } = await supabase
+    .from(table)
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+
+  return data;
 };
 
 export const getExams = async (teacherId, done) => {
@@ -70,6 +218,18 @@ export const getExams = async (teacherId, done) => {
   }
 };
 
+export const getStudentsAndRequests = async (teacherId) => {
+  const { error, data } = await supabase
+    .from("teachers")
+    .select("students, requests")
+    .eq("id", teacherId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+
+  return data; // رجع بس الأراي مش الأوبجكت كله
+};
+
 export const insertQuestion = async (questionData) => {
   const { data: questionDataResponse, error: questionError } = await supabase
     .from("questions")
@@ -92,7 +252,7 @@ export const createNewExam = async (testData) => {
   return data;
 };
 
-export const editExamData = async ({ testData, examId }) => {
+export const editExamData = async ({ testData, examId, isEdit }) => {
   const { error } = await supabase
     .from("exams")
     .update(testData)
@@ -100,7 +260,7 @@ export const editExamData = async ({ testData, examId }) => {
 
   if (error) throw new Error(error.message);
 
-  return testData;
+  return { examId, isEdit };
 };
 
 export const getQuestions = async (examId) => {

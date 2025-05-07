@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 export default function SignUp() {
   const [isStudent, setIsStudent] = useState(true);
 
-  const { mutateAsync } = useRegister(isStudent);
+  const { mutateAsync: register } = useRegister(isStudent);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,22 +18,39 @@ export default function SignUp() {
       gender: formdata.get("gender"),
       subject: formdata.get("subject"),
       phoneNumber: formdata.get("phoneNumber"),
-      grade: formdata.get("grade"),
+      stages: !isStudent
+        ? formdata
+            .get("stages")
+            ?.split(/[-،,]/) // هنا فصلت بثلاث علامات: - أو ، أو ,
+            .map((stage) => stage.trim())
+            .filter((stage) => stage) || []
+        : [],
     };
+
     if (
-      !userData.name ||
-      !userData.userName ||
-      !userData.email ||
-      !userData.password ||
-      !userData.gender ||
-      !userData.phoneNumber ||
-      !userData.grade
+      (isStudent &&
+        (!userData.name ||
+          !userData.userName ||
+          !userData.email ||
+          !userData.password ||
+          !userData.gender ||
+          !userData.phoneNumber)) ||
+      (!isStudent &&
+        (!userData.name ||
+          !userData.userName ||
+          !userData.email ||
+          !userData.password ||
+          !userData.gender ||
+          !userData.phoneNumber ||
+          !userData.stages.length ||
+          !userData.subject))
     ) {
       toast.error("الرجاء ملئ جميع الحقول");
       return;
     }
+    console.log(userData);
     toast.loading("جاري إنشاء الحساب...");
-    await mutateAsync(userData);
+    await register(userData);
     toast.dismiss();
     toast.success(
       "تم إنشاء الحساب بنجاح .. تحقق من بريدك الالكتروني لتأكيد تسجيل الحساب",
@@ -46,7 +63,7 @@ export default function SignUp() {
       onSubmit={handleSubmit}
       className="bg-white rounded-lg overflow-hidden"
     >
-      <div className="space-y-4 p-1" dir="rtl">
+      <div className="space-y-2 p-1" dir="rtl">
         <div className="flex justify-center gap-6 mb-2">
           <div className="flex items-center gap-2">
             <input
@@ -86,7 +103,7 @@ export default function SignUp() {
             id="name"
             name="name"
             placeholder={isStudent ? "محمد أحمد إبراهيم" : "محمد أحمد"}
-            className="w-full h-10 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+            className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
           />
         </div>
 
@@ -99,7 +116,7 @@ export default function SignUp() {
             id="userName"
             name="userName"
             placeholder="mohammed223"
-            className="w-full h-10 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+            className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
           />
         </div>
 
@@ -145,7 +162,7 @@ export default function SignUp() {
               id="subject"
               name="subject"
               placeholder="العلوم"
-              className="w-full h-10 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+              className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
             />
           </div>
         )}
@@ -162,11 +179,42 @@ export default function SignUp() {
             id="phoneNumber"
             name="phoneNumber"
             placeholder="01067605444"
-            className="w-full h-10 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+            className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
           />
         </div>
 
-        <div className="space-y-2">
+        {!isStudent && (
+          <div className="space-y-2">
+            <label
+              htmlFor="phoneNumber"
+              className="block text-gray-700 font-medium"
+            >
+              المراحل الدراسية:
+            </label>
+            <input
+              type="text"
+              id="stages"
+              name="stages"
+              placeholder="الصف الأول الثانوي - الصف الثاني الثانوي - ..."
+              className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+            />
+            <p className="text-sm">
+              <span className="font-bold text-red-500">ملحوظة:</span> احرص على
+              الفصل بين المراحل برمز (-) أو فاصلة (،)
+            </p>
+            <details>
+              <summary className="cursor-pointer text-green-500 font-bold select-none">
+                أمثلة أخرى
+              </summary>
+              <p>
+                <span className="text-green-500">&#9830;</span> مبتدئ - متوسط -
+                متقدم
+              </p>
+            </details>
+          </div>
+        )}
+
+        {/* <div className="space-y-2">
           <label htmlFor="grade" className="block text-gray-700 font-medium">
             المرحلة الدراسية:
           </label>
@@ -174,7 +222,7 @@ export default function SignUp() {
             dir="rtl"
             name="grade"
             id="grade"
-            className="w-full h-10 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+            className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
           >
             {isStudent ? (
               <>
@@ -196,7 +244,7 @@ export default function SignUp() {
               </>
             )}
           </select>
-        </div>
+        </div> */}
 
         <div className="space-y-2">
           <label htmlFor="email" className="block text-gray-700 font-medium">
@@ -207,7 +255,7 @@ export default function SignUp() {
             id="email"
             name="email"
             placeholder="example@gmail.com"
-            className="w-full h-10 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+            className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
           />
         </div>
 
@@ -220,7 +268,7 @@ export default function SignUp() {
             id="password"
             name="password"
             placeholder="Strong_Password_123"
-            className="w-full h-10 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+            className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
           />
         </div>
 

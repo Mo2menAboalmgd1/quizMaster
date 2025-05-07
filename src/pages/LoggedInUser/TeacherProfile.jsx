@@ -1,14 +1,22 @@
 import React from "react";
 import { Link, useParams } from "react-router-dom";
-import { useExamsByTeacherId } from "../../QueriesAndMutations/QueryHooks";
+import {
+  useColumnByUserId,
+  useExamsByTeacherId,
+  useStudentsAndRequestsByTeacherId,
+} from "../../QueriesAndMutations/QueryHooks";
 import { faArrowLeft, faFileAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ExamItemInTeacherProfile from "../../components/ExamItemInTeacherProfile";
 import toast from "react-hot-toast";
 import Loader from "../../components/Loader";
+import { useCurrentUser } from "../../store/useStore";
+import { useJoinTeacherMutation } from "../../QueriesAndMutations/mutationsHooks";
 
 export default function TeacherProfile() {
   const { id: teacherId } = useParams();
+  const { currentUser } = useCurrentUser(); // Assuming you have a useCurrentUser hook to get the current use
+  const [isJoin, setIsJoin] = React.useState(false);
 
   const {
     data: exams,
@@ -16,10 +24,119 @@ export default function TeacherProfile() {
     error: examsError,
   } = useExamsByTeacherId(teacherId, true);
 
+  const {
+    data: stages,
+    isLoading: isStagesLoading,
+    error: stagesError,
+  } = useColumnByUserId(teacherId, "teachers", "stages");
+
+  const {
+    data: studentsAndRequests,
+    isLoading: isStudentsAndRequestsLoading,
+    error: studentsAndRequestsError,
+  } = useStudentsAndRequestsByTeacherId(teacherId);
+
+  console.log(studentsAndRequests);
+  console.log(currentUser.id);
+
+  const { mutateAsync: joinTeacher } = useJoinTeacherMutation(
+    teacherId,
+    setIsJoin
+  );
+
+  const handleJoinRequest = async () => {
+    const requestData = [
+      ...(studentsAndRequests.requests || []),
+      {
+        studentId: currentUser.id,
+        stage: document.getElementById("stage").value,
+      },
+    ];
+    console.log(requestData);
+    toast.loading("جاري إرسال طلب انضمامك إلى المعلم");
+    await joinTeacher({ teacherId, requestData });
+  };
+
+  console.log(studentsAndRequests);
+
+  if (isStudentsAndRequestsLoading || isStagesLoading)
+    return <Loader message="جري التحميل" />;
+
+  if (studentsAndRequestsError) {
+    toast.error(studentsAndRequestsError.message);
+  }
+
+  const isStudent = studentsAndRequests.students?.some(
+    (student) => student.id === currentUser.id
+  );
+  const isRequested = studentsAndRequests.requests?.some(
+    (req) => req.studentId === currentUser.id
+  );
+
+  if (!isStudent && !isRequested) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center">
+        <p className="mt-4 text-lg font-medium text-red-600">
+          ليس لديك صلاحية قراءة الامتحانات الخاصة بهذا المعلم
+        </p>
+        <button
+          onClick={() => setIsJoin(!isJoin)}
+          className="p-2 px-4 mt-5 cursor-pointer rounded-lg bg-gradient-to-tl from-blue-600 to-blue-500 text-white font-bold"
+        >
+          أرسل طلب انضمام
+        </button>
+        {isJoin && (
+          <div
+            onClick={() => setIsJoin(false)}
+            className="fixed left-1/2 top-1/2 -translate-1/2 h-screen w-screen bg-black/30 z-20 flex items-center justify-center"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="border-gray-300 rounded-xl border bg-white p-3 py-6"
+            >
+              <h3 className="font-bold text-transparent bg-clip-text bg-gradient-to-l from-green-400 to-emerald-600 text-2xl w-96">
+                طلب انضمام
+              </h3>
+              <div dir="rtl" className="flex flex-col items-start mt-5 w-full">
+                <p>اختر المرحلة الدراسية:</p>
+                <select
+                  className="h-10 w-full mt-2 px-3 outline-none border border-gray-300 rounded-lg"
+                  name="stage"
+                  id="stage"
+                >
+                  {stages?.map((stage, index) => (
+                    <option key={index} value={stage}>
+                      {stage}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={handleJoinRequest}
+                className="px-3 py-2 mt-3 bg-gradient-to-l from-blue-400 to-blue-600 text-white rounded-lg cursor-pointer"
+              >
+                انضمام
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (!isStudent && isRequested) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center">
+        <p className="mt-4 text-lg font-medium text-red-600">
+          سيصلك إشعار في حال قبول أو رفض انضمامك إلى المعلم
+        </p>
+      </div>
+    );
+  }
+
   console.log(exams);
 
-  if (isExamsLoading)
-    return <Loader message="جري تحميل الامتحانات" />;
+  if (isExamsLoading) return <Loader message="جري تحميل الامتحانات" />;
 
   if (examsError) {
     toast.error(examsError.message);

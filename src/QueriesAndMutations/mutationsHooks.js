@@ -1,16 +1,23 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  acceptRequest,
   createNewExam,
   deleteAns,
   deleteExam,
+  deleteNotification,
   editExamData,
+  getColumn,
   handleCreateStudent,
   handleCreateTeacher,
   insertQuestion,
+  joinTeacher,
   makeProfile,
+  readNotification,
   register,
+  removeRequest,
   saveAns,
   saveAnswer,
+  sendNotification,
   signIn,
 } from "../api/AllApiFunctions";
 import toast from "react-hot-toast";
@@ -39,7 +46,116 @@ export const useSignIn = () => {
   return useMutation({
     mutationFn: signIn,
     onError: (error) => {
+      toast.dismiss();
       toast.error(error.message);
+    },
+  });
+};
+
+export const useJoinTeacherMutation = (teacherId, setIsJoin) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: joinTeacher,
+    onError: (error) => {
+      toast.dismiss();
+      toast.error(error.message);
+    },
+    onSuccess: () => {
+      toast.dismiss();
+      toast.success("تم الإرسال بنجاح، في انتظار الموافقة");
+      setIsJoin(false);
+      queryClient.invalidateQueries(["studentsAndRequests", teacherId]);
+    },
+  });
+};
+
+export const useRemoveRequestMutation = () => {
+  const queryClient = useQueryClient();
+  const { mutateAsync: sendNotification } = useSendNotificationMutation();
+  return useMutation({
+    mutationFn: removeRequest,
+    onError: (error) => {
+      toast.dismiss();
+      toast.error(error.message);
+    },
+    onSuccess: (_, data) => {
+      toast.dismiss();
+      sendNotification({
+        studentId: data.studentId,
+        text: `تم رفض طلب انضمامك من ${data.teacherName}`,
+      });
+      queryClient.invalidateQueries(["studentsAndRequests", data.teacherId]);
+    },
+  });
+};
+
+export const useTableColumnByUserId = (studentId, column, table) => {
+  return useMutation({
+    mutationFn: async () => await getColumn(studentId, column, table),
+    onError: () => {
+      toast.dismiss();
+      toast.error("حدث خطأ أثناء إرسال الإشعار إلى الطالب");
+    },
+  });
+};
+
+export const useAcceptRequestMutation = () => {
+  const queryClient = useQueryClient();
+  const { mutateAsync: sendNotification } = useSendNotificationMutation();
+  return useMutation({
+    mutationFn: acceptRequest,
+    onError: () => {
+      toast.dismiss();
+      toast.error("فشل قبول الانضمام، أعد المحاولة");
+    },
+    onSuccess: (data) => {
+      // 👈 هنا التعديل
+      toast.dismiss();
+      sendNotification({
+        studentId: data.studentId,
+        text: `تم قبول طلب انضمامك من ${data.teacherName}`,
+      });
+      queryClient.invalidateQueries(["studentsAndRequests", data.teacherId]);
+    },
+  });
+};
+
+export const useSendNotificationMutation = () => {
+  return useMutation({
+    mutationFn: sendNotification,
+    onError: () => {
+      toast.dismiss();
+      toast.error("حدث خطأ أثناء إرسال الإشعار إلى الطالب");
+    },
+  });
+};
+
+export const useReadNotificationMutation = (userId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: readNotification,
+    onError: () => {
+      toast.dismiss();
+      toast.error("حدث خطأ، أعد المحاولة");
+    },
+    onSuccess: () => {
+      toast.dismiss();
+      queryClient.invalidateQueries(["notifications"], userId);
+    },
+  });
+};
+
+export const useDeleteNotification = (userId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteNotification,
+    onError: () => {
+      toast.dismiss();
+      toast.error("حدث خطأ، أعد المحاولة");
+    },
+    onSuccess: () => {
+      toast.dismiss();
+      queryClient.invalidateQueries(["notifications"], userId);
     },
   });
 };
@@ -60,22 +176,14 @@ export const useInsertQuestionMutation = (examData, examId) => {
         correct: correctAnsText,
       });
     },
-    // onMutate: async (questionData) => {
-    //   await queryClient.cancelQueries(["questions", examId]);
-
-    //   const previousQuestions = queryClient.getQueryData(["questions", examId]);
-    //   queryClient.setQueryData(["questions", examId], (old) => {
-    //     return [...old, questionData];
-    //   });
-    //   return { previousQuestions };
-    // },
     onSuccess: () => {
       queryClient.invalidateQueries(["questions", examId]);
     },
   });
 };
 
-export const useCreateNewExamMutation = (setExamId, queryClient) => {
+export const useCreateNewExamMutation = (setExamId) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createNewExam,
     onSuccess: (data) => {
@@ -89,7 +197,12 @@ export const useEditExamDataMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: editExamData,
-    onSuccess: (_, examId) => {
+    onSuccess: ({ examId, isEdit }) => {
+      if (isEdit) {
+        toast.success("تم التعديل بنجاح");
+      } else {
+        toast.success("تم نشر الاختبار بنجاح");
+      }
       queryClient.invalidateQueries(["exam", examId]);
     },
   });
