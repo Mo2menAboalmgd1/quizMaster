@@ -149,14 +149,9 @@ export default function App() {
                   <span className="text-gray-700 font-medium hidden md:block">
                     {currentUser.name}
                   </span>
-                  {currentUser.type === "student" ? (
+                  {currentUser.type === "teacher" && (
                     <span className="text-gray-700 font-medium hidden md:block">
-                      الصف {currentUser.grade}
-                    </span>
-                  ) : (
-                    <span className="text-gray-700 font-medium hidden md:block">
-                      المرحلة{" "}
-                      {currentUser.grade === "prep" ? "الإعدادية" : "الثانوية"}
+                      {currentUser.subject}
                     </span>
                   )}
                 </div>

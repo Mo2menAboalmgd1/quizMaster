@@ -17,6 +17,8 @@ export default function CreateExam() {
     error: examDataError,
   } = useExamByItsId(examId);
 
+  console.log(examData);
+
   if (currentUser.type === "student") return <CreateExamStudentplaceHolder />;
 
   if (examDataError) toast.error(examDataError.message);

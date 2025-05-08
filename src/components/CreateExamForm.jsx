@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useCurrentUser } from "../store/useStore";
 import {
   useCreateNewExamMutation,
@@ -26,6 +26,11 @@ export default function CreateExamForm({
   isCreate,
 }) {
   const { currentUser } = useCurrentUser();
+  const [selectedStage, setSelectedStage] = useState("");
+
+  useEffect(() => {
+    if (examData?.stage) setSelectedStage(examData.stage);
+  }, [examData]);
 
   const {
     data: stages,
@@ -43,7 +48,7 @@ export default function CreateExamForm({
     const testData = {
       subject: currentUser.subject,
       title: formData.get("examName"),
-      stage: formData.get("stage"),
+      stage: selectedStage,
       teacherId: currentUser.id,
     };
     if (!testData.title || !testData.stage) return;
@@ -55,7 +60,7 @@ export default function CreateExamForm({
     const formData = new FormData(e.target);
     const testData = {
       title: formData.get("examName"),
-      stage: formData.get("stage"),
+      stage: selectedStage,
       teacherId: currentUser.id,
     };
     await editExamMutation({ testData, examId: examData.id, isEdit: true });
@@ -118,7 +123,8 @@ export default function CreateExamForm({
           <select
             name="stage"
             id="stage"
-            defaultValue={examData ? examData.grade : ""}
+            value={selectedStage}
+            onChange={(e) => setSelectedStage(e.target.value)}
             className="text-center h-12 border border-gray-300 bg-white w-full rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all shadow-sm appearance-none"
           >
             {stages?.map((stage, index) => (
@@ -126,7 +132,9 @@ export default function CreateExamForm({
                 {stage}
               </option>
             ))}
+            <option value="">جميع الصفوف</option>
           </select>
+
           <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
             <FontAwesomeIcon icon={faGraduationCap} className="text-gray-400" />
           </div>

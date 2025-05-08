@@ -11,12 +11,13 @@ import ExamItemInTeacherProfile from "../../components/ExamItemInTeacherProfile"
 import toast from "react-hot-toast";
 import Loader from "../../components/Loader";
 import { useCurrentUser } from "../../store/useStore";
-import { useJoinTeacherMutation } from "../../QueriesAndMutations/mutationsHooks";
+import Join from "../../components/Join";
+import { ExamsError } from "../../components/ErrorPlaceHolder";
+import NoExamsPlaceHolder from "../../components/NoDataPlaceHolder";
 
 export default function TeacherProfile() {
   const { id: teacherId } = useParams();
   const { currentUser } = useCurrentUser(); // Assuming you have a useCurrentUser hook to get the current use
-  const [isJoin, setIsJoin] = React.useState(false);
 
   const {
     data: exams,
@@ -31,96 +32,59 @@ export default function TeacherProfile() {
   } = useColumnByUserId(teacherId, "teachers", "stages");
 
   const {
+    data: students,
+    isLoading: isStudentsLoading,
+    error: studentsError,
+  } = useColumnByUserId(teacherId, "teachers", "students");
+
+  const currentStudentStage =
+    students?.find((student) => student.studentId === currentUser.id)?.stage ||
+    null;
+
+  const isThereAnyExamForMyId = exams?.some(
+    (exam) => exam.stage === currentStudentStage
+  );
+  const isTherePublicExam = exams?.some((exam) => exam.stage == "");
+
+  const {
     data: studentsAndRequests,
     isLoading: isStudentsAndRequestsLoading,
     error: studentsAndRequestsError,
   } = useStudentsAndRequestsByTeacherId(teacherId);
 
-  console.log(studentsAndRequests);
-  console.log(currentUser.id);
-
-  const { mutateAsync: joinTeacher } = useJoinTeacherMutation(
-    teacherId,
-    setIsJoin
-  );
-
-  const handleJoinRequest = async () => {
-    const requestData = [
-      ...(studentsAndRequests.requests || []),
-      {
-        studentId: currentUser.id,
-        stage: document.getElementById("stage").value,
-      },
-    ];
-    console.log(requestData);
-    toast.loading("جاري إرسال طلب انضمامك إلى المعلم");
-    await joinTeacher({ teacherId, requestData });
-  };
-
-  console.log(studentsAndRequests);
-
-  if (isStudentsAndRequestsLoading || isStagesLoading)
+  if (isStudentsAndRequestsLoading || isStagesLoading || isStudentsLoading) {
     return <Loader message="جري التحميل" />;
+  }
 
   if (studentsAndRequestsError) {
     toast.error(studentsAndRequestsError.message);
+    return;
+  }
+
+  if (stagesError) {
+    toast.error(stagesError.message);
+    return;
+  }
+
+  if (studentsError) {
+    toast.error(studentsError.message);
+    return;
   }
 
   const isStudent = studentsAndRequests.students?.some(
-    (student) => student.id === currentUser.id
+    (student) => student.studentId === currentUser.id
   );
   const isRequested = studentsAndRequests.requests?.some(
-    (req) => req.studentId === currentUser.id
+    (request) => request.studentId === currentUser.id
   );
 
   if (!isStudent && !isRequested) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-center">
-        <p className="mt-4 text-lg font-medium text-red-600">
-          ليس لديك صلاحية قراءة الامتحانات الخاصة بهذا المعلم
-        </p>
-        <button
-          onClick={() => setIsJoin(!isJoin)}
-          className="p-2 px-4 mt-5 cursor-pointer rounded-lg bg-gradient-to-tl from-blue-600 to-blue-500 text-white font-bold"
-        >
-          أرسل طلب انضمام
-        </button>
-        {isJoin && (
-          <div
-            onClick={() => setIsJoin(false)}
-            className="fixed left-1/2 top-1/2 -translate-1/2 h-screen w-screen bg-black/30 z-20 flex items-center justify-center"
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="border-gray-300 rounded-xl border bg-white p-3 py-6"
-            >
-              <h3 className="font-bold text-transparent bg-clip-text bg-gradient-to-l from-green-400 to-emerald-600 text-2xl w-96">
-                طلب انضمام
-              </h3>
-              <div dir="rtl" className="flex flex-col items-start mt-5 w-full">
-                <p>اختر المرحلة الدراسية:</p>
-                <select
-                  className="h-10 w-full mt-2 px-3 outline-none border border-gray-300 rounded-lg"
-                  name="stage"
-                  id="stage"
-                >
-                  {stages?.map((stage, index) => (
-                    <option key={index} value={stage}>
-                      {stage}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                onClick={handleJoinRequest}
-                className="px-3 py-2 mt-3 bg-gradient-to-l from-blue-400 to-blue-600 text-white rounded-lg cursor-pointer"
-              >
-                انضمام
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      <Join
+        teacherId={teacherId}
+        stages={stages}
+        studentsAndRequests={studentsAndRequests}
+      />
     );
   }
 
@@ -134,35 +98,15 @@ export default function TeacherProfile() {
     );
   }
 
-  console.log(exams);
-
   if (isExamsLoading) return <Loader message="جري تحميل الامتحانات" />;
 
   if (examsError) {
     toast.error(examsError.message);
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-center">
-        <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-lg font-medium text-red-600">
-          حدث خطأ أثناء تحميل الامتحانات الرجاء إعادة المحاولة
-        </p>
-        <p className="text-gray-500 text-sm mt-2">{examsError.message}</p>
-      </div>
-    );
+    return <ExamsError message={examsError.message} />;
   }
 
-  if (!exams || exams.length === 0)
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-center bg-gray-50 rounded-lg border border-dashed border-gray-300 p-6">
-        <FontAwesomeIcon
-          icon={faFileAlt}
-          className="text-gray-400 text-5xl mb-4"
-        />
-        <p className="text-gray-600 font-medium">
-          لا يوجد امتحانات متاحة حاليًا
-        </p>
-      </div>
-    );
+  if (exams.length === 0 || (!isThereAnyExamForMyId && !isTherePublicExam))
+    return <NoExamsPlaceHolder message="لا يوجد امتحانات متاحة حاليًا" />;
 
   return (
     <div className="max-w-4xl mx-auto p-2">
@@ -185,7 +129,7 @@ export default function TeacherProfile() {
           ) : (
             <div className="space-y-3">
               {exams.map((exam) => (
-                <ExamItemInTeacherProfile exam={exam} />
+                <ExamItemInTeacherProfile key={exam.id} exam={exam} />
               ))}
             </div>
           )}

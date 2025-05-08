@@ -4,10 +4,14 @@ import {
   faQuestionCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
-import { useQuestionsByExamId } from "../QueriesAndMutations/QueryHooks";
+import {
+  useColumnByUserId,
+  useQuestionsByExamId,
+} from "../QueriesAndMutations/QueryHooks";
 import toast from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
+import { useCurrentUser } from "../store/useStore";
 
 export default function ExamItemInTeacherProfile({ exam }) {
   const {
@@ -15,8 +19,6 @@ export default function ExamItemInTeacherProfile({ exam }) {
     isLoading: isQuestionsLoading,
     error: questionsError,
   } = useQuestionsByExamId(exam.id);
-
-  console.log(questions);
 
   if (isQuestionsLoading) return <div>Loading...</div>;
 
@@ -42,7 +44,7 @@ export default function ExamItemInTeacherProfile({ exam }) {
         <div className="flex gap-4 mt-1 text-sm">
           <span className="text-gray-500 flex items-center gap-1">
             <FontAwesomeIcon icon={faLayerGroup} className="text-gray-400" />
-            {exam.grade ? `الصف ${exam.grade}` : "جميع الصفوف"}
+            {exam.stage ? exam.stage : "جميع الصفوف"}
           </span>
           <span className="text-gray-500 flex items-center gap-1">
             <FontAwesomeIcon
