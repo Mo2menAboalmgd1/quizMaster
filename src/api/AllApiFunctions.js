@@ -194,6 +194,18 @@ export const getUser = async (userId, table) => {
   return data;
 };
 
+export const getProfile = async (userId) => {
+  const { error, data } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
 export const getExams = async (teacherId, done) => {
   if (done) {
     const { error, data } = await supabase
@@ -298,19 +310,19 @@ export const deleteExam = async (examId) => {
   if (error) throw new Error(error.message);
 };
 
-export const deleteAns = async (questionId) => {
-  const { error } = await supabase
+export const saveAns = async (answer) => {
+  const { error: deleteAnswersError } = await supabase
     .from("studentsAnswers")
     .delete()
-    .eq("questionId", questionId);
+    .eq("questionId", answer.questionId);
 
-  if (error) throw new Error(error.message);
-};
+  if (deleteAnswersError) throw new Error(deleteAnswersError.message);
 
-export const saveAns = async (ansId, answer) => {
   const { error } = await supabase.from("studentsAnswers").insert(answer);
 
   if (error) throw new Error(error.message);
+
+  return answer.id;
 };
 
 export const getStudentAnswers = async (studentId, examId) => {
@@ -325,15 +337,15 @@ export const getStudentAnswers = async (studentId, examId) => {
   return data;
 };
 
-export const saveAnswer = async (studentId, examId, grade, total) => {
-  const { error } = await supabase
-    .from("examsResults")
-    .insert({ studentId, examId, grade, total });
+export const saveResult = async (result) => {
+  const { error } = await supabase.from("examsResults").insert(result);
 
   if (error) throw new Error(error.message);
+
+  return result.studentId;
 };
 
-export const getExamsResults = async (studentId, examId) => {
+export const getExamResult = async (studentId, examId) => {
   const { data, error } = await supabase
     .from("examsResults")
     .select("*")
@@ -343,4 +355,30 @@ export const getExamsResults = async (studentId, examId) => {
 
   if (error) throw new Error(error.message);
   return data;
+};
+
+
+export const getExamsResults = async (teacherId, studentId) => {
+  const { data, error } = await supabase
+    .from("examsResults")
+    .select("*")
+    .eq("teacherId", teacherId)
+    .eq("studentId", studentId)
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+// {examId, studentId: currentUser.id, examsTaken:newExamsTaken}
+export const takeExam = async ({ examId, studentId, examsTaken }) => {
+  const { error } = await supabase
+    .from("students")
+    .update({
+      examsTaken: examsTaken,
+    })
+    .eq("id", studentId);
+
+  if (error) throw new Error(error.message);
+
+  return examId;
 };

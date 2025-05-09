@@ -21,6 +21,7 @@ import {
 import Notifications from "./pages/LoggedInUser/Notifications";
 import Stages from "./pages/LoggedInUser/Stages";
 import Stage from "./pages/LoggedInUser/Stage";
+import UserProfile from "./pages/LoggedInUser/UserProfile";
 
 export default function App() {
   const { getSession, session } = useSession();
@@ -345,6 +346,7 @@ export default function App() {
               element={<ResumeCreateTest />}
             />
             <Route path="/teacherProfile/:id" element={<TeacherProfile />} />
+            <Route path="/userProfile/:id" element={<UserProfile />} />
             <Route path="/exam/:id" element={<Exam />} />
           </Routes>
         </div>

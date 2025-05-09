@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   acceptRequest,
   createNewExam,
-  deleteAns,
   deleteExam,
   deleteNotification,
   editExamData,
@@ -16,9 +15,10 @@ import {
   register,
   removeRequest,
   saveAns,
-  saveAnswer,
+  saveResult,
   sendNotification,
   signIn,
+  takeExam,
 } from "../api/AllApiFunctions";
 import toast from "react-hot-toast";
 
@@ -218,32 +218,39 @@ export const useDeleteExamMutation = (currentUserId) => {
   });
 };
 
-export const useDeleteAnswer = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ questionId }) => deleteAns(questionId),
-    onSuccess: (_, { ansId }) => {
-      queryClient.invalidateQueries(["answer", ansId]);
-    },
-  });
-};
-
 export const useSaveAnswer = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ ansId, answer }) => saveAns(ansId, answer),
-    onSuccess: (_, { ansId }) => {
+    mutationFn: saveAns,
+    onSuccess: (ansId) => {
       queryClient.invalidateQueries(["answer", ansId]);
     },
   });
 };
 
-export const useSaveStudentResult = (studentId, examId, total) => {
+export const useSaveStudentResult = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (grade) => saveAnswer(studentId, examId, grade, total),
-    onSuccess: () => {
+    mutationFn: saveResult,
+    onSuccess: (studentId) => {
+      toast.success("تم حفظ النتيجة بنجاح");
       queryClient.invalidateQueries(["student", studentId]);
+    },
+    onError: () => {
+      toast.error("حدث خطأ أثناء حفظ النتيجة");
+    },
+  });
+};
+
+export const useTakeExam = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: takeExam,
+    onSuccess: (examId) => {
+      queryClient.invalidateQueries(["exam", examId]);
+    },
+    onError: () => {
+      toast.error("حدث خطأ أثناء حفظ النتيجة");
     },
   });
 };

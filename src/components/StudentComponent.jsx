@@ -5,13 +5,11 @@ import { Link } from "react-router-dom";
 export default function StudentComponent({ studentId }) {
   const {
     data: student,
-    isLoading: isStudentLoading,
     error: studentError,
   } = useUserDataByUserId(studentId, "students");
 
   console.log(student);
 
-  if (isStudentLoading) return <p>Loading...</p>;
   if (studentError) return <p>Error: {studentError.message}</p>;
 
   if (!student) return <p>No student found.</p>;

@@ -3,14 +3,16 @@ import {
   getColumn,
   getExam,
   getExams,
-  getExamsResults,
+  getExamResult,
   getNotifications,
+  getProfile,
   getQuestions,
   getStudent,
   getStudentAnswers,
   getStudentsAndRequests,
   getTeachers,
   getUser,
+  getExamsResults,
 } from "../api/AllApiFunctions";
 
 export const useNotificationsByUserId = (userId) => {
@@ -32,8 +34,16 @@ export const useColumnByUserId = (userId, table, column) => {
 
 export const useUserDataByUserId = (userId, table) => {
   return useQuery({
-    queryKey: ["userData", userId],
+    queryKey: ["userData", userId, table],
     queryFn: () => getUser(userId, table),
+    enabled: !!userId && !!table,
+  });
+};
+
+export const useProfileByUserId = (userId) => {
+  return useQuery({
+    queryKey: ["profile", userId],
+    queryFn: () => getProfile(userId),
     enabled: !!userId,
   });
 };
@@ -51,6 +61,15 @@ export const useExamsByTeacherId = (teacherId, done) => {
     queryKey: ["exams", teacherId],
     queryFn: () => getExams(teacherId, done),
     staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useExamsResultsByTeacherId = (teacherId, student) => {
+  return useQuery({
+    queryKey: ["examsResults", teacherId, student.id],
+    queryFn: () => getExamsResults(teacherId, student.id),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!teacherId && !!student.id && !!student.examsTaken,
   });
 };
 
@@ -98,7 +117,7 @@ export const useAnswersByStudentIdAndExamId = (studentId, examId) => {
 export const useExamsResultsByStudentIdAndExamId = (studentId, examId) => {
   return useQuery({
     queryKey: ["studentExamResult", studentId, examId],
-    queryFn: () => getExamsResults(studentId, examId),
+    queryFn: () => getExamResult(studentId, examId),
     staleTime: 5 * 60 * 1000,
   });
 };

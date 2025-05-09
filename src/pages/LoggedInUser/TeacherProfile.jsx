@@ -12,8 +12,8 @@ import toast from "react-hot-toast";
 import Loader from "../../components/Loader";
 import { useCurrentUser } from "../../store/useStore";
 import Join from "../../components/Join";
-import { ExamsError } from "../../components/ErrorPlaceHolder";
-import NoExamsPlaceHolder from "../../components/NoDataPlaceHolder";
+import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
+import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
 
 export default function TeacherProfile() {
   const { id: teacherId } = useParams();
@@ -37,6 +37,12 @@ export default function TeacherProfile() {
     error: studentsError,
   } = useColumnByUserId(teacherId, "teachers", "students");
 
+  const {
+    data: examsTaken,
+    isLoading: isExamsTakenLoading,
+    error: examsTakenError,
+  } = useColumnByUserId(currentUser?.id, "students", "examsTaken");
+
   const currentStudentStage =
     students?.find((student) => student.studentId === currentUser.id)?.stage ||
     null;
@@ -52,7 +58,12 @@ export default function TeacherProfile() {
     error: studentsAndRequestsError,
   } = useStudentsAndRequestsByTeacherId(teacherId);
 
-  if (isStudentsAndRequestsLoading || isStagesLoading || isStudentsLoading) {
+  if (
+    isStudentsAndRequestsLoading ||
+    isStagesLoading ||
+    isStudentsLoading ||
+    isExamsTakenLoading
+  ) {
     return <Loader message="جري التحميل" />;
   }
 
@@ -68,6 +79,11 @@ export default function TeacherProfile() {
 
   if (studentsError) {
     toast.error(studentsError.message);
+    return;
+  }
+
+  if (examsTakenError) {
+    toast.error(examsTakenError.message);
     return;
   }
 
@@ -102,11 +118,16 @@ export default function TeacherProfile() {
 
   if (examsError) {
     toast.error(examsError.message);
-    return <ExamsError message={examsError.message} />;
+    return <ErrorPlaceHolder message={examsError.message} />;
   }
 
   if (exams.length === 0 || (!isThereAnyExamForMyId && !isTherePublicExam))
-    return <NoExamsPlaceHolder message="لا يوجد امتحانات متاحة حاليًا" />;
+    return (
+      <NoDataPlaceHolder
+        icon={faFileAlt}
+        message="لا يوجد امتحانات متاحة حاليًا"
+      />
+    );
 
   return (
     <div className="max-w-4xl mx-auto p-2">
@@ -128,9 +149,18 @@ export default function TeacherProfile() {
             </div>
           ) : (
             <div className="space-y-3">
-              {exams.map((exam) => (
-                <ExamItemInTeacherProfile key={exam.id} exam={exam} />
-              ))}
+              {exams
+                .filter(
+                  (exam) =>
+                    exam.stage === currentStudentStage || exam.stage === ""
+                )
+                .map((exam) => (
+                  <ExamItemInTeacherProfile
+                    isExamTaken={(examsTaken || [])?.some((e) => e === exam.id)}
+                    key={exam.id}
+                    exam={exam}
+                  />
+                ))}
             </div>
           )}
         </div>

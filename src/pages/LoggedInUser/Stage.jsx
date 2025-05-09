@@ -4,6 +4,8 @@ import { useCurrentUser } from "../../store/useStore";
 import Loader from "../../components/Loader";
 import { useParams } from "react-router-dom";
 import StudentComponent from "../../components/StudentComponent";
+import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
+import { faUser } from "@fortawesome/free-solid-svg-icons";
 
 export default function Stage() {
   const { currentUser } = useCurrentUser();
@@ -17,9 +19,16 @@ export default function Stage() {
 
   if (isStudentsLoading) return <Loader message="جاري تحميل الطلاب" />;
   if (studentsError) return <p>Error: {studentsError.message}</p>;
-  if (!students) return <p>لا يوجد طلاب بهذه المرحلة</p>;
 
-  const stageStudents = students.filter((student) => student.stage === stage);
+  const stageStudents = students?.filter((student) => student.stage === stage);
+  if (stageStudents.length === 0) {
+    return (
+      <NoDataPlaceHolder
+        message={"لا يوجد طلاب بهذة المرحلة الدراسية إلى الآن"}
+        icon={faUser}
+      />
+    );
+  }
 
   console.log(stageStudents);
   return (
@@ -28,7 +37,12 @@ export default function Stage() {
         {stage}
       </h1>
       {stageStudents.map((student) => {
-        return <StudentComponent studentId={student.studentId} />;
+        return (
+          <StudentComponent
+            key={student.studentId}
+            studentId={student.studentId}
+          />
+        );
       })}
     </div>
   );

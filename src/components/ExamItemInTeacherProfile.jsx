@@ -4,16 +4,13 @@ import {
   faQuestionCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
-import {
-  useColumnByUserId,
-  useQuestionsByExamId,
-} from "../QueriesAndMutations/QueryHooks";
+import { useQuestionsByExamId } from "../QueriesAndMutations/QueryHooks";
 import toast from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
-import { useCurrentUser } from "../store/useStore";
+import clsx from "clsx";
 
-export default function ExamItemInTeacherProfile({ exam }) {
+export default function ExamItemInTeacherProfile({ exam, isExamTaken }) {
   const {
     data: questions,
     isLoading: isQuestionsLoading,
@@ -29,16 +26,33 @@ export default function ExamItemInTeacherProfile({ exam }) {
 
   return (
     <Link
-      className="p-3 border border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all flex items-center gap-3 group"
+      className={clsx(
+        "p-3 border rounded-lg transition-all flex items-center gap-3 group",
+        isExamTaken
+          ? "bg-blue-50 border-blue-300 hover:bg-blue-100"
+          : "bg-green-50 border-green-300 hover:bg-green-100"
+      )}
       dir="rtl"
       to={"/exam/" + exam.id}
       key={exam.id}
     >
-      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm">
+      <div
+        className={clsx(
+          "w-10 h-10 bg-gradient-to-r rounded-lg flex items-center justify-center text-white shadow-sm",
+          isExamTaken
+            ? "from-blue-500 to-blue-600"
+            : "from-green-500 to-green-600"
+        )}
+      >
         <FontAwesomeIcon icon={faClipboardList} />
       </div>
       <div className="grow">
-        <h3 className="font-medium text-gray-800 group-hover:text-green-700 transition-colors">
+        <h3
+          className={clsx(
+            "font-medium transition-colors",
+            isExamTaken ? "text-blue-600" : "text-green-600"
+          )}
+        >
           {exam.title}
         </h3>
         <div className="flex gap-4 mt-1 text-sm">
@@ -55,8 +69,13 @@ export default function ExamItemInTeacherProfile({ exam }) {
           </span>
         </div>
       </div>
-      <div className="bg-green-100 max-sm:hidden text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-        ابدأ الآن
+      <div
+        className={clsx(
+          " max-sm:hidden px-3 py-1 rounded-full text-sm font-medium",
+          isExamTaken ? "bg-blue-500 text-white" : "bg-green-500 text-white"
+        )}
+      >
+        {isExamTaken ? "مكتمل" : "ابدأ الآن"}
       </div>
     </Link>
   );

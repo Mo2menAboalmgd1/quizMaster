@@ -6,6 +6,7 @@ import { useExamsByTeacherId } from "../../QueriesAndMutations/QueryHooks";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import Loader from "../../components/Loader";
+import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 
 export default function Teacher() {
   const { currentUser } = useCurrentUser();
@@ -18,20 +19,11 @@ export default function Teacher() {
 
   console.log(teacherExams);
 
-  if (isTeacherExamsLoading) return <Loader message="جري تحميل الملف الشخصي..." />;
+  if (isTeacherExamsLoading)
+    return <Loader message="جري تحميل الملف الشخصي..." />;
 
   if (teacherExamsError)
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-center">
-        <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-lg font-medium text-red-600">
-          حدث خطأ أثناء تحميل الامتحانات
-        </p>
-        <p className="text-gray-500 text-sm mt-2">
-          {teacherExamsError.message}
-        </p>
-      </div>
-    );
+    return <ErrorPlaceHolder message={"حدث خطأ أثناء تحميل الامتحانات"} />;
 
   if (!teacherExams || teacherExams.length === 0)
     return (
