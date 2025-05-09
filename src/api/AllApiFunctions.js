@@ -170,6 +170,17 @@ export const getColumn = async (userId, table, column) => {
   return data[column];
 };
 
+export const getRows = async (teachersIds, table) => {
+  const { error, data } = await supabase
+    .from(table)
+    .select("*")
+    .in("id", teachersIds);
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
 export const getStudent = async (studentId) => {
   const { error, data } = await supabase
     .from("students")
@@ -357,13 +368,12 @@ export const getExamResult = async (studentId, examId) => {
   return data;
 };
 
-
 export const getExamsResults = async (teacherId, studentId) => {
   const { data, error } = await supabase
     .from("examsResults")
     .select("*")
     .eq("teacherId", teacherId)
-    .eq("studentId", studentId)
+    .eq("studentId", studentId);
 
   if (error) throw new Error(error.message);
   return data;

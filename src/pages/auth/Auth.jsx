@@ -2,9 +2,14 @@ import React from "react";
 import SignIn from "./SignIn";
 import SignUp from "./SignUp";
 import { Toaster } from "react-hot-toast";
+import { useSearchParams } from "react-router-dom";
 
 export default function Auth() {
-  const [isSignIn, setIsSignIn] = React.useState(true);
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get("mode");
+  const type = searchParams.get("type");
+
+  const [isSignIn, setIsSignIn] = React.useState(mode !== "signup");
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-green-100 p-4">
@@ -17,7 +22,11 @@ export default function Auth() {
         </div>
 
         <div className="bg-white rounded-b-lg shadow-xl p-6">
-          {isSignIn ? <SignIn /> : <SignUp />}
+          {isSignIn ? (
+            <SignIn />
+          ) : (
+            <SignUp initialType={type === "teacher" ? "teacher" : "student"} />
+          )}
 
           <div className="mt-3 text-center">
             <button

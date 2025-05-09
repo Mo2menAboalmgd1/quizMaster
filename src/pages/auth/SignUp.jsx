@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useRegister } from "../../QueriesAndMutations/mutationsHooks";
 import toast from "react-hot-toast";
 
-export default function SignUp() {
-  const [isStudent, setIsStudent] = useState(true);
+export default function SignUp({ initialType = "student" }) {
+  const [isStudent, setIsStudent] = useState(initialType === "student");
 
   const { mutateAsync: register } = useRegister(isStudent);
 
@@ -21,7 +21,7 @@ export default function SignUp() {
       stages: !isStudent
         ? formdata
             .get("stages")
-            ?.split(/[-،,]/) // هنا فصلت بثلاث علامات: - أو ، أو ,
+            ?.split(/[-،,]/)
             .map((stage) => stage.trim())
             .filter((stage) => stage) || []
         : [],
@@ -48,7 +48,7 @@ export default function SignUp() {
       toast.error("الرجاء ملئ جميع الحقول");
       return;
     }
-    console.log(userData);
+
     toast.loading("جاري إنشاء الحساب...");
     await register(userData);
     toast.dismiss();
@@ -68,7 +68,7 @@ export default function SignUp() {
           <div className="flex items-center gap-2">
             <input
               onChange={() => setIsStudent(true)}
-              defaultChecked
+              checked={isStudent}
               type="radio"
               name="type"
               id="student"
@@ -82,6 +82,7 @@ export default function SignUp() {
           <div className="flex items-center gap-2">
             <input
               onChange={() => setIsStudent(false)}
+              checked={!isStudent}
               type="radio"
               name="type"
               id="teacher"
@@ -185,10 +186,7 @@ export default function SignUp() {
 
         {!isStudent && (
           <div className="space-y-2">
-            <label
-              htmlFor="phoneNumber"
-              className="block text-gray-700 font-medium"
-            >
+            <label htmlFor="stages" className="block text-gray-700 font-medium">
               المراحل الدراسية:
             </label>
             <input
@@ -199,8 +197,8 @@ export default function SignUp() {
               className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
             />
             <p className="text-sm">
-              <span className="font-bold text-red-500">ملحوظة:</span> احرص على
-              الفصل بين المراحل برمز (-) أو فاصلة (،)
+              <span className="font-bold text-red-500">ملحوظة:</span> افصل بين
+              المراحل بـ - أو ،
             </p>
             <details>
               <summary className="cursor-pointer text-green-500 font-bold select-none">
@@ -213,38 +211,6 @@ export default function SignUp() {
             </details>
           </div>
         )}
-
-        {/* <div className="space-y-2">
-          <label htmlFor="grade" className="block text-gray-700 font-medium">
-            المرحلة الدراسية:
-          </label>
-          <select
-            dir="rtl"
-            name="grade"
-            id="grade"
-            className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
-          >
-            {isStudent ? (
-              <>
-                <optgroup label="المرحلة الإعدادية">
-                  <option value="7">الصف الأول الاعدادي</option>
-                  <option value="8">الصف الثاني الاعدادي</option>
-                  <option value="9">الصف الثالث الاعدادي</option>
-                </optgroup>
-                <optgroup label="المرحلة الثانوية">
-                  <option value="10">الصف الأول الثانوي</option>
-                  <option value="11">الصف الثاني الثانوي</option>
-                  <option value="12">الصف الثالث الثانوي</option>
-                </optgroup>
-              </>
-            ) : (
-              <>
-                <option value="prep">المرحلة الإعدادية</option>
-                <option value="sec">المرحلة الثانوية</option>
-              </>
-            )}
-          </select>
-        </div> */}
 
         <div className="space-y-2">
           <label htmlFor="email" className="block text-gray-700 font-medium">

@@ -10,6 +10,7 @@ import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import UserProfileDataComponent from "../../components/UserProfileDataComponent";
 import { useCurrentUser } from "../../store/useStore";
 import StudentGradesChart from "../../components/StudentGradesChart";
+import StudentTeachersInOwnProfile from "../../components/StudentTeachersInOwnProfile";
 
 export default function UserProfile() {
   const { id: userId } = useParams();
@@ -55,12 +56,42 @@ export default function UserProfile() {
     user.type === "student" &&
     user.teachers?.some((teacherId) => teacherId === currentUser.id);
 
+  const isCurrentUserStudentVeiwingOwnProfile =
+    currentUser.type === "student" && user.id === currentUser.id;
+
   return (
-    <div className="w-full space-y-4">
-      <UserProfileDataComponent user={user} userType={userType} />
+    <div className="w-full max-w-5xl mx-auto space-y-6 p-4">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm">
+        <UserProfileDataComponent user={user} userType={userType} />
+      </div>
 
       {isCurrentUserTeacherInStudentTeachersList && (
-        <StudentGradesChart teacher={currentUser} student={user} />
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 border-b border-green-100">
+            <h2 className="text-lg font-semibold text-green-800 text-center">
+              أداء الطالب في الاختبارات
+            </h2>
+          </div>
+          <div className="p-4">
+            <StudentGradesChart teacher={currentUser} student={user} />
+          </div>
+        </div>
+      )}
+
+      {isCurrentUserStudentVeiwingOwnProfile && (
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-50 to-violet-50 p-4 border-b border-purple-100">
+            <h2 className="text-lg font-semibold text-purple-800">
+              My Teachers
+            </h2>
+          </div>
+          <div className="p-4">
+            <StudentTeachersInOwnProfile
+              student={currentUser}
+              teachers={currentUser.teachers}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

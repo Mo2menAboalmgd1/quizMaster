@@ -4,7 +4,7 @@ import { supabase } from "./config/supabase";
 import Auth from "./pages/auth/Auth";
 import Student from "./pages/LoggedInUser/Student";
 import Teacher from "./pages/LoggedInUser/Teacher";
-import { Route, Routes, Link, useLocation } from "react-router-dom";
+import { Route, Routes, Link, useLocation, Navigate } from "react-router-dom";
 import CreateTest from "./pages/LoggedInUser/CreateTest";
 import TeacherProfile from "./pages/LoggedInUser/TeacherProfile";
 import Exam from "./pages/LoggedInUser/Exam";
@@ -23,6 +23,7 @@ import Stages from "./pages/LoggedInUser/Stages";
 import Stage from "./pages/LoggedInUser/Stage";
 import UserProfile from "./pages/LoggedInUser/UserProfile";
 import ErrorPlaceHolder from "./components/ErrorPlaceHolder";
+import Landing from "./pages/auth/Landing"; // Import the new Landing component
 
 export default function App() {
   const { getSession, session } = useSession();
@@ -30,11 +31,7 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
 
-  const {
-    data: notifications,
-    isLoading: isNotificationsLoading,
-    error: notificationsError,
-  } = useNotificationsByUserId(currentUser?.id);
+  const { data: notifications } = useNotificationsByUserId(currentUser?.id);
 
   const unReadNotifications = notifications?.filter(
     (notification) => !notification.isRead
@@ -93,12 +90,35 @@ export default function App() {
     error: studentsAndRequestsError,
   } = useStudentsAndRequestsByTeacherId(currentUser?.id);
 
-  if (!session)
+  // If no session, show the Landing page with routes for auth
+  if (!session) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Auth />
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            success: {
+              style: {
+                background: "#10B981",
+                color: "white",
+              },
+            },
+            error: {
+              style: {
+                background: "#EF4444",
+                color: "white",
+              },
+            },
+          }}
+        />
       </div>
     );
+  }
 
   if (!currentUser || isStudentsAndRequestsLoading)
     return <Loader message="جري تحميل الامتحانات" />;
@@ -108,6 +128,7 @@ export default function App() {
       <ErrorPlaceHolder message={"حدث خطأ اثناء تحميل الصفحة، أعد المحاولة"} />
     );
   }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header */}
@@ -148,11 +169,6 @@ export default function App() {
 
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                {/* <div className="w-8 h-8 rounded-full font-bold bg-indigo-100 flex items-center justify-center text-indigo-600">
-                  {currentUser.name
-                    ? currentUser.name.charAt(0).toUpperCase()
-                    : "U"}
-                </div> */}
                 <div className="flex gap-5" dir="rtl">
                   <Link
                     to={"/userProfile/" + currentUser.id}

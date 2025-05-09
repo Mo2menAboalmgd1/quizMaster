@@ -14,7 +14,7 @@ export default function Stages() {
     error: stagesError,
   } = useColumnByUserId(currentUser?.id, "teachers", "stages");
 
-  console.log(stages)
+  console.log(stages);
 
   if (isStagesLoading) return <p>Loading...</p>;
   if (stagesError) return <p>Error: {stagesError.message}</p>;

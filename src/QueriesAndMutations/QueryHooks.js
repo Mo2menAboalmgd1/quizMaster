@@ -13,6 +13,7 @@ import {
   getTeachers,
   getUser,
   getExamsResults,
+  getRows,
 } from "../api/AllApiFunctions";
 
 export const useNotificationsByUserId = (userId) => {
@@ -28,6 +29,15 @@ export const useColumnByUserId = (userId, table, column) => {
     queryKey: [column, table, userId],
     queryFn: () => getColumn(userId, table, column),
     enabled: !!userId,
+    staleTime: 5 * 60 * 1000, // 5 minu
+  });
+};
+
+export const useAlotIfRowsInAnyTable = (teachersIds, table) => {
+  return useQuery({
+    queryKey: ["many-rows", table, teachersIds],
+    queryFn: () => getRows(teachersIds, table),
+    enabled: !!teachersIds && !!table && teachersIds.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minu
   });
 };
