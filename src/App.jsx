@@ -147,9 +147,12 @@ export default function App() {
                     : "U"}
                 </div> */}
                 <div className="flex gap-5" dir="rtl">
-                  <span className="text-gray-700 font-medium hidden md:block">
+                  <Link
+                    to={"/userProfile/" + currentUser.id}
+                    className="text-gray-700 font-medium hidden md:block"
+                  >
                     {currentUser.name}
-                  </span>
+                  </Link>
                   {currentUser.type === "teacher" && (
                     <span className="text-gray-700 font-medium hidden md:block">
                       {currentUser.subject}

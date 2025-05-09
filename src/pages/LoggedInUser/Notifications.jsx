@@ -6,7 +6,10 @@ import Notification from "../../components/Notification";
 import clsx from "clsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faTrash } from "@fortawesome/free-solid-svg-icons";
-import { useDeleteNotification, useReadNotificationMutation } from "../../QueriesAndMutations/mutationsHooks";
+import {
+  useDeleteNotification,
+  useReadNotificationMutation,
+} from "../../QueriesAndMutations/mutationsHooks";
 
 export default function Notifications() {
   const { currentUser } = useCurrentUser();
@@ -19,12 +22,16 @@ export default function Notifications() {
 
   console.log(notifications);
 
-  const {mutateAsync: readNotification} = useReadNotificationMutation(currentUser.id);
+  const { mutateAsync: readNotification } = useReadNotificationMutation(
+    currentUser.id
+  );
   const handleReadNotification = async (notificationId) => {
     await readNotification(notificationId);
   };
 
-  const {mutateAsync: deleteNotification} = useDeleteNotification(currentUser.id);
+  const { mutateAsync: deleteNotification } = useDeleteNotification(
+    currentUser.id
+  );
   const handleDeleteNotification = async (notificationId) => {
     await deleteNotification(notificationId);
   };
@@ -32,12 +39,14 @@ export default function Notifications() {
   if (isNotificationsLoading) return <Loader message="جاري تحميل الإشعارات" />;
   if (notificationsError) return <div>Error: {notificationsError.message}</div>;
 
-  if (!notifications?.length) return <p className="text-center">لا يوجد إشعارات</p>;
+  if (!notifications?.length)
+    return <p className="text-center">لا يوجد إشعارات</p>;
 
   return (
     <div className="space-y-3">
       {notifications?.map((notification) => (
         <div
+          key={notification.id}
           dir="rtl"
           className={clsx(
             "p-3 border rounded-lg flex justify-between items-center",

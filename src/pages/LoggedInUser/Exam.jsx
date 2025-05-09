@@ -32,30 +32,11 @@ export default function Exam() {
   const { currentUser } = useCurrentUser();
   const [isShowResult, setIsShowResult] = React.useState(false);
 
-  useEffect(() => {
-    const handleBlur = () => {
-      console.log("الطالب فقد التركيز عن الصفحة");
-    };
-
-    const handleFocus = () => {
-      console.log("الطالب رجع للصفحة");
-    };
-
-    window.addEventListener("blur", handleBlur);
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      window.removeEventListener("blur", handleBlur);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, []);
-
   const {
     data: examsTaken,
     isLoading: isExamsTakenLoading,
     error: examsTakenError,
   } = useColumnByUserId(currentUser.id, "students", "examsTaken");
-  console.log(examsTaken);
 
   const {
     data: answers,
@@ -74,10 +55,8 @@ export default function Exam() {
     isLoading: isExamResultLoading,
     error: examResultError,
   } = useExamsResultsByStudentIdAndExamId(currentUser.id, examId);
-  console.log(examResult);
 
   const isExamTaken = examsTaken?.some((exId) => exId === examId);
-  // console.log(isExamTaken);
 
   const {
     data: questions,
@@ -109,8 +88,6 @@ export default function Exam() {
     return !answers?.some((answer) => answer.questionId === question.id);
   });
 
-  console.log("الأسئلة اللي ملهاش إجابة:", unansweredQuestions);
-
   // send exam
   const { mutateAsync: saveResultMutation } = useSaveStudentResult();
   const { mutateAsync: setExamTaken } = useTakeExam();
@@ -129,8 +106,6 @@ export default function Exam() {
     const newExamsTaken = (examsTaken || [])?.includes(examId)
       ? examsTaken || []
       : [...(examsTaken || []), examId];
-
-    console.log(newExamsTaken, correctCount);
 
     try {
       await saveResultMutation({
@@ -207,10 +182,16 @@ export default function Exam() {
         <h2 className="text-2xl font-bold text-center py-3 px-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-sm mb-2">
           {exam.title}
         </h2>
-        {isExamTaken ? (
-          <p className="text-center text-gray-600 text-sm mt-4">
-            لقد قمت بالإجابة على هذا الامتحان مسبقا
-          </p>
+        {isExamTaken && !isShowResult ? (
+          <>
+            <p className="text-center text-gray-600 text-sm mt-4">
+              لقد قمت بالإجابة على هذا الامتحان مسبقا
+            </p>
+            <p className="font-bold text-blue-800 text-xl mt-2 text-center">
+              درجتك هي <span >{examResult?.grade}</span> من{" "}
+              <span>{examResult?.total}</span>
+            </p>
+          </>
         ) : (
           <p className="text-center text-gray-600 text-sm mt-4">
             قم بالإجابة على جميع الأسئلة ثم اضغط على زر إرسال الامتحان
