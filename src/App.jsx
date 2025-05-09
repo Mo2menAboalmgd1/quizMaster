@@ -22,6 +22,7 @@ import Notifications from "./pages/LoggedInUser/Notifications";
 import Stages from "./pages/LoggedInUser/Stages";
 import Stage from "./pages/LoggedInUser/Stage";
 import UserProfile from "./pages/LoggedInUser/UserProfile";
+import ErrorPlaceHolder from "./components/ErrorPlaceHolder";
 
 export default function App() {
   const { getSession, session } = useSession();
