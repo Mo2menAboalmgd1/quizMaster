@@ -103,7 +103,7 @@ export default function App() {
   if (!currentUser || isStudentsAndRequestsLoading)
     return <Loader message="جري تحميل الامتحانات" />;
 
-  if (studentsAndRequests) {
+  if (studentsAndRequestsError) {
     return (
       <ErrorPlaceHolder message={"حدث خطأ اثناء تحميل الصفحة، أعد المحاولة"} />
     );
