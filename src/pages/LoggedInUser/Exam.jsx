@@ -1,6 +1,4 @@
-// old code
-
-import React, { useEffect } from "react";
+import React from "react";
 import { useParams } from "react-router-dom";
 import clsx from "clsx";
 import {

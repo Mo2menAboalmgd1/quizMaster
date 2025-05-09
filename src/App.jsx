@@ -99,8 +99,14 @@ export default function App() {
       </div>
     );
 
-  if (!currentUser) return <Loader message="جري تحميل الامتحانات" />;
+  if (!currentUser || isStudentsAndRequestsLoading)
+    return <Loader message="جري تحميل الامتحانات" />;
 
+  if (studentsAndRequests) {
+    return (
+      <ErrorPlaceHolder message={"حدث خطأ اثناء تحميل الصفحة، أعد المحاولة"} />
+    );
+  }
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header */}
