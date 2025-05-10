@@ -242,6 +242,17 @@ export const getStudentsAndRequests = async (teacherId, table) => {
   return data;
 };
 
+export const getTeachersByStudentId = async (studentId, table) => {
+  const { error, data } = await supabase
+    .from(table)
+    .select("*")
+    .eq("studentId", studentId);
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
 export const insertQuestion = async (questionData) => {
   const { data: questionDataResponse, error: questionError } = await supabase
     .from("questions")

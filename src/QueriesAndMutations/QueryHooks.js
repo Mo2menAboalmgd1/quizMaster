@@ -13,6 +13,7 @@ import {
   getUser,
   getExamsResults,
   getRows,
+  getTeachersByStudentId,
 } from "../api/AllApiFunctions";
 
 export const useNotificationsByUserId = (userId) => {
@@ -96,6 +97,15 @@ export const useStudentsAndRequestsByTeacherIdAndTable = (teacherId, table) => {
     queryFn: () => getStudentsAndRequests(teacherId, table),
     staleTime: 5 * 60 * 1000,
     enabled: !!teacherId && !!table,
+  });
+};
+
+export const useTeachersFromTeachersStudents = (studentId, table) => {
+  return useQuery({
+    queryKey: ["studentTeachers", studentId],
+    queryFn: () => getTeachersByStudentId(studentId, table),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!studentId && !!table,
   });
 };
 

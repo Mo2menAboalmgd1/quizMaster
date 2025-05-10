@@ -1,31 +1,52 @@
 import React, { useState } from "react";
-import { useAlotIfRowsInAnyTable } from "../QueriesAndMutations/QueryHooks";
 import StduentGradesChart from "./StudentGradesChart";
+import {
+  useAlotIfRowsInAnyTable,
+  useTeachersFromTeachersStudents,
+} from "../QueriesAndMutations/QueryHooks";
+import ErrorPlaceHolder from "./ErrorPlaceHolder";
+import NoDataPlaceHolder from "./NoDataPlaceHolder";
+import { faUser } from "@fortawesome/free-solid-svg-icons";
+import Loader from "./Loader";
 
-export default function StudentTeachersInOwnProfile({ student, teachers }) {
+export default function StudentTeachersInOwnProfile({ student }) {
   const {
-    data: teachersData,
+    data: teachers,
     isLoading: isTeachersLoading,
     error: teachersError,
-  } = useAlotIfRowsInAnyTable(teachers, "teachers");
+  } = useTeachersFromTeachersStudents(student?.id, "teachers_students");
+  // console.log("teachers: ", teachers);
+
+  const teachersIds = teachers?.map((teacher) => teacher.teacherId);
+
+  const {
+    data: teachersData,
+    isLoading: isTeachersDataLoading,
+    error: teachersDataError,
+  } = useAlotIfRowsInAnyTable(teachersIds, "teachers");
+
+  console.log("teachers data: ", teachersData);
 
   const [selectedTeacherId, setSelectedTeacherId] = useState(null);
 
-  if (isTeachersLoading) {
-    return <p>جاري تحميل بيانات المدرسين...</p>;
+  if (isTeachersLoading || isTeachersDataLoading) {
+    return <Loader message="جاري تحميل بيانات المعلمين" />;
   }
 
-  if (teachersError) {
-    return <p>حدث خطأ أثناء تحميل بيانات المدرسين: {teachersError.message}</p>;
+  if (teachersError || teachersDataError) {
+    return <ErrorPlaceHolder message={"حدث خطأ اثناء جلب بيانات المعلمين"} />;
   }
 
   if (!teachersData || teachersData.length === 0) {
-    return <p>لم يتم العثور على بيانات المدرسين</p>;
+    return (
+      <NoDataPlaceHolder message={"لا يوجد معلمين إلى الآن"} icon={faUser} />
+    );
   }
 
   const selectedTeacher = teachersData.find((t) => t.id === selectedTeacherId);
 
   return (
+    // <div>mo2men</div>
     <div className="bg-white rounded-xl shadow-md p-4">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">My Teachers</h2>
 

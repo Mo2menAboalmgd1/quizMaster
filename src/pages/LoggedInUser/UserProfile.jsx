@@ -2,6 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import {
   useProfileByUserId,
+  useStudentsAndRequestsByTeacherIdAndTable,
   useUserDataByUserId,
 } from "../../QueriesAndMutations/QueryHooks";
 import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
@@ -84,10 +85,7 @@ export default function UserProfile() {
             </h2>
           </div>
           <div className="p-4">
-            <StudentTeachersInOwnProfile
-              student={currentUser}
-              teachers={currentUser.teachers}
-            />
+            <StudentTeachersInOwnProfile student={currentUser} />
           </div>
         </div>
       )}
