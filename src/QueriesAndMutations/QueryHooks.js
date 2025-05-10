@@ -7,7 +7,6 @@ import {
   getNotifications,
   getProfile,
   getQuestions,
-  getStudent,
   getStudentAnswers,
   getStudentsAndRequests,
   getTeachers,
@@ -74,28 +73,29 @@ export const useExamsByTeacherId = (teacherId, done) => {
   });
 };
 
-export const useExamsResultsByTeacherId = (teacherId, student) => {
+export const useExamsResultsByTeacherId = (teacherId, studentId) => {
   return useQuery({
-    queryKey: ["examsResults", teacherId, student.id],
-    queryFn: () => getExamsResults(teacherId, student.id),
+    queryKey: ["examsResults", teacherId, studentId],
+    queryFn: () => getExamsResults(teacherId, studentId),
     staleTime: 5 * 60 * 1000,
-    enabled: !!teacherId && !!student.id && !!student.examsTaken,
+    enabled: !!teacherId && !!studentId,
   });
 };
 
-export const useStudentsAndRequestsByTeacherId = (teacherId) => {
-  return useQuery({
-    queryKey: ["studentsAndRequests", teacherId],
-    queryFn: () => (teacherId ? getStudentsAndRequests(teacherId) : null),
-    staleTime: 5 * 60 * 1000,
-  });
-};
+// export const useStudentsAndRequestsByTeacherId = (teacherId) => {
+//   return useQuery({
+//     queryKey: ["studentsAndRequests", teacherId],
+//     queryFn: () => (teacherId ? getStudentsAndRequests(teacherId) : null),
+//     staleTime: 5 * 60 * 1000,
+//   });
+// };
 
-export const useRequestByRequestId = (teacherId, studentId) => {
+export const useStudentsAndRequestsByTeacherIdAndTable = (teacherId, table) => {
   return useQuery({
-    queryKey: ["request", studentId, teacherId],
-    queryFn: () => getStudent(studentId),
+    queryKey: [table, teacherId],
+    queryFn: () => getStudentsAndRequests(teacherId, table),
     staleTime: 5 * 60 * 1000,
+    enabled: !!teacherId && !!table,
   });
 };
 
@@ -129,5 +129,6 @@ export const useExamsResultsByStudentIdAndExamId = (studentId, examId) => {
     queryKey: ["studentExamResult", studentId, examId],
     queryFn: () => getExamResult(studentId, examId),
     staleTime: 5 * 60 * 1000,
+    enabled: !!studentId && !!examId,
   });
 };

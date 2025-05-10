@@ -87,25 +87,22 @@ export const deleteNotification = async (notificationId) => {
   if (error) throw new Error(error.message);
 };
 
-export const joinTeacher = async ({ teacherId, requestData }) => {
+export const joinTeacher = async ({ teacherId, stage, studentId }) => {
   const { error } = await supabase
     .from("teachers")
-    .update({ requests: requestData })
-    .eq("id", teacherId);
+    .insert({ teacherId, stage, studentId });
 
   if (error) throw new Error(error.message);
+
+  return teacherId;
 };
 
-export const removeRequest = async ({
-  teacherId,
-  requestData,
-  teacherName,
-  studentId,
-}) => {
+export const removeRequest = async ({ teacherId, teacherName, studentId }) => {
   const { error } = await supabase
-    .from("teachers")
-    .update({ requests: requestData })
-    .eq("id", teacherId);
+    .from("teachers_requests")
+    .delete()
+    .eq("teacherId", teacherId)
+    .eq("studentId", studentId);
 
   if (error) throw new Error(error.message);
 
@@ -115,44 +112,25 @@ export const removeRequest = async ({
 
 export const acceptRequest = async ({
   teacherId,
-  requestData,
-  studentsData,
   teacherName,
+  stage,
   studentId,
 }) => {
-  // 1️⃣ تحديث جدول المعلمين (teachers)
+  // 1️⃣
   const { error: teacherError } = await supabase
-    .from("teachers")
-    .update({
-      requests: requestData,
-      students: studentsData,
-    })
-    .eq("id", teacherId);
+    .from("teachers_requests")
+    .delete()
+    .eq("teacherId", teacherId)
+    .eq("studentId", studentId);
 
   if (teacherError) throw new Error(teacherError.message);
 
-  // 2️⃣ تحديث جدول الطلاب (students): إضافة teacherId للـ teachers[]
-  // أول حاجة نجيب الـ teachers الحالية
-  const { data: studentData, error: studentFetchError } = await supabase
-    .from("students")
-    .select("teachers")
-    .eq("id", studentId)
-    .single();
+  // 2️⃣
+  const { error: studentFetchError } = await supabase
+    .from("teachers_students")
+    .insert({ teacherId, studentId, stage });
 
   if (studentFetchError) throw new Error(studentFetchError.message);
-
-  // لو الطالب عنده teachers قديمة، نضيف عليها، لو لأ، نبدأ مصفوفة جديدة
-  const currentTeachers = studentData?.teachers || [];
-  const updatedTeachers = currentTeachers.includes(teacherId)
-    ? currentTeachers
-    : [...currentTeachers, teacherId];
-
-  const { error: studentUpdateError } = await supabase
-    .from("students")
-    .update({ teachers: updatedTeachers })
-    .eq("id", studentId);
-
-  if (studentUpdateError) throw new Error(studentUpdateError.message);
 
   // ✅ رجع البيانات للاستخدام في onSuccess
   return { teacherId, teacherName, studentId };
@@ -241,16 +219,27 @@ export const getExams = async (teacherId, done) => {
   }
 };
 
-export const getStudentsAndRequests = async (teacherId) => {
+// export const getStudentsAndRequests = async (teacherId) => {
+//   const { error, data } = await supabase
+//     .from("teachers")
+//     .select("students, requests")
+//     .eq("id", teacherId)
+//     .maybeSingle();
+
+//   if (error) throw new Error(error.message);
+
+//   return data; // رجع بس الأراي مش الأوبجكت كله
+// };
+
+export const getStudentsAndRequests = async (teacherId, table) => {
   const { error, data } = await supabase
-    .from("teachers")
-    .select("students, requests")
-    .eq("id", teacherId)
-    .maybeSingle();
+    .from(table)
+    .select("*")
+    .eq("teacherId", teacherId);
 
   if (error) throw new Error(error.message);
 
-  return data; // رجع بس الأراي مش الأوبجكت كله
+  return data;
 };
 
 export const insertQuestion = async (questionData) => {
@@ -261,6 +250,33 @@ export const insertQuestion = async (questionData) => {
   if (questionError) throw new Error(questionError.message);
 
   return questionDataResponse;
+};
+
+export const editQeustion = async ({
+  editedQuestion,
+  editedAnswers,
+  questionId,
+}) => {
+  const answers = editedAnswers.map((ans) => ans.text);
+  const correct = editedAnswers.find((ans) => ans.isCorrect).text;
+  const text = editedQuestion;
+  const newAnswerObj = { answers, correct, text };
+
+  const { error: questionError } = await supabase
+    .from("questions")
+    .update(newAnswerObj)
+    .eq("id", questionId);
+
+  if (questionError) throw new Error(questionError.message);
+};
+
+export const deleteQuestion = async (questionId) => {
+  const { error } = await supabase
+    .from("questions")
+    .delete()
+    .eq("id", questionId);
+
+  if (error) throw new Error(error.message);
 };
 
 export const createNewExam = async (testData) => {
@@ -290,7 +306,8 @@ export const getQuestions = async (examId) => {
   const { error, data } = await supabase
     .from("questions")
     .select("*")
-    .eq("examId", examId);
+    .eq("examId", examId)
+    .order("created_at", { ascending: true });
 
   if (error) throw new Error(error.message);
 
@@ -302,7 +319,7 @@ export const getExam = async (examId) => {
     .from("exams")
     .select("*")
     .eq("id", examId)
-    .single();
+    .maybeSingle();
   if (error) throw new Error(error.message);
   return data;
 };
@@ -357,6 +374,7 @@ export const saveResult = async (result) => {
 };
 
 export const getExamResult = async (studentId, examId) => {
+  console.log("Querying examsResults with:", { studentId, examId });
   const { data, error } = await supabase
     .from("examsResults")
     .select("*")
@@ -377,18 +395,4 @@ export const getExamsResults = async (teacherId, studentId) => {
 
   if (error) throw new Error(error.message);
   return data;
-};
-
-// {examId, studentId: currentUser.id, examsTaken:newExamsTaken}
-export const takeExam = async ({ examId, studentId, examsTaken }) => {
-  const { error } = await supabase
-    .from("students")
-    .update({
-      examsTaken: examsTaken,
-    })
-    .eq("id", studentId);
-
-  if (error) throw new Error(error.message);
-
-  return examId;
 };

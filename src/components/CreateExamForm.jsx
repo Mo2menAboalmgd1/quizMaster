@@ -10,6 +10,7 @@ import {
 } from "../QueriesAndMutations/QueryHooks";
 import toast from "react-hot-toast";
 import {
+  faArrowRotateBack,
   faBook,
   faChevronDown,
   faEdit,
@@ -18,6 +19,7 @@ import {
   faUpload,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Loader from "./Loader";
 
 export default function CreateExamForm({
   examData,
@@ -32,6 +34,8 @@ export default function CreateExamForm({
     if (examData?.stage) setSelectedStage(examData.stage);
   }, [examData]);
 
+  console.log(examData);
+
   const {
     data: stages,
     isLoading: isStagesLoading,
@@ -39,8 +43,6 @@ export default function CreateExamForm({
   } = useColumnByUserId(currentUser?.id, "teachers", "stages");
 
   const { mutate: newExamMutation } = useCreateNewExamMutation(setExamId);
-
-  const { mutateAsync: editExamMutation } = useEditExamDataMutation();
 
   const handleCreateNewExam = (e) => {
     e.preventDefault();
@@ -51,7 +53,7 @@ export default function CreateExamForm({
       stage: selectedStage,
       teacherId: currentUser.id,
     };
-    if (!testData.title || !testData.stage) return;
+    if (!testData.title) return;
     newExamMutation(testData);
   };
 
@@ -63,10 +65,11 @@ export default function CreateExamForm({
       stage: selectedStage,
       teacherId: currentUser.id,
     };
-    await editExamMutation({ testData, examId: examData.id, isEdit: true });
+    await editExamMutation({ testData, examId: examData.id, isEdit: "edit" });
   };
 
   const { data: questions } = useQuestionsByExamId(examId);
+  const { mutateAsync: editExamMutation } = useEditExamDataMutation();
 
   const handlePublishExam = async () => {
     console.log(questions);
@@ -76,11 +79,25 @@ export default function CreateExamForm({
 
     const testData = { done: true };
 
-    await editExamMutation({ testData, examId: examData.id, isEdit: false });
+    await editExamMutation({
+      testData,
+      examId: examData.id,
+      isEdit: "publish",
+    });
+  };
+
+  const { mutateAsync: undoPublishMutation } = useEditExamDataMutation();
+
+  const handleUndoPublish = async (examId) => {
+    const testData = {
+      done: false,
+    };
+
+    await undoPublishMutation({ testData, examId, isEdit: "unPublish" });
   };
 
   if (isStagesLoading) {
-    return <div>Loading...</div>;
+    return <Loader message="جاري التحميل" />;
   }
 
   if (stagesError) {
@@ -152,7 +169,7 @@ export default function CreateExamForm({
           {isCreate ? (examData ? "تعديل" : "إنشاء") : "تعديل"}
         </button>
 
-        {examData && (
+        {examData && !examData?.done ? (
           <button
             onClick={handlePublishExam}
             type="button"
@@ -161,7 +178,16 @@ export default function CreateExamForm({
             <FontAwesomeIcon icon={faUpload} />
             نشر الاختبار
           </button>
-        )}
+        ) : examData && examData?.done ? (
+          <button
+            onClick={() => handleUndoPublish(examId)}
+            type="button"
+            className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black py-3 px-6 rounded-lg shadow-sm transition-all shrink-0 flex items-center justify-center gap-2"
+          >
+            <FontAwesomeIcon icon={faArrowRotateBack} />
+            إلغاء نشر الاختبار
+          </button>
+        ) : null}
       </div>
     </form>
   );

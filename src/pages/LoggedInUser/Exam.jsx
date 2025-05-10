@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import clsx from "clsx";
 import {
   useAnswersByStudentIdAndExamId,
-  useColumnByUserId,
   useExamByItsId,
   useExamsResultsByStudentIdAndExamId,
   useQuestionsByExamId,
@@ -12,7 +11,6 @@ import toast from "react-hot-toast";
 import {
   useSaveAnswer,
   useSaveStudentResult,
-  useTakeExam,
 } from "../../QueriesAndMutations/mutationsHooks";
 import { useCurrentUser } from "../../store/useStore";
 import {
@@ -31,16 +29,10 @@ export default function Exam() {
   const [isShowResult, setIsShowResult] = React.useState(false);
 
   const {
-    data: examsTaken,
-    isLoading: isExamsTakenLoading,
-    error: examsTakenError,
-  } = useColumnByUserId(currentUser.id, "students", "examsTaken");
-
-  const {
     data: answers,
     isLoading: isAnswersLoading,
     error: answersError,
-  } = useAnswersByStudentIdAndExamId(currentUser.id, examId);
+  } = useAnswersByStudentIdAndExamId(currentUser?.id, examId);
 
   const {
     data: exam,
@@ -52,9 +44,10 @@ export default function Exam() {
     data: examResult,
     isLoading: isExamResultLoading,
     error: examResultError,
-  } = useExamsResultsByStudentIdAndExamId(currentUser.id, examId);
+  } = useExamsResultsByStudentIdAndExamId(currentUser?.id, examId);
 
-  const isExamTaken = examsTaken?.some((exId) => exId === examId);
+  console.log(examResult);
+
 
   const {
     data: questions,
@@ -88,7 +81,6 @@ export default function Exam() {
 
   // send exam
   const { mutateAsync: saveResultMutation } = useSaveStudentResult();
-  const { mutateAsync: setExamTaken } = useTakeExam();
 
   const handleSendExam = async () => {
     if (!answers) return;
@@ -101,10 +93,6 @@ export default function Exam() {
 
     setIsShowResult(true);
 
-    const newExamsTaken = (examsTaken || [])?.includes(examId)
-      ? examsTaken || []
-      : [...(examsTaken || []), examId];
-
     try {
       await saveResultMutation({
         grade: correctCount,
@@ -112,11 +100,6 @@ export default function Exam() {
         examId,
         total: questions?.length,
         teacherId: exam?.teacherId,
-      });
-      await setExamTaken({
-        examId,
-        studentId: currentUser.id,
-        examsTaken: newExamsTaken,
       });
       toast.success("تم إرسال الامتحان بنجاح");
     } catch (error) {
@@ -141,7 +124,6 @@ export default function Exam() {
     isExamLoading ||
     isQuestionsLoading ||
     isAnswersLoading ||
-    isExamsTakenLoading ||
     isExamResultLoading
   )
     return <Loader message="جري التحميل" />;
@@ -156,10 +138,6 @@ export default function Exam() {
   }
   if (answersError) {
     toast.error(answersError.message);
-    return;
-  }
-  if (examsTakenError) {
-    toast.error(examsTakenError.message);
     return;
   }
   if (examResultError) {
@@ -180,13 +158,13 @@ export default function Exam() {
         <h2 className="text-2xl font-bold text-center py-3 px-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-sm mb-2">
           {exam.title}
         </h2>
-        {isExamTaken && !isShowResult ? (
+        {examResult && !isShowResult ? (
           <>
             <p className="text-center text-gray-600 text-sm mt-4">
               لقد قمت بالإجابة على هذا الامتحان مسبقا
             </p>
             <p className="font-bold text-blue-800 text-xl mt-2 text-center">
-              درجتك هي <span >{examResult?.grade}</span> من{" "}
+              درجتك هي <span>{examResult?.grade}</span> من{" "}
               <span>{examResult?.total}</span>
             </p>
           </>
@@ -203,14 +181,14 @@ export default function Exam() {
             key={index}
             className={clsx(
               "border rounded-xl p-5 transition-all shadow-sm hover:shadow-md",
-              (isShowResult || isExamTaken) &&
+              (isShowResult || examResult) &&
                 unansweredQuestions?.some((q) => q.id === question.id)
                 ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-400"
                 : "bg-gradient-to-r from-gray-50 to-slate-50 border-gray-300"
             )}
             dir="rtl"
           >
-            {(isShowResult || isExamTaken) &&
+            {(isShowResult || examResult) &&
               unansweredQuestions?.some((q) => q.id === question.id) && (
                 <div className="mb-4 text-center font-semibold text-orange-600 bg-orange-100 py-2 px-4 rounded-lg border border-orange-200 flex items-center justify-center gap-2">
                   <FontAwesomeIcon icon={faExclamationTriangle} />
@@ -239,7 +217,7 @@ export default function Exam() {
                     key={idx}
                     className={clsx(
                       "flex gap-3 items-center p-3 rounded-lg border transition-all",
-                      (isShowResult || isExamTaken) &&
+                      (isShowResult || examResult) &&
                         (currentAnswer
                           ? isCorrect
                             ? "bg-green-50 border-green-300"
@@ -247,12 +225,12 @@ export default function Exam() {
                           : answer === question.correct
                           ? "bg-green-50 border-green-300"
                           : "border-gray-200 bg-white"),
-                      !(isShowResult || isExamTaken) &&
+                      !(isShowResult || examResult) &&
                         "hover:border-blue-300 border-gray-200 bg-white"
                     )}
                   >
                     <input
-                      disabled={isShowResult || isExamTaken}
+                      disabled={isShowResult || examResult}
                       onChange={() =>
                         handleSaveAnswer(
                           ansId,
@@ -274,7 +252,7 @@ export default function Exam() {
                       htmlFor={ansId}
                       className={clsx(
                         "cursor-pointer",
-                        (isShowResult || isExamTaken) &&
+                        (isShowResult || examResult) &&
                           (currentAnswer
                             ? isCorrect
                               ? "text-green-800"
@@ -287,7 +265,7 @@ export default function Exam() {
                       {answer}
                     </label>
 
-                    {(isShowResult || isExamTaken) && (
+                    {(isShowResult || examResult) && (
                       <>
                         {currentAnswer && isCorrect && (
                           <span className="ml-auto text-green-600">
@@ -314,7 +292,7 @@ export default function Exam() {
         ))}
       </div>
 
-      {!isShowResult && !isExamTaken && (
+      {!isShowResult && !examResult && (
         <button
           onClick={handleSendExam}
           className="py-3 px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md transition-all transform hover:scale-105 flex items-center gap-2"
@@ -324,16 +302,13 @@ export default function Exam() {
         </button>
       )}
 
-      {(isShowResult || isExamTaken) && (
+      {(isShowResult || examResult) && (
         <div className="flex flex-col items-center gap-4 bg-gradient-to-r from-gray-50 to-slate-100 p-6 rounded-xl border border-gray-300 shadow-lg w-full max-w-md">
           <h2 className="text-xl font-bold border-b-2 border-gray-300 pb-2 w-full text-center">
             نتيجة الإمتحان
           </h2>
-          {isExamsTakenLoading ? (
-            <div className="flex justify-center items-center py-6">
-              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-              <span className="mr-3">Loading...</span>
-            </div>
+          {isExamResultLoading ? (
+            <Loader message="جاري تحميل الامتحان" />
           ) : (
             <div dir="rtl" className="space-y-4 text-lg w-full">
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 text-center">

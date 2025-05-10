@@ -19,8 +19,6 @@ export default function SignIn() {
     }
     toast.loading("جاري تسجيل الدخول");
     await mutateAsync(userData);
-    toast.dismiss();
-    toast.success("مرحبا بك مجدداً");
   };
 
   return (

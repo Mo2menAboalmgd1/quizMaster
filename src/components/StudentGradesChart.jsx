@@ -18,6 +18,7 @@ import { faFileAlt, faPrint } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { supabase } from "../config/supabase";
 import toast from "react-hot-toast";
+import { useCurrentUser } from "../store/useStore";
 
 const getExamName = async (examId) => {
   const { data: exam, error } = await supabase
@@ -61,21 +62,25 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-export default function ExamCurveChart({ teacher, student }) {
+export default function StudentGradesChart({ teacher, student }) {
   const [chartData, setChartData] = useState([]);
   const [isLoadingNames, setIsLoadingNames] = useState(true);
   const chartRef = useRef(null);
   const printFrameRef = useRef(null);
+  const { currentUser } = useCurrentUser();
 
   const {
     data: exmasResults,
     isLoading: isExmasResultsLoading,
     error: exmasResultsError,
-  } = useExamsResultsByTeacherId(teacher.id, student);
+  } = useExamsResultsByTeacherId(teacher.id, student.id);
+
+  const examsTakenByStudent = exmasResults?.filter(
+    (examResult) => examResult.studentId === student.id
+  );
 
   // Create hidden iframe for printing when component mounts
   useEffect(() => {
-    // Create the iframe if it doesn't exist
     if (!printFrameRef.current) {
       const iframe = document.createElement("iframe");
       iframe.style.display = "none";
@@ -89,10 +94,10 @@ export default function ExamCurveChart({ teacher, student }) {
       printFrameRef.current = iframe;
     }
 
-    // Clean up iframe when component unmounts
     return () => {
-      if (printFrameRef.current) {
-        document.body.removeChild(printFrameRef.current);
+      const iframe = printFrameRef.current;
+      if (iframe && iframe.parentNode === document.body) {
+        document.body.removeChild(iframe); // ✅ يتأكد إنه موجود جوه body
       }
     };
   }, []);
@@ -104,18 +109,8 @@ export default function ExamCurveChart({ teacher, student }) {
         return;
       }
 
-      if (!student.examsTaken || student.examsTaken.length === 0) {
+      if (!examsTakenByStudent || examsTakenByStudent.length === 0) {
         setChartData([]); // مفيش امتحانات
-        setIsLoadingNames(false);
-        return;
-      }
-
-      const examsTakenByStudent = exmasResults.filter((examResult) =>
-        student.examsTaken.includes(examResult.examId)
-      );
-
-      if (examsTakenByStudent.length === 0) {
-        setChartData([]);
         setIsLoadingNames(false);
         return;
       }
@@ -134,7 +129,7 @@ export default function ExamCurveChart({ teacher, student }) {
     };
 
     loadChartData();
-  }, [exmasResults, student.examsTaken]);
+  }, [exmasResults, student.id]);
 
   const handlePrintChart = () => {
     // Make sure we have a chart to print
@@ -239,13 +234,15 @@ export default function ExamCurveChart({ teacher, student }) {
             Track student progress across examinations
           </p>
         </div>
-        <button
-          onClick={handlePrintChart}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
-        >
-          <FontAwesomeIcon icon={faPrint} />
-          <span>Print Chart</span>
-        </button>
+        {student.id !== currentUser.id && (
+          <button
+            onClick={handlePrintChart}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
+          >
+            <FontAwesomeIcon icon={faPrint} />
+            <span>Print Chart</span>
+          </button>
+        )}
       </div>
 
       <div

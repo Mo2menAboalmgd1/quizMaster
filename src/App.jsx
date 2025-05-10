@@ -16,7 +16,7 @@ import Loader from "./components/Loader";
 import Requests from "./pages/LoggedInUser/Requests";
 import {
   useNotificationsByUserId,
-  useStudentsAndRequestsByTeacherId,
+  useStudentsAndRequestsByTeacherIdAndTable,
 } from "./QueriesAndMutations/QueryHooks";
 import Notifications from "./pages/LoggedInUser/Notifications";
 import Stages from "./pages/LoggedInUser/Stages";
@@ -85,10 +85,26 @@ export default function App() {
   }, [session?.user?.id, getCurrentUser]);
 
   const {
-    data: studentsAndRequests,
-    isLoading: isStudentsAndRequestsLoading,
-    error: studentsAndRequestsError,
-  } = useStudentsAndRequestsByTeacherId(currentUser?.id);
+    data: requests,
+    isLoading: isRequestsLoading,
+    error: requestsError,
+  } = useStudentsAndRequestsByTeacherIdAndTable(
+    currentUser?.id,
+    "teachers_requests"
+  );
+
+  const {
+    data: students,
+    isLoading: isStudentsLoading,
+    error: studentsError,
+  } = useStudentsAndRequestsByTeacherIdAndTable(
+    currentUser?.id,
+    "teachers_students"
+  );
+
+  if (session === undefined || currentUser === undefined) {
+    return <Loader message="جاري التحقق من الجلسة..." />;
+  }
 
   // If no session, show the Landing page with routes for auth
   if (!session) {
@@ -97,7 +113,6 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Toaster
           position="top-right"
@@ -120,10 +135,10 @@ export default function App() {
     );
   }
 
-  if (!currentUser || isStudentsAndRequestsLoading)
+  if (!currentUser || isRequestsLoading || isStudentsLoading)
     return <Loader message="جري تحميل الامتحانات" />;
 
-  if (studentsAndRequestsError) {
+  if (requestsError || studentsError) {
     return (
       <ErrorPlaceHolder message={"حدث خطأ اثناء تحميل الصفحة، أعد المحاولة"} />
     );
@@ -293,9 +308,9 @@ export default function App() {
                   to="/requests"
                   className="px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md flex items-center gap-2 transition-colors md:py-1 relative"
                 >
-                  {studentsAndRequests?.requests?.length > 0 && (
+                  {requests?.length > 0 && (
                     <span className="h-6 rounded-full px-2 bg-red-500 flex items-center justify-center text-white text-sm absolute left-0 -top-1">
-                      {studentsAndRequests?.requests?.length || 0}
+                      {requests?.length || 0}
                     </span>
                   )}
                   <svg
@@ -322,9 +337,9 @@ export default function App() {
                   to="/stages"
                   className="px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md flex items-center gap-2 transition-colors md:py-1 relative"
                 >
-                  {studentsAndRequests?.students?.length > 0 && (
+                  {students?.length > 0 && (
                     <span className="h-6 rounded-full px-2 bg-red-500 flex items-center justify-center text-white text-sm absolute left-0 -top-1">
-                      {studentsAndRequests?.students?.length || 0}
+                      {students?.length || 0}
                     </span>
                   )}
                   <svg

@@ -1,9 +1,9 @@
 import React from "react";
 import { useCurrentUser } from "../../store/useStore";
 import { useColumnByUserId } from "../../QueriesAndMutations/QueryHooks";
-import StudentComponent from "../../components/StudentComponent";
-import { Link } from "react-router-dom";
 import StageFolder from "../../components/StageFolder";
+import Loader from "../../components/Loader";
+import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 
 export default function Stages() {
   const { currentUser } = useCurrentUser();
@@ -16,8 +16,14 @@ export default function Stages() {
 
   console.log(stages);
 
-  if (isStagesLoading) return <p>Loading...</p>;
-  if (stagesError) return <p>Error: {stagesError.message}</p>;
+  if (isStagesLoading) {
+    return <Loader message="جاري تحميل المراحل الدراسية" />;
+  }
+  if (stagesError) {
+    return (
+      <ErrorPlaceHolder message="حدث خطأ أثناء جلب المراحل الدراسية يُرجى إعادة المحاولة" />
+    );
+  }
 
   return (
     <div className="flex gap-3 flex-wrap justify-center">

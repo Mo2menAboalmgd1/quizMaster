@@ -1,6 +1,8 @@
 import React from "react";
 import { useCurrentUser } from "../../store/useStore";
-import { useStudentsAndRequestsByTeacherId } from "../../QueriesAndMutations/QueryHooks";
+import {
+  useStudentsAndRequestsByTeacherIdAndTable,
+} from "../../QueriesAndMutations/QueryHooks";
 import Request from "../../components/Request";
 import Loader from "../../components/Loader";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
@@ -11,22 +13,25 @@ export default function Requests() {
   const { currentUser } = useCurrentUser();
 
   const {
-    data: studentsAndRequests,
-    isLoading: isStudentsAndRequestsLoading,
-    error: studentsAndRequestsError,
-  } = useStudentsAndRequestsByTeacherId(currentUser.id);
+    data: requests,
+    isLoading: isRequestsLoading,
+    error: requestsError,
+  } = useStudentsAndRequestsByTeacherIdAndTable(
+    currentUser?.id,
+    "teachers_requests"
+  );
 
-  if (isStudentsAndRequestsLoading) {
+  if (isRequestsLoading) {
     return <Loader message="جاري تحميل طلبات الانضمام المتاحة" />;
   }
 
-  if (studentsAndRequestsError) {
+  if (requestsError) {
     return (
       <ErrorPlaceHolder message="حدث خطأ أثناء جلب طلبات الانضمام، أعد المحاولة" />
     );
   }
 
-  if (!studentsAndRequests?.requests?.length) {
+  if (!requests || requests?.length === 0) {
     return (
       <NoDataPlaceHolder message={"لا يوجد طلبات حاليا"} icon={faUserPlus} />
     );
@@ -34,7 +39,7 @@ export default function Requests() {
 
   return (
     <div className="space-y-3">
-      {studentsAndRequests?.requests?.map((request) => {
+      {requests.map((request) => {
         return (
           <Request
             key={request.studentId}

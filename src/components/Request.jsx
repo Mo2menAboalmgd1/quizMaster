@@ -1,8 +1,5 @@
 import React from "react";
-import {
-  useStudentsAndRequestsByTeacherId,
-  useUserDataByUserId,
-} from "../QueriesAndMutations/QueryHooks";
+import { useUserDataByUserId } from "../QueriesAndMutations/QueryHooks";
 import { useCurrentUser } from "../store/useStore";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faX } from "@fortawesome/free-solid-svg-icons";
@@ -22,61 +19,29 @@ export default function Request({ requestId, stage }) {
     error: requestError,
   } = useUserDataByUserId(requestId, "students");
 
-  const {
-    data: studentsAndRequests,
-    isLoading: isStudentsAndRequestsLoading,
-    error: studentsAndRequestsError,
-  } = useStudentsAndRequestsByTeacherId(currentUser.id);
-
   const { mutateAsync: rejectRequest } = useRemoveRequestMutation();
-  const handleRejectRequest = async (id) => {
-    const newRequestData = studentsAndRequests?.requests?.filter(
-      (request) => request.studentId !== id
-    );
-
+  const handleRejectRequest = async (studentId) => {
     await rejectRequest({
       teacherId: currentUser.id,
       teacherName: currentUser.name,
-      requestData: newRequestData,
-      studentId: id,
+      studentId,
     });
   };
 
   // studentId, column, table, teacherId
-  const { mutateAsync: acceptRequest } = useAcceptRequestMutation(
-    currentUser.id
-  );
-  const handleAcceptRequest = async ({ studentId, stage }) => {
-    // 1️⃣ نحذف الطلب من قائمة الطلبات
-    const newRequestData = studentsAndRequests?.requests?.filter(
-      (request) => request.studentId !== studentId
-    );
-
-    // 2️⃣ نشوف هل الطالب أصلاً موجود في students
-    const alreadyStudent = studentsAndRequests?.students?.some(
-      (student) => student.studentId === studentId
-    );
-
-    const newStudentsData = alreadyStudent
-      ? studentsAndRequests.students
-      : [...(studentsAndRequests?.students || []), { studentId, stage }];
-
+  const { mutateAsync: acceptRequest } = useAcceptRequestMutation();
+  const handleAcceptRequest = async (studentId) => {
     await acceptRequest({
       teacherId: currentUser.id,
       teacherName: currentUser.name,
-      requestData: newRequestData,
-      studentsData: newStudentsData,
-      studentId: studentId,
+      stage,
+      studentId,
     });
   };
 
-  if (isRequestLoading || isStudentsAndRequestsLoading) return <Loader />;
+  if (isRequestLoading) return <Loader message="جاري تحميل طلبات الانضمام" />;
   if (requestError) {
     toast.error(requestError.message);
-    return;
-  }
-  if (studentsAndRequestsError) {
-    toast.error(studentsAndRequestsError.message);
     return;
   }
 

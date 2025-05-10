@@ -9,15 +9,13 @@ import toast from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
+import Loader from "./Loader";
 
 export default function ExamItemInTeacherProfile({ exam, isExamTaken }) {
   const {
     data: questions,
-    isLoading: isQuestionsLoading,
     error: questionsError,
   } = useQuestionsByExamId(exam.id);
-
-  if (isQuestionsLoading) return <div>Loading...</div>;
 
   if (questionsError) {
     toast.error(questionsError.message);

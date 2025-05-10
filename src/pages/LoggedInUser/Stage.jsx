@@ -1,5 +1,5 @@
 import React from "react";
-import { useColumnByUserId } from "../../QueriesAndMutations/QueryHooks";
+import { useStudentsAndRequestsByTeacherIdAndTable } from "../../QueriesAndMutations/QueryHooks";
 import { useCurrentUser } from "../../store/useStore";
 import Loader from "../../components/Loader";
 import { useParams } from "react-router-dom";
@@ -15,20 +15,21 @@ export default function Stage() {
     data: students,
     isLoading: isStudentsLoading,
     error: studentsError,
-  } = useColumnByUserId(currentUser?.id, "teachers", "students");
+  } = useStudentsAndRequestsByTeacherIdAndTable(
+    currentUser?.id,
+    "teachers_students"
+  );
 
   if (isStudentsLoading) return <Loader message="جاري تحميل الطلاب" />;
-  if (studentsError) return <p>Error: {studentsError.message}</p>;
+  if (studentsError) {
+    return <ErrorPlaceHolder message="حدث خطأ اثناء جلب الطلاب" />;
+  }
+  if (!students) {
+    return <NoDataPlaceHolder message="لا يوجد طلاب" icon={faUser} />;
+  }
 
   const stageStudents = students?.filter((student) => student.stage === stage);
-  if (stageStudents.length === 0) {
-    return (
-      <NoDataPlaceHolder
-        message={"لا يوجد طلاب بهذة المرحلة الدراسية إلى الآن"}
-        icon={faUser}
-      />
-    );
-  }
+  console.log(stageStudents);
 
   console.log(stageStudents);
   return (

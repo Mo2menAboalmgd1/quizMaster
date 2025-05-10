@@ -3,14 +3,13 @@ import toast from "react-hot-toast";
 import { useJoinTeacherMutation } from "../QueriesAndMutations/mutationsHooks";
 import { useCurrentUser } from "../store/useStore";
 
-export default function Join({ stages, teacherId, studentsAndRequests }) {
+export default function Join({ stages, teacherId }) {
   const [isJoin, setIsJoin] = React.useState(false);
   const [selectedStage, setSelectedStage] = React.useState("");
   const { currentUser } = useCurrentUser();
   console.log(selectedStage);
 
   const { mutateAsync: joinTeacher } = useJoinTeacherMutation(
-    teacherId,
     setIsJoin
   );
 
@@ -21,16 +20,8 @@ export default function Join({ stages, teacherId, studentsAndRequests }) {
   }, [stages, selectedStage]);
 
   const handleJoinRequest = async () => {
-    const requestData = [
-      ...(studentsAndRequests.requests || []),
-      {
-        studentId: currentUser.id,
-        stage: selectedStage,
-      },
-    ];
-    console.log(requestData);
     toast.loading("جاري إرسال طلب انضمامك إلى المعلم");
-    await joinTeacher({ teacherId, requestData });
+    await joinTeacher(teacherId, selectedStage, currentUser?.id);
   };
 
   return (

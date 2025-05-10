@@ -3,7 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import {
   useColumnByUserId,
   useExamsByTeacherId,
-  useStudentsAndRequestsByTeacherId,
+  useExamsResultsByTeacherId,
+  useStudentsAndRequestsByTeacherIdAndTable,
 } from "../../QueriesAndMutations/QueryHooks";
 import { faArrowLeft, faFileAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -32,16 +33,18 @@ export default function TeacherProfile() {
   } = useColumnByUserId(teacherId, "teachers", "stages");
 
   const {
+    data: examsTakenByStudent,
+    isLoading: isexamsTakenByStudentLoading,
+    error: examsTakenByStudentError,
+  } = useExamsResultsByTeacherId(teacherId, currentUser?.id);
+
+  console.log(examsTakenByStudent);
+
+  const {
     data: students,
     isLoading: isStudentsLoading,
     error: studentsError,
-  } = useColumnByUserId(teacherId, "teachers", "students");
-
-  const {
-    data: examsTaken,
-    isLoading: isExamsTakenLoading,
-    error: examsTakenError,
-  } = useColumnByUserId(currentUser?.id, "students", "examsTaken");
+  } = useStudentsAndRequestsByTeacherIdAndTable(teacherId, "teachers_students");
 
   const currentStudentStage =
     students?.find((student) => student.studentId === currentUser.id)?.stage ||
@@ -53,22 +56,33 @@ export default function TeacherProfile() {
   const isTherePublicExam = exams?.some((exam) => exam.stage == "");
 
   const {
-    data: studentsAndRequests,
-    isLoading: isStudentsAndRequestsLoading,
-    error: studentsAndRequestsError,
-  } = useStudentsAndRequestsByTeacherId(teacherId);
+    data: requests,
+    isLoading: isRequestsLoading,
+    error: requestsError,
+  } = useStudentsAndRequestsByTeacherIdAndTable(teacherId, "teachers_requests");
 
   if (
-    isStudentsAndRequestsLoading ||
+    isStudentsLoading ||
+    isRequestsLoading ||
     isStagesLoading ||
     isStudentsLoading ||
-    isExamsTakenLoading
+    isexamsTakenByStudentLoading
   ) {
     return <Loader message="جري التحميل" />;
   }
 
-  if (studentsAndRequestsError) {
-    toast.error(studentsAndRequestsError.message);
+  if (studentsError) {
+    toast.error(studentsError.message);
+    return;
+  }
+
+  if (examsTakenByStudentError) {
+    toast.error(examsTakenByStudentError.message);
+    return;
+  }
+
+  if (requestsError) {
+    toast.error(requestsError.message);
     return;
   }
 
@@ -82,26 +96,15 @@ export default function TeacherProfile() {
     return;
   }
 
-  if (examsTakenError) {
-    toast.error(examsTakenError.message);
-    return;
-  }
-
-  const isStudent = studentsAndRequests.students?.some(
+  const isStudent = students.some(
     (student) => student.studentId === currentUser.id
   );
-  const isRequested = studentsAndRequests.requests?.some(
+  const isRequested = requests.some(
     (request) => request.studentId === currentUser.id
   );
 
   if (!isStudent && !isRequested) {
-    return (
-      <Join
-        teacherId={teacherId}
-        stages={stages}
-        studentsAndRequests={studentsAndRequests}
-      />
-    );
+    return <Join teacherId={teacherId} stages={stages} requests={requests} />;
   }
 
   if (!isStudent && isRequested) {
@@ -156,7 +159,9 @@ export default function TeacherProfile() {
                 )
                 .map((exam) => (
                   <ExamItemInTeacherProfile
-                    isExamTaken={(examsTaken || [])?.some((e) => e === exam.id)}
+                    isExamTaken={(examsTakenByStudent || [])?.some(
+                      (e) => e.examId === exam.id
+                    )}
                     key={exam.id}
                     exam={exam}
                   />

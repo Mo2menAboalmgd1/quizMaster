@@ -4,7 +4,9 @@ import {
   createNewExam,
   deleteExam,
   deleteNotification,
+  deleteQuestion,
   editExamData,
+  editQeustion,
   getColumn,
   handleCreateStudent,
   handleCreateTeacher,
@@ -18,16 +20,14 @@ import {
   saveResult,
   sendNotification,
   signIn,
-  takeExam,
 } from "../api/AllApiFunctions";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 export const useRegister = (isStudent) => {
+  const navigate = useNavigate();
   return useMutation({
     mutationFn: register,
-    onError: (error) => {
-      toast.error(error.message);
-    },
     onSuccess: async (data) => {
       // 1. save type and id in profiles table
       await makeProfile(data, isStudent);
@@ -38,21 +38,40 @@ export const useRegister = (isStudent) => {
       } else {
         await handleCreateTeacher(data);
       }
+
+      toast.dismiss();
+      toast.success(
+        "تم إنشاء الحساب بنجاح .. تحقق من بريدك الالكتروني لتأكيد تسجيل الحساب",
+        { duration: 5000 }
+      );
+      navigate("/");
+    },
+    onError: () => {
+      toast.dismiss();
+      toast.error("حدث خطأ أثناء إنشاء الحساب، تأكد من صحة البيانات", {
+        duration: 5000,
+      });
     },
   });
 };
 
 export const useSignIn = () => {
+  const navigate = useNavigate();
   return useMutation({
     mutationFn: signIn,
     onError: (error) => {
       toast.dismiss();
       toast.error(error.message);
     },
+    onSuccess: () => {
+      toast.dismiss();
+      toast.success("مرحبا بك مجدداً");
+      navigate("/");
+    },
   });
 };
 
-export const useJoinTeacherMutation = (teacherId, setIsJoin) => {
+export const useJoinTeacherMutation = (setIsJoin) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: joinTeacher,
@@ -60,11 +79,11 @@ export const useJoinTeacherMutation = (teacherId, setIsJoin) => {
       toast.dismiss();
       toast.error(error.message);
     },
-    onSuccess: () => {
+    onSuccess: (teacherId) => {
       toast.dismiss();
       toast.success("تم الإرسال بنجاح، في انتظار الموافقة");
       setIsJoin(false);
-      queryClient.invalidateQueries(["studentsAndRequests", teacherId]);
+      queryClient.invalidateQueries(["requests", teacherId]);
     },
   });
 };
@@ -84,7 +103,8 @@ export const useRemoveRequestMutation = () => {
         studentId: data.studentId,
         text: `تم رفض طلب انضمامك من ${data.teacherName}`,
       });
-      queryClient.invalidateQueries(["studentsAndRequests", data.teacherId]);
+      queryClient.invalidateQueries(["students", data.teacherId]);
+      queryClient.invalidateQueries(["requests", data.teacherId]);
     },
   });
 };
@@ -115,7 +135,8 @@ export const useAcceptRequestMutation = () => {
         studentId: data.studentId,
         text: `تم قبول طلب انضمامك من ${data.teacherName}`,
       });
-      queryClient.invalidateQueries(["studentsAndRequests", data.teacherId]);
+      queryClient.invalidateQueries(["students", data.teacherId]);
+      queryClient.invalidateQueries(["requests", data.teacherId]);
     },
   });
 };
@@ -182,6 +203,34 @@ export const useInsertQuestionMutation = (examData, examId) => {
   });
 };
 
+export const useEditExistingQuestionMutation = (examId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: editQeustion,
+    onSuccess: () => {
+      toast.success("تم تعديل السؤال بنجاح");
+      queryClient.invalidateQueries(["questions", examId]);
+    },
+    onError: () => {
+      toast.error("حدث خطأ أثناء تعديل السؤال");
+    },
+  });
+};
+
+export const useDeleteQuestionMutation = (examId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteQuestion,
+    onSuccess: () => {
+      toast.success("تم حذف السؤال بنجاح");
+      queryClient.invalidateQueries(["questions", examId]);
+    },
+    onError: () => {
+      toast.error("حدث خطأ أثناء حذف السؤال");
+    },
+  });
+};
+
 export const useCreateNewExamMutation = (setExamId) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -198,10 +247,12 @@ export const useEditExamDataMutation = () => {
   return useMutation({
     mutationFn: editExamData,
     onSuccess: ({ examId, isEdit }) => {
-      if (isEdit) {
-        toast.success("تم التعديل بنجاح");
-      } else {
+      if (isEdit === "publish") {
         toast.success("تم نشر الاختبار بنجاح");
+      } else if (isEdit === "unPublish") {
+        toast.success("تم إلغاء نشر الاختبار بنجاح");
+      } else {
+        toast.success("تم تعديل بيانات الاختبار بنجاح");
       }
       queryClient.invalidateQueries(["exam", examId]);
     },
@@ -235,19 +286,6 @@ export const useSaveStudentResult = () => {
     onSuccess: (studentId) => {
       toast.success("تم حفظ النتيجة بنجاح");
       queryClient.invalidateQueries(["student", studentId]);
-    },
-    onError: () => {
-      toast.error("حدث خطأ أثناء حفظ النتيجة");
-    },
-  });
-};
-
-export const useTakeExam = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: takeExam,
-    onSuccess: (examId) => {
-      queryClient.invalidateQueries(["exam", examId]);
     },
     onError: () => {
       toast.error("حدث خطأ أثناء حفظ النتيجة");

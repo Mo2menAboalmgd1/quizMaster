@@ -49,8 +49,6 @@ export default function UserProfile() {
     );
   }
 
-  // const isCurrentUserTeacher = currentUser.type === "teacher";
-  // const isUserStudent = user.type === "student";
   const isCurrentUserTeacherInStudentTeachersList =
     currentUser.type === "teacher" &&
     user.type === "student" &&

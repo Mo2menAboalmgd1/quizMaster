@@ -51,11 +51,6 @@ export default function SignUp({ initialType = "student" }) {
 
     toast.loading("جاري إنشاء الحساب...");
     await register(userData);
-    toast.dismiss();
-    toast.success(
-      "تم إنشاء الحساب بنجاح .. تحقق من بريدك الالكتروني لتأكيد تسجيل الحساب",
-      { duration: 5000 }
-    );
   };
 
   return (
