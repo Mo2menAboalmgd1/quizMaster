@@ -34,8 +34,6 @@ export default function CreateExamForm({
     if (examData?.stage) setSelectedStage(examData.stage);
   }, [examData]);
 
-  console.log(examData);
-
   const {
     data: stages,
     isLoading: isStagesLoading,
@@ -43,6 +41,8 @@ export default function CreateExamForm({
   } = useColumnByUserId(currentUser?.id, "teachers", "stages");
 
   const { mutate: newExamMutation } = useCreateNewExamMutation(setExamId);
+  const { mutateAsync: editExamMutation } = useEditExamDataMutation();
+  const { data: questions } = useQuestionsByExamId(examId);
 
   const handleCreateNewExam = (e) => {
     e.preventDefault();
@@ -64,12 +64,15 @@ export default function CreateExamForm({
       title: formData.get("examName"),
       stage: selectedStage,
       teacherId: currentUser.id,
+      actionStage: examData.stage || "(اختبار عام)",
+      actionTitle: examData.title,
     };
-    await editExamMutation({ testData, examId: examData.id, isEdit: "edit" });
+    await editExamMutation({
+      ...testData,
+      examId: examData.id,
+      isEdit: "edit",
+    });
   };
-
-  const { data: questions } = useQuestionsByExamId(examId);
-  const { mutateAsync: editExamMutation } = useEditExamDataMutation();
 
   const handlePublishExam = async () => {
     console.log(questions);
@@ -77,10 +80,15 @@ export default function CreateExamForm({
       return toast.error("لا يوجد أسئلة في الاختبار");
     }
 
-    const testData = { done: true };
+    const testData = {
+      done: true,
+      actionStage: examData.stage || "(اختبار عام)",
+      teacherId: currentUser?.id,
+      title: examData.title,
+    };
 
     await editExamMutation({
-      testData,
+      ...testData,
       examId: examData.id,
       isEdit: "publish",
     });
@@ -91,9 +99,14 @@ export default function CreateExamForm({
   const handleUndoPublish = async (examId) => {
     const testData = {
       done: false,
+      actionStage: examData.stage || "(اختبار عام)",
+      teacherId: currentUser?.id,
+      title: examData.title,
     };
 
-    await undoPublishMutation({ testData, examId, isEdit: "unPublish" });
+    console.log(testData);
+
+    await undoPublishMutation({ ...testData, examId, isEdit: "unPublish" });
   };
 
   if (isStagesLoading) {

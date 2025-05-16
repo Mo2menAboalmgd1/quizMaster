@@ -1,16 +1,30 @@
-// old code
-
-
-
-
-
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import clsx from "clsx";
 import { useQuestionsByExamId } from "../QueriesAndMutations/QueryHooks";
+import {
+  faCheck,
+  faEdit,
+  faQuestionCircle,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import NoDataPlaceHolder from "../components/NoDataPlaceHolder";
+import {
+  useDeleteQuestionMutation,
+  useEditExistingQuestionMutation,
+} from "../QueriesAndMutations/mutationsHooks";
+import Loader from "./Loader";
+import DisplayFile from "./DisplayFile";
 
 export default function DisplayAnswersInCreateExam({ examId }) {
-  const [animatedItems, setAnimatedItems] = useState([]);
+  const [isEditAnswer, setIsEditAnswer] = useState(null);
+  const [editedCorrectAnswers, setEditedCorrectAnswers] = useState({});
+  const [editedQuestion, setEditedQuestion] = useState("");
+  const [answers, setAnswers] = useState([]);
+  const [fileDisplayed, setFileDisplayed] = useState(null);
+  console.log("editedCorrectAnswers :", editedCorrectAnswers);
+  console.log("editedQeustion: ", editedQuestion);
+  console.log("editedAnswers", answers);
 
   const {
     data: questions,
@@ -18,149 +32,235 @@ export default function DisplayAnswersInCreateExam({ examId }) {
     error: questionsError,
   } = useQuestionsByExamId(examId);
 
-  useEffect(() => {
-    if (questions && !isQuestionsLoading) {
-      const timer = setTimeout(() => {
-        setAnimatedItems(questions.map((question) => question.id));
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [questions, isQuestionsLoading]);
+  const { mutateAsync: editQuestionMutation } =
+    useEditExistingQuestionMutation(examId);
+  const { mutateAsync: deleteQuestionMutation } =
+    useDeleteQuestionMutation(examId);
 
-  if (isQuestionsLoading) {
-    return (
-      <div className="flex justify-center items-center py-6">
-        <div className="flex flex-col items-center gap-2">
-          <div className="w-12 h-12 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600">جاري تحميل الأسئلة...</p>
-        </div>
-      </div>
-    );
-  }
+  if (isQuestionsLoading) return <Loader message="جاري تحميل الأسألة" />;
 
-  if (questionsError) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center space-y-2">
-        <svg
-          className="w-10 h-10 mx-auto text-red-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        <h3 className="text-lg font-semibold text-red-800">
-          خطأ في تحميل البيانات
-        </h3>
-        <p className="text-red-700">{questionsError.message}</p>
-      </div>
-    );
-  }
+  if (questionsError) return <div>{questionsError.message}</div>;
 
-  if (!questions || questions.length === 0) {
+  if (questions.length === 0)
     return (
-      <div className="bg-white rounded-lg shadow-md p-6 text-center space-y-2">
-        <svg
-          className="w-16 h-16 mx-auto text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        <h2 className="text-xl font-medium text-gray-700">
-          لا يوجد أسئلة حالياً
-        </h2>
-      </div>
+      <NoDataPlaceHolder
+        message={"لا يوجد اسألة بعد"}
+        icon={faQuestionCircle}
+      />
     );
-  }
 
   return (
-    <div className="mt-8 space-y-8">
-      <div className="bg-gradient-to-r from-blue-500 to-blue-400 rounded-lg shadow-md p-4 mb-4">
-        <h2 className="text-2xl font-bold text-white text-center">
-          الأسئلة المضافة
-        </h2>
-        <div className="w-24 h-1 bg-white mx-auto rounded-full mt-2 opacity-50"></div>
-      </div>
+    <div className="space-y-6 p-6">
+      <h2 className="text-center text-2xl font-semibold text-gray-800 border-b-2 border-green-400 pb-2 mb-6 flex gap-2 items-center justify-center">
+        <FontAwesomeIcon
+          icon={faQuestionCircle}
+          className="ml-2 text-green-500"
+        />
+        الأسئلة المضافة
+      </h2>
 
-      {questions.map((question, index) => (
-        <div
-          key={question.id || index}
-          className={`transition-all duration-500 transform bg-white rounded-lg shadow-md overflow-hidden border-2 border-transparent hover:border-blue-400 ${
-            animatedItems.includes(question.id)
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-8"
-          }`}
-          style={{ transitionDelay: `${index * 100}ms` }}
-          dir="rtl"
-        >
-          <div className="bg-gray-100 p-5 border-b border-gray-300 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-lg font-bold">
-              {index + 1}
-            </div>
-            <div className="flex-grow">
-              <h3 className="font-semibold text-lg text-gray-800">
-                {question.text}
-              </h3>
-            </div>
-          </div>
+      {questions.map((question, index) => {
+        const isEditThisQuestion = isEditAnswer === question.id;
+        const selectedAnswer =
+          editedCorrectAnswers[question.id] ?? question.correct;
+        
+        console.log("selectedAnswer: ", selectedAnswer);
 
-          <div className="p-5 space-y-3">
-            {question.answers.map((answer, ansIndex) => (
-              <div
-                key={ansIndex}
-                className={clsx(
-                  "flex items-center p-3 rounded-lg transition-colors gap-3",
-                  question.correct === answer
-                    ? "bg-green-50 border border-green-400"
-                    : "bg-gray-50 border border-gray-200 hover:bg-gray-100"
+        return (
+          <div
+            key={index}
+            className="border border-gray-200 rounded-lg bg-gray-50 p-4 shadow-sm transition-all hover:shadow-md"
+            dir="rtl"
+          >
+            <div className="flex gap-3 w-full items-start mb-4">
+              <div className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-2 rounded-lg text-lg font-bold flex items-center justify-center shadow-sm min-w-10">
+                {questions.length - index}
+              </div>
+              {isEditThisQuestion ? (
+                <textarea
+                  className="p-4 bg-white border border-dashed border-gray-300 min-h-24 max-h-36 field-sizing-content resize-none grow font-medium"
+                  name="editAddedQuestion"
+                  placeholder="enter edited question"
+                  value={editedQuestion}
+                  onChange={(e) => setEditedQuestion(e.target.value)}
+                  autoFocus
+                ></textarea>
+              ) : (
+                <div className="p-4 bg-white border border-gray-200 rounded-lg grow font-medium shadow-sm">
+                  {question.text}
+                </div>
+              )}
+              <div className="space-x-2">
+                {isEditThisQuestion && (
+                  <button
+                    onClick={() => deleteQuestionMutation(question.id)}
+                    className={clsx(
+                      "h-10 w-10 rounded-sm text-white cursor-pointer bg-red-600"
+                    )}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </button>
                 )}
-              >
-                <div
+                <button
+                  onClick={async () => {
+                    if (isEditAnswer === question.id) {
+                      await editQuestionMutation({
+                        editedQuestion,
+                        editedAnswers: answers,
+                        questionId: question.id,
+                      });
+                      setIsEditAnswer(null);
+                      setAnswers([]);
+                      setIsEditAnswer(null);
+                    } else {
+                      setEditedQuestion(question.text);
+                      setAnswers(
+                        question.answers.map((answer, idx) => {
+                          return {
+                            id: `${question.id}-${idx}`,
+                            text: answer,
+                            isCorrect: answer === question.correct,
+                          };
+                        })
+                      );
+                      setIsEditAnswer(question.id);
+                    }
+                  }}
                   className={clsx(
-                    "w-5 h-5 rounded-full flex items-center justify-center font-bold",
-                    question.correct === answer
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-300 text-gray-700"
+                    "h-10 w-10 rounded-sm text-white cursor-pointer",
+                    isEditThisQuestion ? "bg-green-500" : "bg-blue-500"
                   )}
                 >
-                  {/* {ansIndex + 1} */}
-                </div>
-                <div className="flex-grow text-gray-800">{answer}</div>
-                {question.correct === answer && (
-                  <div className="text-green-600">
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  </div>
-                )}
+                  <FontAwesomeIcon
+                    icon={isEditThisQuestion ? faCheck : faEdit}
+                  />
+                </button>
               </div>
-            ))}
+            </div>
+            <div className="flex gap-2 flex-wrap justify-center mb-4">
+              {question.images &&
+                question.images.length > 0 &&
+                question.images.map((image, idx) => (
+                  <img
+                    onClick={() => setFileDisplayed(image)}
+                    key={idx}
+                    src={image}
+                    alt="question"
+                    className="max-h-40 object-cover rounded-lg"
+                  />
+                ))}
+              {fileDisplayed && (
+                <DisplayFile
+                  setFileDisplayed={setFileDisplayed}
+                  file={fileDisplayed}
+                />
+              )}
+            </div>
+
+            <div className="space-y-3 mt-4 pr-12">
+              {question.answers.map((answer, idx) => {
+                const isCorrect =
+                  question.correct.text === answer.text &&
+                  question.correct.image == answer.image;
+                return (
+                  <div key={idx}>
+                    {isEditThisQuestion ? (
+                      <div
+                        className={clsx(
+                          "flex items-center gap-2 p-3 border rounded-lg transition-all",
+                          isCorrect
+                            ? "border-green-500 bg-green-50 font-semibold shadow-sm"
+                            : "border-gray-200 bg-white hover:border-gray-300"
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name={question.id}
+                          id={`${question.id}-${idx}`}
+                          className="h-8 w-8"
+                          checked={selectedAnswer === answer}
+                          onChange={() => {
+                            setEditedCorrectAnswers((prev) => ({
+                              ...prev,
+                              [question.id]: answer,
+                            }));
+                            setAnswers((prev) => {
+                              return prev.map((ans) => {
+                                if (ans.text === answer) {
+                                  ans.isCorrect = true;
+                                } else {
+                                  ans.isCorrect = false;
+                                }
+                                return ans;
+                              });
+                            });
+                          }}
+                        />
+                        <textarea
+                          value={
+                            answers.find(
+                              (ans) => ans.id === `${question.id}-${idx}`
+                            )?.text || ""
+                          }
+                          className="w-full min-h-10 max-h-24 field-sizing-content resize-none p-2 border border-dashed border-gray-300"
+                          onChange={(e) => {
+                            const newText = e.target.value;
+                            setAnswers((prev) =>
+                              prev.map((ans) => {
+                                if (ans.id === `${question.id}-${idx}`) {
+                                  return { ...ans, text: newText };
+                                }
+                                return ans;
+                              })
+                            );
+                          }}
+                        ></textarea>
+                      </div>
+                    ) : (
+                      <div
+                        className={clsx(
+                          "flex items-center gap-2 p-3 border rounded-lg transition-all",
+                          isCorrect
+                            ? "border-green-500 bg-green-50 font-semibold shadow-sm"
+                            : "border-gray-200 bg-white hover:border-gray-300"
+                        )}
+                      >
+                        <div
+                          className={clsx(
+                            "w-6 h-6 flex items-center justify-center rounded-full mr-2",
+                            isCorrect
+                              ? "bg-green-500 text-white shrink-0"
+                              : "bg-gray-200 text-gray-600 shrink-0"
+                          )}
+                        >
+                          {isCorrect ? (
+                            <FontAwesomeIcon
+                              icon={faCheck}
+                              className="text-xs"
+                            />
+                          ) : (
+                            <span className="text-xs">{idx + 1}</span>
+                          )}
+                        </div>
+                          {answer.text}
+                          {
+                            answer.image && (
+                              <img
+                                src={answer.image}
+                                alt="answer"
+                                className="w-16 h-16 object-cover rounded-lg"
+                              />
+                            )
+                          }
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

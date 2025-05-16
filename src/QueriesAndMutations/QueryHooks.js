@@ -14,6 +14,8 @@ import {
   getExamsResults,
   getRows,
   getTeachersByStudentId,
+  getJoinCodes,
+  getLastActions,
 } from "../api/AllApiFunctions";
 
 export const useNotificationsByUserId = (userId) => {
@@ -24,11 +26,19 @@ export const useNotificationsByUserId = (userId) => {
   });
 };
 
+export const useLastActionsByUserId = (userId) => {
+  return useQuery({
+    queryKey: ["lastActions", userId],
+    queryFn: () => getLastActions(userId),
+    enabled: !!userId,
+  });
+};
+
 export const useColumnByUserId = (userId, table, column) => {
   return useQuery({
     queryKey: [column, table, userId],
     queryFn: () => getColumn(userId, table, column),
-    enabled: !!userId,
+    enabled: !!userId && !!table && !!column,
     staleTime: 5 * 60 * 1000, // 5 minu
   });
 };
@@ -71,6 +81,7 @@ export const useExamsByTeacherId = (teacherId, done) => {
     queryKey: ["exams", teacherId],
     queryFn: () => getExams(teacherId, done),
     staleTime: 5 * 60 * 1000,
+    enabled:!!teacherId,
   });
 };
 
@@ -93,10 +104,26 @@ export const useExamsResultsByTeacherId = (teacherId, studentId) => {
 
 export const useStudentsAndRequestsByTeacherIdAndTable = (teacherId, table) => {
   return useQuery({
-    queryKey: [table, teacherId],
+    queryKey: [
+      table === "teachers_students"
+        ? "students"
+        : table === "teachers_requests"
+        ? "requests"
+        : null,
+      teacherId,
+    ],
     queryFn: () => getStudentsAndRequests(teacherId, table),
     staleTime: 5 * 60 * 1000,
     enabled: !!teacherId && !!table,
+  });
+};
+
+export const useJoinCodes = (teacherId) => {
+  return useQuery({
+    queryKey: ["joinCodes", teacherId],
+    queryFn: () => getJoinCodes(teacherId),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!teacherId,
   });
 };
 

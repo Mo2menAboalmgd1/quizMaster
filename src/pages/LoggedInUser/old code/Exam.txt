@@ -1,17 +1,4 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useParams } from "react-router-dom";
 import clsx from "clsx";
 import {
@@ -22,33 +9,32 @@ import {
 } from "../../QueriesAndMutations/QueryHooks";
 import toast from "react-hot-toast";
 import {
-  useDeleteAnswer,
   useSaveAnswer,
   useSaveStudentResult,
 } from "../../QueriesAndMutations/mutationsHooks";
 import { useCurrentUser } from "../../store/useStore";
+import {
+  faCheckCircle,
+  faExclamationTriangle,
+  faPaperPlane,
+  faQuestionCircle,
+  faTimesCircle,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Loader from "../../components/Loader";
+import DisplayFile from "../../components/DisplayFile";
 
 export default function Exam() {
   const { id: examId } = useParams();
   const { currentUser } = useCurrentUser();
-  // const [correct, setCorrect] = useState(0);
-  const [isShowResult, setIsShowResult] = useState(false);
-  const [animateQuestion, setAnimateQuestion] = useState(null);
+  const [isShowResult, setIsShowResult] = React.useState(false);
+  const [fileDisplayed, setFileDisplayed] = React.useState(null);
 
   const {
-    data: answers,
+    data: studentSubmittedAnswers,
     isLoading: isAnswersLoading,
     error: answersError,
-  } = useAnswersByStudentIdAndExamId(currentUser.id, examId);
-
-  const {
-    data: isTakenPreviously,
-    isLoading: isExamResultsLoading,
-    error: examsResultsError,
-  } = useExamsResultsByStudentIdAndExamId(currentUser.id, examId);
-
-  console.log("student result at this exam");
-  console.log(isTakenPreviously);
+  } = useAnswersByStudentIdAndExamId(currentUser?.id, examId);
 
   const {
     data: exam,
@@ -57,276 +43,298 @@ export default function Exam() {
   } = useExamByItsId(examId);
 
   const {
+    data: examResult,
+    isLoading: isExamResultLoading,
+    error: examResultError,
+  } = useExamsResultsByStudentIdAndExamId(currentUser?.id, examId);
+
+  const {
     data: questions,
     isLoading: isQuestionsLoading,
     error: questionsError,
   } = useQuestionsByExamId(examId);
 
-  const { mutateAsync: saveAnswerMutation, isError: isErrorAtDeleteAns } =
-    useSaveAnswer();
-  const { mutateAsync: deleteAnswerMutation } = useDeleteAnswer();
-
-  useEffect(() => {
-    // Stagger animation for questions
-    if (questions && !isQuestionsLoading) {
-      questions.forEach((_, index) => {
-        setTimeout(() => {
-          setAnimateQuestion(index);
-        }, index * 150);
-      });
-    }
-  }, [questions, isQuestionsLoading]);
+  const { mutateAsync: saveAnswerMutation } = useSaveAnswer();
 
   const handleSaveAnswer = async (
-    ansId,
+    optionId,
     questionId,
-    selectedAns,
-    correctAns
+    selectedOptionText,
+    actualCorrectTextForQuestion
   ) => {
-    const answer = {
-      id: ansId,
+    const answerPayload = {
+      id: optionId,
       studentId: currentUser.id,
       questionId,
       examId,
-      selectedAns,
-      correctAns,
-      isCorrect: selectedAns === correctAns,
+      selectedAns: selectedOptionText,
+      correctAns: actualCorrectTextForQuestion,
+      isCorrect: selectedOptionText === actualCorrectTextForQuestion,
     };
-    await deleteAnswerMutation({ ansId, questionId });
-    if (isErrorAtDeleteAns) {
-      toast.error("حدث خطأ أثناء تعديل الإجابة");
-      return;
-    }
-    await saveAnswerMutation({ ansId, answer });
-    toast.success("تم حفظ إجابتك", { duration: 1500 });
+    await saveAnswerMutation(answerPayload);
   };
 
-  const { mutate: saveStudentResultMutation } = useSaveStudentResult(
-    currentUser.id,
-    examId
-  );
+  const unansweredQuestions = questions?.filter((question) => {
+    return !studentSubmittedAnswers?.some(
+      (answer) => answer.questionId === question.id
+    );
+  });
+
+  const { mutateAsync: saveResultMutation } = useSaveStudentResult();
 
   const handleSendExam = async () => {
-    if (!answers) return;
+    if (!studentSubmittedAnswers || studentSubmittedAnswers.length === 0) {
+      toast.error("الرجاء الإجابة على بعض الأسئلة أولاً.");
+      return;
+    }
 
     let correctCount = 0;
-
-    answers.forEach((ans) => {
+    studentSubmittedAnswers.forEach((ans) => {
       if (ans.isCorrect) correctCount++;
     });
 
-    // setCorrect(correctCount);
     setIsShowResult(true);
 
-    // Scroll to results
-    setTimeout(() => {
-      window.scrollTo({
-        top: document.body.scrollHeight,
-        behavior: "smooth",
+    try {
+      await saveResultMutation({
+        grade: correctCount,
+        studentId: currentUser.id,
+        examId,
+        total: questions?.length,
+        teacherId: exam?.teacherId,
       });
-    }, 100);
-
-    const grade = `${correctCount}/${questions.length}`;
-
-    saveStudentResultMutation(grade);
+      toast.success("تم إرسال الامتحان بنجاح");
+    } catch (error) {
+      console.error("خطأ أثناء إرسال الامتحان:", error);
+      toast.error("حدث خطأ أثناء إرسال الامتحان");
+    }
   };
+
+  const correctCount =
+    studentSubmittedAnswers && Array.isArray(studentSubmittedAnswers)
+      ? studentSubmittedAnswers.filter((ans) => ans.isCorrect).length
+      : 0;
+
+  const wrongCount = studentSubmittedAnswers
+    ? studentSubmittedAnswers.length - correctCount
+    : 0;
+
+  const unansweredCount = unansweredQuestions?.length || 0;
 
   if (
     isExamLoading ||
     isQuestionsLoading ||
     isAnswersLoading ||
-    isExamResultsLoading
+    isExamResultLoading
   )
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-4 text-lg font-medium text-gray-600">
-            جاري التحميل...
-          </p>
-        </div>
-      </div>
-    );
+    return <Loader message="جاري التحميل..." />;
 
   if (examError) {
-    toast.error("لم يتم العثور على الامتحان");
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen text-center p-4">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md shadow-md">
-          <h2 className="text-xl font-bold text-red-600 mb-2">
-            لم يتم العثور على الامتحان
-          </h2>
-          <p className="text-gray-700 mb-2">
-            يبدو أن هناك مشكلة في الرابط أو أن هذا الامتحان غير موجود أو تم
-            حذفه.
-          </p>
-          <details className="text-gray-500 text-sm">
-            <summary className="cursor-pointer">
-              عرض تفاصيل الخطأ (للدعم الفني)
-            </summary>
-            <p className="mt-2">{examError.message}</p>
-          </details>
-        </div>
-      </div>
-    );
+    toast.error(examError.message);
+    return <div>حدث خطأ أثناء تحميل بيانات الامتحان.</div>;
+  }
+  if (questionsError) {
+    toast.error(questionsError.message);
+    return <div>حدث خطأ أثناء تحميل الأسئلة.</div>;
+  }
+  if (answersError) {
+    // console.warn("Answers error:", answersError.message);
+  }
+  if (examResultError) {
+    // console.warn("Exam result error:", examResultError.message);
   }
 
-  if (questionsError) return toast.error(questionsError.message);
-  if (examsResultsError) return toast.error(examsResultsError.message);
-  if (answersError) return toast.error(answersError.message);
-
-  // بعدين تحقق تاني من وجود الداتا نفسها
-  if (!exam || Object.keys(exam).length === 0) {
+  if (!exam) {
     toast.error("لم يتم العثور على الامتحان");
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen text-center p-4">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-          <h2 className="text-xl font-bold text-red-600 mb-2">
-            لم يتم العثور على الامتحان
-          </h2>
-          <p className="text-gray-700">
-            يبدو أن هذا الامتحان غير موجود أو تم حذفه.
-          </p>
-        </div>
-      </div>
+      <div>لم يتم العثور على هذا الامتحان يبدو أنه غير موجود أو تم حذفه</div>
     );
   }
+  if (!questions) {
+    toast.error("لم يتم العثور على أسئلة لهذا الامتحان");
+    return <div>لم يتم العثور على أسئلة لهذا الامتحان.</div>;
+  }
 
-  const getProgress = () => {
-    if (!answers || !questions) return 0;
-    return Math.round((answers.length / questions.length) * 100);
-  };
+  const displayResultsMode = isShowResult || !!examResult;
 
   return (
-    <div className="flex flex-col items-center gap-6 max-w-3xl mx-auto py-8 px-4">
-      <div className="w-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg p-6 text-white shadow-lg mb-2">
-        <h2 className="text-2xl font-bold text-center">{exam.title}</h2>
-        {isTakenPreviously && (
-          <div className="text-sm mt-1 text-blue-100 text-center">
-            لقد قمت بالامتحان بالفعل
-          </div>
-        )}
-        <div className="mt-4 w-full bg-blue-200 rounded-full h-2.5">
-          <div
-            className="bg-white h-2.5 rounded-full transition-all duration-500"
-            style={{ width: `${getProgress()}%` }}
-          ></div>
-        </div>
-        <div className="text-sm mt-1 text-blue-100 text-center">
-          {answers?.length || 0} من {questions?.length || 0} تم الإجابة عليها
-        </div>
+    <div className="flex flex-col items-center gap-8 p-6 max-w-4xl mx-auto">
+      <div className="w-full bg-white rounded-xl shadow-lg p-5">
+        <h2 className="text-2xl font-bold text-center py-3 px-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-sm mb-2">
+          {exam.title}
+        </h2>
+        {examResult && !isShowResult ? (
+          <>
+            <p className="text-center text-gray-600 text-sm mt-4">
+              لقد قمت بالإجابة على هذا الامتحان مسبقا
+            </p>
+            <p className="font-bold text-blue-800 text-xl mt-2 text-center">
+              درجتك هي <span>{examResult?.grade}</span> من{" "}
+              <span>{examResult?.total}</span>
+            </p>
+          </>
+        ) : !displayResultsMode ? (
+          <p className="text-center text-gray-600 text-sm mt-4">
+            قم بالإجابة على جميع الأسئلة ثم اضغط على زر إرسال الامتحان
+          </p>
+        ) : null}
       </div>
 
-      <div className="space-y-6 w-full">
+      <div className="space-y-8 w-full">
         {questions?.map((question, index) => {
+          const actualCorrectTextForQuestion = question.correct?.text;
+
+          const isQuestionUnansweredInResults =
+            displayResultsMode &&
+            unansweredQuestions?.some((q) => q.id === question.id);
+
           return (
             <div
-              key={index}
+              key={question.id || index}
               className={clsx(
-                "border border-gray-300 rounded-lg shadow-md bg-white p-4 transition-all duration-500",
-                animateQuestion >= index
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4",
-
-                // لو مفيش إجابة مختارة على السؤال بعد تصحيح الامتحان
-                (isShowResult || isTakenPreviously) &&
-                  !answers?.some((ans) => ans.questionId === question.id) &&
-                  "bg-yellow-50 border-yellow-300"
+                "border rounded-xl p-5 transition-all shadow-sm hover:shadow-md",
+                isQuestionUnansweredInResults
+                  ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-400"
+                  : "bg-gradient-to-r from-gray-50 to-slate-50 border-gray-300"
               )}
               dir="rtl"
             >
-              <div className="flex gap-3 w-full">
-                <div className="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 font-bold shadow-md">
+              {isQuestionUnansweredInResults && (
+                <div className="mb-4 text-center font-semibold text-orange-600 bg-orange-100 py-2 px-4 rounded-lg border border-orange-200 flex items-center justify-center gap-2">
+                  <FontAwesomeIcon icon={faExclamationTriangle} />
+                  <span>سؤال لم يتم الإجابة عليه</span>
+                </div>
+              )}
+
+              <div className="flex gap-3 w-full items-start mb-4">
+                <div className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-2 rounded-lg text-lg font-bold shadow-sm flex items-center justify-center min-w-10">
                   {index + 1}
                 </div>
-                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg grow shadow-sm">
+                <div className="p-4 bg-white border border-gray-200 rounded-lg grow font-medium shadow-sm">
                   {question.text}
                 </div>
               </div>
-              <div className="space-y-3 mt-4 pr-12">
-                {question.answers.map((answer, idx) => {
-                  const ansId = `${question.id}-${idx}`;
-                  const currentAnswer = answers?.find(
-                    (ans) => ans.id === ansId
+
+              <div className="flex gap-2 flex-wrap justify-center mb-4">
+                {question.images &&
+                  question.images.length > 0 &&
+                  question.images.map((image, idx) => (
+                    <img
+                      onClick={() => setFileDisplayed(image)}
+                      key={idx}
+                      src={image}
+                      alt={`Question image ${idx + 1}`}
+                      className="max-h-40 object-contain rounded-lg cursor-pointer"
+                    />
+                  ))}
+              </div>
+
+              <div className="space-y-3 pr-12">
+                {question.answers.map((answerOption, optIdx) => {
+                  const optionId = `${question.id}-${optIdx}`;
+
+                  const studentAnswerRecord = studentSubmittedAnswers?.find(
+                    (ans) => ans.questionId === question.id
                   );
-                  const isChecked = answers?.find(
-                    (ans) =>
-                      ans.questionId === question.id &&
-                      ans.selectedAns === answer
-                  );
+
+                  const isThisOptionTheActualCorrectOne =
+                    answerOption.text === actualCorrectTextForQuestion;
+
+                  // This will always be true or false, making the input controlled
+                  const didStudentSelectThisOption =
+                    studentAnswerRecord?.selectedAns === answerOption.text;
+
+                  let optionBgColor = "bg-white";
+                  let optionBorderColor = "border-gray-200";
+                  let optionTextColor = "";
+
+                  if (displayResultsMode) {
+                    if (didStudentSelectThisOption) {
+                      if (studentAnswerRecord?.isCorrect) {
+                        optionBgColor = "bg-green-50";
+                        optionBorderColor = "border-green-300";
+                        optionTextColor = "text-green-800";
+                      } else {
+                        optionBgColor = "bg-red-50";
+                        optionBorderColor = "border-red-300";
+                        optionTextColor = "text-red-800";
+                      }
+                    } else if (isThisOptionTheActualCorrectOne) {
+                      optionBgColor = "bg-green-50";
+                      optionBorderColor = "border-green-300";
+                      optionTextColor = "text-green-800";
+                    }
+                  }
 
                   return (
                     <div
-                      key={idx}
+                      key={optIdx}
                       className={clsx(
-                        "flex items-center rounded-lg transition-all duration-300 p-3",
-
-                        // الحالة لما يكون بيعرض النتيجة أو الامتحان متاخد قبل كده
-                        (isShowResult || isTakenPreviously) &&
-                          (currentAnswer?.selectedAns === answer
-                            ? currentAnswer?.isCorrect
-                              ? "bg-green-100 border border-green-300" // إجابة صحيحة مختارة
-                              : "bg-red-100 border border-red-300" // إجابة خطأ مختارة
-                            : answer === question.correct
-                            ? "bg-green-100 border border-green-300" // الإجابة الصحيحة اللي ما اختارهاش
-                            : "bg-white border border-gray-200"), // باقي الإجابات
-
-                        // لما لسه مجبش النتيجة
-                        !isShowResult &&
-                          !isTakenPreviously &&
-                          isChecked &&
-                          "bg-blue-100 border border-blue-300"
+                        "flex items-center p-3 rounded-lg border transition-all",
+                        optionBgColor,
+                        optionBorderColor,
+                        !displayResultsMode && "hover:border-blue-300 bg-white"
                       )}
                     >
-                      <div className="relative">
-                        <input
-                          disabled={isShowResult || isTakenPreviously}
-                          onChange={() =>
-                            handleSaveAnswer(
-                              ansId,
-                              question.id,
-                              answer,
-                              question.correct
-                            )
-                          }
-                          type="radio"
-                          id={ansId}
-                          name={question.id}
-                          defaultChecked={
-                            answers?.find(
-                              (ans) => ans.questionId === question.id
-                            )?.selectedAns === answer
-                          }
-                          className={clsx(
-                            "w-5 h-5 cursor-pointer",
-                            isShowResult ||
-                              (isTakenPreviously && "pointer-events-none")
-                          )}
-                        />
-                        <div
-                          className={clsx(
-                            "absolute -top-2 -right-2 w-4 h-4 rounded-full transition-all scale-0 opacity-0",
-                            isShowResult ||
-                              (isTakenPreviously &&
-                                (answer === question.correct
-                                  ? "bg-green-500 scale-100 opacity-100"
-                                  : isChecked && answer !== question.correct
-                                  ? "bg-red-500 scale-100 opacity-100"
-                                  : ""))
-                          )}
-                        ></div>
-                      </div>
+                      <input
+                        disabled={displayResultsMode}
+                        onChange={() =>
+                          handleSaveAnswer(
+                            optionId,
+                            question.id,
+                            answerOption.text,
+                            actualCorrectTextForQuestion
+                          )
+                        }
+                        type="radio"
+                        id={optionId}
+                        name={question.id.toString()} // Name must be a string and unique per question
+                        checked={didStudentSelectThisOption} // Consistently controlled
+                        className="w-5 h-5 accent-blue-600"
+                      />
                       <label
-                        htmlFor={ansId}
+                        htmlFor={optionId}
                         className={clsx(
-                          "mr-3 cursor-pointer flex-grow",
-                          isShowResult ||
-                            (isTakenPreviously &&
-                              "pointer-events-none opacity-80")
+                          "flex-grow cursor-pointer flex items-center gap-2 ml-3",
+                          optionTextColor
                         )}
                       >
-                        {answer}
+                        <span>{answerOption.text}</span>
+                        {answerOption.image && (
+                          <img
+                            src={answerOption.image}
+                            alt={`Option ${optIdx + 1}`}
+                            className="max-h-16 max-w-[80px] object-contain rounded-md hover:opacity-80 transition-opacity cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent label click if image is clicked
+                              setFileDisplayed(answerOption.image);
+                            }}
+                          />
+                        )}
                       </label>
+
+                      {displayResultsMode && (
+                        <>
+                          {didStudentSelectThisOption &&
+                            studentAnswerRecord?.isCorrect && (
+                              <span className="ml-auto text-green-600">
+                                <FontAwesomeIcon icon={faCheckCircle} />
+                              </span>
+                            )}
+                          {didStudentSelectThisOption &&
+                            !studentAnswerRecord?.isCorrect && (
+                              <span className="ml-auto text-red-600">
+                                <FontAwesomeIcon icon={faTimesCircle} />
+                              </span>
+                            )}
+                          {isThisOptionTheActualCorrectOne &&
+                            !didStudentSelectThisOption && (
+                              <span className="ml-auto text-green-600">
+                                <FontAwesomeIcon icon={faCheckCircle} />
+                              </span>
+                            )}
+                        </>
+                      )}
                     </div>
                   );
                 })}
@@ -335,122 +343,102 @@ export default function Exam() {
           );
         })}
       </div>
-
-      <button
-        onClick={handleSendExam}
-        disabled={isShowResult}
-        className={clsx(
-          "py-3 px-8 rounded-lg shadow-lg text-white font-medium text-lg transition-all duration-300",
-          isShowResult || isTakenPreviously
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700 active:transform active:scale-95"
-        )}
-      >
-        {isShowResult || isTakenPreviously
-          ? "تم إرسال الإمتحان"
-          : "إرسال الإمتحان"}
-      </button>
-
-      {isTakenPreviously && (
-        <div className="flex flex-col items-center gap-4 w-full animate-fade-in">
-          <div
-            className={clsx(
-              "w-full rounded-lg p-6 shadow-lg text-center",
-              +isTakenPreviously?.grade.split("/")[0] / questions.length >= 0.7
-                ? "bg-green-50 border border-green-200"
-                : +isTakenPreviously?.grade.split("/")[0] / questions.length >=
-                  0.5
-                ? "bg-yellow-50 border border-yellow-200"
-                : "bg-red-50 border border-red-200"
-            )}
-          >
-            <h2 className="text-2xl font-bold mb-4">نتيجة الإمتحان</h2>
-
-            <p className=" text-xl" dir="rtl">
-              {isTakenPreviously?.grade.split("/")[0]} من {questions.length}
-            </p>
-          </div>
-        </div>
+      {fileDisplayed && (
+        <DisplayFile setFileDisplayed={setFileDisplayed} file={fileDisplayed} />
       )}
 
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
+      {!displayResultsMode && (
+        <button
+          onClick={handleSendExam}
+          disabled={
+            !studentSubmittedAnswers || studentSubmittedAnswers.length === 0
           }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out forwards;
-        }
-      `}</style>
+          className="py-3 px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FontAwesomeIcon icon={faPaperPlane} />
+          <span>إرسال الإمتحان</span>
+        </button>
+      )}
+
+      {displayResultsMode && (examResult || isShowResult) && (
+        <div className="flex flex-col items-center gap-4 bg-gradient-to-r from-gray-50 to-slate-100 p-6 rounded-xl border border-gray-300 shadow-lg w-full max-w-md">
+          <h2 className="text-xl font-bold border-b-2 border-gray-300 pb-2 w-full text-center">
+            نتيجة الإمتحان
+          </h2>
+          {isExamResultLoading && !isShowResult ? (
+            <Loader message="جاري تحميل النتيجة..." />
+          ) : (
+            <div dir="rtl" className="space-y-4 text-lg w-full">
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 text-center">
+                <p className="font-bold text-blue-800 text-xl mb-1">
+                  درجتك هي{" "}
+                  <span className="text-2xl">
+                    {isShowResult ? correctCount : examResult?.grade}
+                  </span>{" "}
+                  من <span>{questions?.length || examResult?.total}</span>
+                </p>
+                <div className="w-full bg-gray-200 rounded-full h-2.5 my-2">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full"
+                    style={{
+                      width: `${
+                        ((isShowResult ? correctCount : examResult?.grade) /
+                          (questions?.length || examResult?.total || 1)) *
+                        100
+                      }%`,
+                    }}
+                  ></div>
+                </div>
+                <p className="text-sm text-gray-600">
+                  {(
+                    ((isShowResult ? correctCount : examResult?.grade) /
+                      (questions?.length || examResult?.total || 1)) *
+                    100
+                  ).toFixed(2)}
+                  %
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                  <p className="text-green-700 font-semibold flex items-center justify-center gap-2">
+                    <FontAwesomeIcon
+                      icon={faCheckCircle}
+                      className="text-green-600"
+                    />
+                    <span>{correctCount}</span>
+                  </p>
+                  <p className="text-xs text-green-700 mt-1">
+                    الإجابات الصحيحة
+                  </p>
+                </div>
+
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                  <p className="text-red-700 font-semibold flex items-center justify-center gap-2">
+                    <FontAwesomeIcon
+                      icon={faTimesCircle}
+                      className="text-red-600"
+                    />
+                    <span>{wrongCount}</span>
+                  </p>
+                  <p className="text-xs text-red-700 mt-1">الإجابات الخاطئة</p>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+                  <p className="text-yellow-700 font-semibold flex items-center justify-center gap-2">
+                    <FontAwesomeIcon
+                      icon={faQuestionCircle}
+                      className="text-yellow-600"
+                    />
+                    <span>{unansweredCount}</span>
+                  </p>
+                  <p className="text-xs text-yellow-700 mt-1">بدون إجابة</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
-}
-
-{
-  /* <div className="flex justify-center items-center">
-  <div className="relative">
-    <svg className="w-32 h-32">
-      <circle
-        cx="64"
-        cy="64"
-        r="56"
-        fill="none"
-        stroke="#e5e7eb"
-        strokeWidth="12"
-      />
-      <circle
-        cx="64"
-        cy="64"
-        r="56"
-        fill="none"
-        stroke={
-          correct / questions.length >= 0.7
-            ? "#10b981"
-            : correct / questions.length >= 0.5
-            ? "#f59e0b"
-            : "#ef4444"
-        }
-        strokeWidth="12"
-        strokeDasharray="352"
-        strokeDashoffset={352 - 352 * (correct / questions.length)}
-        strokeLinecap="round"
-        transform="rotate(-90 64 64)"
-        className="transition-all duration-1000 ease-out"
-      />
-    </svg>
-    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-3xl font-bold">
-      {Math.round((correct / questions.length) * 100)}%
-    </div>
-  </div>
-</div>; */
-}
-
-{
-  /* {isShowResult && (
-        <div className="flex flex-col items-center gap-4 w-full animate-fade-in">
-          <div
-            className={clsx(
-              "w-full rounded-lg p-6 shadow-lg text-center",
-              correct / questions.length >= 0.7
-                ? "bg-green-50 border border-green-200"
-                : correct / questions.length >= 0.5
-                ? "bg-yellow-50 border border-yellow-200"
-                : "bg-red-50 border border-red-200"
-            )}
-          >
-            <h2 className="text-2xl font-bold mb-4">نتيجة الإمتحان</h2>
-
-            <p className=" text-xl">
-              <span className="font-bold text-2xl">{correct}</span> /{" من "}
-              {questions.length}
-            </p>
-          </div>
-        </div>
-      )} */
 }

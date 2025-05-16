@@ -1,10 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useCurrentUser } from "../../store/useStore";
-import TeacherExamsList from "../../components/TeacherExamsList";
-import { useExamsByTeacherId } from "../../QueriesAndMutations/QueryHooks";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import {
+  useExamsByTeacherId,
+  useLastActionsByUserId,
+  useStudentsAndRequestsByTeacherIdAndTable,
+} from "../../QueriesAndMutations/QueryHooks";
 import Loader from "../../components/Loader";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 
@@ -17,55 +18,109 @@ export default function Teacher() {
     error: teacherExamsError,
   } = useExamsByTeacherId(currentUser.id, false);
 
-  console.log(teacherExams);
+  const {
+    data: students,
+    isLoading: isStudentsLoading,
+    error: studentsError,
+  } = useStudentsAndRequestsByTeacherIdAndTable(
+    currentUser.id,
+    "teachers_students"
+  );
 
-  if (isTeacherExamsLoading)
-    return <Loader message="جري تحميل الملف الشخصي..." />;
+  const {
+    data: actions,
+    isLoading: isActionsLoading,
+    error: actionsError,
+  } = useLastActionsByUserId(currentUser?.id);
 
-  if (teacherExamsError)
-    return <ErrorPlaceHolder message={"حدث خطأ أثناء تحميل الامتحانات"} />;
+  console.log(actions);
 
-  if (!teacherExams || teacherExams.length === 0)
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-center bg-gray-50 rounded-lg border border-dashed border-gray-300 p-6">
-        <p className="text-gray-600 font-medium">
-          لا يوجد امتحانات متاحة حاليا
-        </p>
-      </div>
-    );
+  if (isTeacherExamsLoading || isStudentsLoading || isActionsLoading)
+    return <Loader message="جاري التحميل" />;
 
-  const completedExams = teacherExams.filter((exam) => exam.done);
-  const incompletedExams = teacherExams.filter((exam) => !exam.done);
+  if (teacherExamsError || studentsError || actionsError)
+    return <ErrorPlaceHolder message={"حدث خطأ ما، أعد المحاولة"} />;
+
+  const unPublishedExams = teacherExams.filter((exam) => !exam.done);
+
+  // const completedExams = teacherExams.filter((exam) => exam.done);
+  // const incompletedExams = teacherExams.filter((exam) => !exam.done);
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6" dir="rtl">
-      <div className="grid md:grid-cols-2 gap-3 md:items-start">
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <h1 className="py-4 text-center bg-gradient-to-r from-green-500 to-emerald-600 font-bold text-white text-xl rounded-t-xl">
-            قائمة الامتحانات المنشورة
-          </h1>
-          <div className="p-4">
-            <TeacherExamsList list={completedExams} isDone />
-          </div>
-        </div>
+    <div className="p-1 space-y-6" dir="rtl">
+      {/* Welcome Card */}
+      <div className="bg-white shadow rounded-2xl p-6">
+        <h2 className="text-2xl font-semibold">
+          أهلاً {currentUser.gender === "male" ? "أستاذ" : "أستاذة"}{" "}
+          {currentUser.name} 👋
+        </h2>
+        {unPublishedExams.length > 0 && (
+          <p className="text-gray-600 mt-2">
+            عندك {unPublishedExams.length} امتحانات في المسودة
+          </p>
+        )}
+        {unPublishedExams.length === 0 && (
+          <p className="text-gray-600 mt-2">جاهز لإنشاء امتحان جديد!</p>
+        )}
+      </div>
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <h1 className="py-4 text-center bg-gradient-to-r from-yellow-400 to-amber-500 font-bold text-gray-800 text-xl rounded-t-xl">
-            قائمة الامتحانات الغير مكتملة
-          </h1>
-          <div className="p-4">
-            <TeacherExamsList list={incompletedExams} isDone={false} />
-          </div>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Link
+          to={"createTest"}
+          className="bg-blue-600 text-white flex items-center justify-center rounded-xl p-4 shadow hover:bg-blue-700 transition cursor-pointer"
+        >
+          📝 إنشاء امتحان جديد
+        </Link>
+        <Link
+          to={"exams"}
+          className="bg-green-600 text-white flex items-center justify-center rounded-xl p-4 shadow hover:bg-green-700 transition cursor-pointer"
+        >
+          📤 عرض الامتحانات
+        </Link>
+        <button className="bg-purple-600 text-white rounded-xl p-4 shadow hover:bg-purple-700 transition cursor-pointer">
+          📊 عرض تحليلات الطلاب
+        </button>
+        <button className="bg-yellow-500 text-white rounded-xl p-4 shadow hover:bg-yellow-600 transition cursor-pointer">
+          📚 إدارة الصفوف
+        </button>
+      </div>
+
+      {/* Overview Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl p-4 shadow text-center">
+          <h3 className="text-xl font-bold">{teacherExams.length}</h3>
+          <p className="text-gray-500">امتحانات</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 shadow text-center">
+          <h3 className="text-xl font-bold">{unPublishedExams.length}</h3>
+          <p className="text-gray-500">امتحانات غير مكتملة</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 shadow text-center">
+          <h3 className="text-xl font-bold">{students.length}</h3>
+          <p className="text-gray-500">طالب مسجل</p>
         </div>
       </div>
 
-      <Link
-        to={"/createTest"}
-        className="h-12 px-6 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md transition-all transform "
-      >
-        <FontAwesomeIcon icon={faPlus} className="text-white" />{" "}
-        <span>إضافة امتحان جديد</span>
-      </Link>
+      {/* Recent Activity */}
+      {actions.length > 0 && (
+        <div className="bg-white rounded-xl p-6 shadow">
+          <h4 className="text-lg font-semibold mb-4">🕒 الأنشطة الأخيرة</h4>
+          <ul className="list-disc list-inside text-gray-600 space-y-2">
+            {actions.slice(0, 3).map((action) => (
+              <li key={action.id}>{action.action}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Teaching Tip */}
+      <div className="bg-blue-100 border-l-4 border-blue-500 p-4 rounded-xl">
+        <p className="text-blue-700">
+          💡 هل تعلم أن تنويع نمط الأسئلة يحسّن من استيعاب الطالب بنسبة 25%؟ جرب
+          تضيف سؤال "صح أو خطأ" في امتحانك القادم.
+        </p>
+      </div>
     </div>
   );
 }

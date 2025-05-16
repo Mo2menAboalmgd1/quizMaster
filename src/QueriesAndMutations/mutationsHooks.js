@@ -7,19 +7,23 @@ import {
   deleteQuestion,
   editExamData,
   editQeustion,
+  generateJoinCode,
   getColumn,
   handleCreateStudent,
   handleCreateTeacher,
   insertQuestion,
   joinTeacher,
+  joinTeacherWithJoinCode,
   makeProfile,
   readNotification,
   register,
   removeRequest,
+  saveAction,
   saveAns,
   saveResult,
   sendNotification,
   signIn,
+  uploadQuestionImages,
 } from "../api/AllApiFunctions";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -84,6 +88,37 @@ export const useJoinTeacherMutation = (setIsJoin) => {
       toast.success("تم الإرسال بنجاح، في انتظار الموافقة");
       setIsJoin(false);
       queryClient.invalidateQueries(["requests", teacherId]);
+    },
+  });
+};
+
+export const useJoinTeacherWithJoinCodeMutation = (setIsJoin) => {
+  const queryClient = useQueryClient();
+  // const navigate = useNavigate();
+  return useMutation({
+    mutationFn: joinTeacherWithJoinCode,
+    onError: (error) => {
+      toast.error(error.message);
+    },
+    onSuccess: (teacherId) => {
+      toast.success("لقد انضممت لهذه المجموعة بنجاح");
+      setIsJoin(false);
+      queryClient.invalidateQueries(["students", teacherId]);
+    },
+  });
+};
+
+export const useGenerateJoinCodeMutation = () => {
+  const queryClient = useQueryClient();
+  // const navigate = useNavigate();
+  return useMutation({
+    mutationFn: generateJoinCode,
+    onError: () => {
+      toast.error("حدث خطأ أثناء إنشاء كود جديد، أعد المحاولة");
+    },
+    onSuccess: (teacherId) => {
+      toast.success("تم إنشاء كود جديد بنجاح");
+      queryClient.invalidateQueries(["joinCodes", teacherId]);
     },
   });
 };
@@ -183,20 +218,56 @@ export const useDeleteNotification = (userId) => {
 
 export const useInsertQuestionMutation = (examData, examId) => {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: async (questionData) => {
-      const answersArray = questionData.allAnswers.map((ans) => ans.ans);
-      const correctAnsText = questionData.allAnswers.find(
-        (ans) => ans.isCorrect
-      ).ans;
+    mutationFn: async ({ questionText, images, allAnswers, teacherId }) => {
+      // 1. رفع صور السؤال
+      let uploadedQuestionImageUrls = [];
+      if (images?.length > 0) {
+        uploadedQuestionImageUrls = await uploadQuestionImages(
+          images,
+          teacherId
+        );
+        if (uploadedQuestionImageUrls.length === 0) {
+          throw new Error("فشل رفع صور السؤال، لم يتم حفظ السؤال.");
+        }
+      }
+
+      // 2. رفع صور الإجابات
+      const uploadedAnswers = [];
+      for (const ans of allAnswers) {
+        let uploadedAnswerImage = null;
+
+        if (ans.image instanceof File) {
+          const uploaded = await uploadQuestionImages([ans.image], teacherId);
+
+          if (uploaded.length === 0) {
+            throw new Error(`فشل رفع صورة إجابة: ${ans.ans}`);
+          }
+
+          uploadedAnswerImage = uploaded[0];
+        }
+
+        uploadedAnswers.push({
+          text: ans.ans,
+          image: uploadedAnswerImage,
+          isCorrect: ans.isCorrect, // ضروري لو هتستخدمه لاحقًا
+        });
+      }
+
+      const correctAnswerObject = uploadedAnswers.find(
+        (ans, i) => allAnswers[i].isCorrect
+      );
 
       await insertQuestion({
         examId: examData.id,
-        text: questionData.questionText,
-        answers: answersArray,
-        correct: correctAnsText,
+        text: questionText,
+        images: uploadedQuestionImageUrls,
+        answers: uploadedAnswers,
+        correct: correctAnswerObject, // ← بدل النص، بنحط الأوبجكت
       });
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries(["questions", examId]);
     },
@@ -246,25 +317,44 @@ export const useEditExamDataMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: editExamData,
-    onSuccess: ({ examId, isEdit }) => {
-      if (isEdit === "publish") {
-        toast.success("تم نشر الاختبار بنجاح");
-      } else if (isEdit === "unPublish") {
-        toast.success("تم إلغاء نشر الاختبار بنجاح");
-      } else {
-        toast.success("تم تعديل بيانات الاختبار بنجاح");
+    onSuccess: (allData) => {
+      if (allData.isEdit === "publish") {
+        saveAction({
+          userId: allData.teacherId,
+          action: `تم نشر اختبار ${allData.title} - ${allData.actionStage}`,
+        });
       }
-      queryClient.invalidateQueries(["exam", examId]);
+
+      if (allData.isEdit === "unPublish") {
+        saveAction({
+          userId: allData.teacherId,
+          action: `تم إلغاء نشر اختبار ${allData.title} - ${allData.actionStage}`,
+        });
+      }
+
+      if (allData.isEdit === "edit") {
+        saveAction({
+          userId: allData.teacherId,
+          action: `تم تعديل اختبار ${allData.actionTitle} - ${allData.actionStage}`,
+        });
+      }
+
+      queryClient.invalidateQueries(["exam", allData.examId]);
     },
   });
 };
 
-export const useDeleteExamMutation = (currentUserId) => {
+export const useDeleteExamMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteExam,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["exams", currentUserId]);
+    onSuccess: (exam) => {
+      toast.success("تم حذف الاختبار بنجاح");
+      saveAction({
+        userId: exam.teacherId,
+        action: `تم حذف اختبار ${exam.title} - ${exam.actionStage}`,
+      });
+      queryClient.invalidateQueries(["exams", exam.teacherId]);
     },
   });
 };
@@ -273,8 +363,8 @@ export const useSaveAnswer = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: saveAns,
-    onSuccess: (ansId) => {
-      queryClient.invalidateQueries(["answer", ansId]);
+    onSuccess: (qustionId) => {
+      queryClient.invalidateQueries(["answer", qustionId]);
     },
   });
 };

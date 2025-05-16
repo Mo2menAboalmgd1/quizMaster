@@ -24,27 +24,30 @@ export default function Stage() {
   if (studentsError) {
     return <ErrorPlaceHolder message="حدث خطأ اثناء جلب الطلاب" />;
   }
-  if (!students) {
-    return <NoDataPlaceHolder message="لا يوجد طلاب" icon={faUser} />;
-  }
 
   const stageStudents = students?.filter((student) => student.stage === stage);
   console.log(stageStudents);
 
   console.log(stageStudents);
+
+  if (!students || !stageStudents || stageStudents.length === 0) {
+    return <NoDataPlaceHolder message="لا يوجد طلاب" icon={faUser} />;
+  }
   return (
     <div>
       <h1 className="font-bold text-2xl text-blue-500 text-center mb-4">
         {stage}
       </h1>
-      {stageStudents.map((student) => {
-        return (
-          <StudentComponent
-            key={student.studentId}
-            studentId={student.studentId}
-          />
-        );
-      })}
+      <div className="space-y-3">
+        {stageStudents.map((student) => {
+          return (
+            <StudentComponent
+              key={student.studentId}
+              studentId={student.studentId}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

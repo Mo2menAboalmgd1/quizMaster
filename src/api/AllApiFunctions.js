@@ -50,9 +50,27 @@ export const signIn = async (userData) => {
 
 export const sendNotification = async (notificationData) => {
   const { error } = await supabase.from("notifications").insert({
-    userId: notificationData.studentId,
+    userId: notificationData.userId,
     text: notificationData.text,
   });
+
+  if (error) throw new Error(error.message);
+};
+
+export const getLastActions = async (userId) => {
+  const { error, data } = await supabase
+    .from("lastActions")
+    .select("*")
+    .eq("userId", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
+export const saveAction = async (actionData) => {
+  const { error } = await supabase.from("lastActions").insert(actionData);
 
   if (error) throw new Error(error.message);
 };
@@ -89,10 +107,64 @@ export const deleteNotification = async (notificationId) => {
 
 export const joinTeacher = async ({ teacherId, stage, studentId }) => {
   const { error } = await supabase
-    .from("teachers")
+    .from("teachers_requests")
     .insert({ teacherId, stage, studentId });
 
   if (error) throw new Error(error.message);
+
+  return teacherId;
+};
+
+export const joinTeacherWithJoinCode = async ({
+  value,
+  teacherId,
+  stage,
+  studentId,
+}) => {
+  // get all codes
+  const { error: getCodeError, data: code } = await supabase
+    .from("join_codes")
+    .select("*")
+    .eq("value", value)
+    .maybeSingle();
+
+  if (getCodeError) throw new Error(getCodeError.message);
+  if (!code) throw new Error("كود الانضمام غير موجود");
+
+  const isPublic = code.isPublic;
+  const isUsed = code.isUsed;
+
+  if (isUsed) {
+    throw new Error(
+      isPublic ? "تم إيقاف هذا الكود" : "كود الانضمام مستخدم من قبل"
+    );
+  }
+
+  // check stage if only code.stage exists
+  if (code.stage && code.stage !== stage) {
+    throw new Error("كود الانضمام غير متوافق مع المرحلة");
+  }
+
+  // add student
+  const { error: addStudentError } = await supabase
+    .from("teachers_students")
+    .insert({
+      teacherId,
+      studentId,
+      stage: stage || code.stage,
+    });
+
+  if (addStudentError) throw new Error(addStudentError.message);
+
+  // if private code: delete it after use
+  if (!isPublic) {
+    const { error: updateCodeError } = await supabase
+      .from("join_codes")
+      .delete()
+      .eq("id", code.id);
+
+    if (updateCodeError) throw new Error(updateCodeError.message);
+  }
 
   return teacherId;
 };
@@ -202,6 +274,7 @@ export const getExams = async (teacherId, done) => {
       .select("*")
       .eq("teacherId", teacherId)
       .eq("done", done)
+      .eq("isDeleted", false)
       .order("created_at", { ascending: true });
 
     if (error) throw new Error(error.message);
@@ -211,7 +284,9 @@ export const getExams = async (teacherId, done) => {
     const { error, data } = await supabase
       .from("exams")
       .select("*")
-      .eq("teacherId", teacherId);
+      .eq("teacherId", teacherId)
+      .eq("isDeleted", false)
+      .order("created_at", { ascending: true });
 
     if (error) throw new Error(error.message);
 
@@ -242,6 +317,26 @@ export const getStudentsAndRequests = async (teacherId, table) => {
   return data;
 };
 
+export const getJoinCodes = async (teacherId) => {
+  const { error, data } = await supabase
+    .from("join_codes")
+    .select("*")
+    .eq("teacherId", teacherId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
+export const generateJoinCode = async (joinCodeObject) => {
+  const { error } = await supabase.from("join_codes").insert(joinCodeObject);
+
+  if (error) throw new Error(error.message);
+
+  return joinCodeObject.teacherId;
+};
+
 export const getTeachersByStudentId = async (studentId, table) => {
   const { error, data } = await supabase
     .from(table)
@@ -254,6 +349,7 @@ export const getTeachersByStudentId = async (studentId, table) => {
 };
 
 export const insertQuestion = async (questionData) => {
+  console.log(questionData);
   const { data: questionDataResponse, error: questionError } = await supabase
     .from("questions")
     .insert(questionData);
@@ -261,6 +357,34 @@ export const insertQuestion = async (questionData) => {
   if (questionError) throw new Error(questionError.message);
 
   return questionDataResponse;
+};
+
+export const uploadQuestionImages = async (images, teacherId) => {
+  const uploadedUrls = [];
+
+  for (const image of images) {
+    const uniqueName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 8)}-${image.name}`;
+    const imgPath = `${teacherId}/questions/${uniqueName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("questionsmedia")
+      .upload(imgPath, image);
+
+    if (uploadError) {
+      console.error("❌ فشل رفع الصورة:", image.name, uploadError.message);
+      throw new Error(`فشل رفع الصورة: ${image.name}`);
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("questionsmedia")
+      .getPublicUrl(imgPath);
+
+    uploadedUrls.push(urlData.publicUrl);
+  }
+
+  return uploadedUrls;
 };
 
 export const editQeustion = async ({
@@ -302,15 +426,21 @@ export const createNewExam = async (testData) => {
   return data;
 };
 
-export const editExamData = async ({ testData, examId, isEdit }) => {
+export const editExamData = async (allData) => {
   const { error } = await supabase
     .from("exams")
-    .update(testData)
-    .eq("id", examId);
+    .update({
+      teacherId: allData.teacherId,
+      title: allData.title,
+      stage: allData.stage,
+      subject: allData.subject,
+      done: allData.done,
+    })
+    .eq("id", allData.examId);
 
   if (error) throw new Error(error.message);
 
-  return { examId, isEdit };
+  return allData;
 };
 
 export const getQuestions = async (examId) => {
@@ -343,16 +473,36 @@ export const getTeachers = async () => {
   return data;
 };
 
-export const deleteExam = async (examId) => {
-  const { error } = await supabase.from("exams").delete().eq("id", examId);
+export const deleteExam = async (exam) => {
+  if (exam.isDeleteWithResults) {
+    // delete exam and results
+    const { error } = await supabase.from("exams").delete().eq("id", exam.id);
+    if (error) throw new Error(error.message);
+  } else {
+    // delete exam only
+    const { error } = await supabase
+      .from("exams")
+      .update({ isDeleted: true })
+      .eq("id", exam.id);
 
-  if (error) throw new Error(error.message);
+    if (error) throw new Error(error.message);
+
+    const { error: deleteAnswersError } = await supabase
+      .from("studentsAnswers")
+      .delete()
+      .eq("examId", exam.id);
+
+    if (deleteAnswersError) throw new Error(deleteAnswersError.message);
+  }
+
+  return exam;
 };
 
 export const saveAns = async (answer) => {
   const { error: deleteAnswersError } = await supabase
     .from("studentsAnswers")
     .delete()
+    .eq("studentId", answer.studentId)
     .eq("questionId", answer.questionId);
 
   if (deleteAnswersError) throw new Error(deleteAnswersError.message);
@@ -361,7 +511,7 @@ export const saveAns = async (answer) => {
 
   if (error) throw new Error(error.message);
 
-  return answer.id;
+  return answer.questionId;
 };
 
 export const getStudentAnswers = async (studentId, examId) => {
@@ -378,6 +528,14 @@ export const getStudentAnswers = async (studentId, examId) => {
 
 export const saveResult = async (result) => {
   const { error } = await supabase.from("examsResults").insert(result);
+  // studentId: currentUser.id,
+  // teacherId: examData.teacherId,
+  // examId,
+  // grade: correctAnswers,
+  // total: questions.length,
+  // correct: correctAnswers,
+  // wrong: wrongAnswers,
+  // notAnswered,
 
   if (error) throw new Error(error.message);
 
@@ -385,7 +543,7 @@ export const saveResult = async (result) => {
 };
 
 export const getExamResult = async (studentId, examId) => {
-  console.log("Querying examsResults with:", { studentId, examId });
+  // console.log("Querying examsResults with:", { studentId, examId });
   const { data, error } = await supabase
     .from("examsResults")
     .select("*")

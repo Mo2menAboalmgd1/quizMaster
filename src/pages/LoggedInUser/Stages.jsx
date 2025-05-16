@@ -1,7 +1,10 @@
 import React from "react";
 import { useCurrentUser } from "../../store/useStore";
-import { useColumnByUserId } from "../../QueriesAndMutations/QueryHooks";
-import StageFolder from "../../components/StageFolder";
+import {
+  useColumnByUserId,
+  useStudentsAndRequestsByTeacherIdAndTable,
+} from "../../QueriesAndMutations/QueryHooks";
+import Folder from "../../components/Folder";
 import Loader from "../../components/Loader";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 
@@ -14,12 +17,21 @@ export default function Stages() {
     error: stagesError,
   } = useColumnByUserId(currentUser?.id, "teachers", "stages");
 
+  const {
+    data: students,
+    isLoading: isStudentsLoading,
+    error: studentsError,
+  } = useStudentsAndRequestsByTeacherIdAndTable(
+    currentUser?.id,
+    "teachers_students"
+  );
+
   console.log(stages);
 
-  if (isStagesLoading) {
+  if (isStagesLoading || isStudentsLoading) {
     return <Loader message="جاري تحميل المراحل الدراسية" />;
   }
-  if (stagesError) {
+  if (stagesError || studentsError) {
     return (
       <ErrorPlaceHolder message="حدث خطأ أثناء جلب المراحل الدراسية يُرجى إعادة المحاولة" />
     );
@@ -27,9 +39,21 @@ export default function Stages() {
 
   return (
     <div className="flex gap-3 flex-wrap justify-center">
-      {stages.map((stage, index) => (
-        <StageFolder stage={stage} key={index} />
-      ))}
+      {stages.map((stage, index) => {
+        const stageStudents = students?.filter(
+          (student) => student.stage === stage
+        );
+        return (
+          <div className="relative">
+            <Folder path={stage} text={stage} key={index} />
+            {stageStudents?.length > 0 && (
+              <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute -left-2 -top-1">
+                {stageStudents?.length || 0}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -5,10 +5,18 @@ import { Link } from "react-router-dom";
 export default function StudentComponent({ studentId }) {
   const {
     data: student,
+    isLoading: isStudentLoading,
     error: studentError,
   } = useUserDataByUserId(studentId, "students");
 
   console.log(student);
+
+  if (isStudentLoading)
+    return (
+      <p className="flex gap-4 items-center p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md hover:border-green-200 transition-all duration-300 text-green-600 text-xl">
+        Loading...
+      </p>
+    );
 
   if (studentError) return <p>Error: {studentError.message}</p>;
 
@@ -16,7 +24,7 @@ export default function StudentComponent({ studentId }) {
 
   return (
     <Link to={`/userProfile/${studentId}`} dir="rtl" className="block">
-      <div className="flex gap-4 items-center p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-green-200 transition-all duration-300">
+      <div className="flex gap-4 items-center p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md hover:border-green-200 transition-all duration-300">
         <div className="relative">
           <img
             src={
