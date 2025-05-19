@@ -26,7 +26,14 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Loader from "./components/Loader";
 import Requests from "./pages/LoggedInUser/Requests";
-import { useNotificationsByUserId } from "./QueriesAndMutations/QueryHooks";
+import {
+  useColumnByUserId,
+  useExamsByTeacherId,
+  useJoinCodes,
+  useNotificationsByUserId,
+  usePostsByTeacherId,
+  useStudentsAndRequestsByTeacherIdAndTable,
+} from "./QueriesAndMutations/QueryHooks";
 import Notifications from "./pages/LoggedInUser/Notifications";
 import Stages from "./pages/LoggedInUser/Stages";
 import Stage from "./pages/LoggedInUser/Stage";
@@ -41,12 +48,17 @@ import {
   FileSVG,
   HomeSVG,
   JoinCodesSVG,
+  PostsSVG,
   RequestsSVG,
   StagesSVG,
 } from "../public/SVGs";
 import Exams from "./pages/LoggedInUser/Exams";
 import PublishedAndUnPublishedExams from "./pages/LoggedInUser/PublishedAndUnPublishedExams";
 import StageExams from "./pages/LoggedInUser/StageExams";
+import Posts from "./pages/LoggedInUser/TeacherPosts";
+import TeacherPosts from "./pages/LoggedInUser/TeacherPosts";
+import StudentPosts from "./pages/LoggedInUser/StudentPosts";
+import PostsInTeacherPosts from "./pages/LoggedInUser/PostsInTeacherPosts";
 
 export default function App() {
   const { getSession, session } = useSession();
@@ -61,42 +73,79 @@ export default function App() {
     (notification) => !notification.isRead
   );
 
+  const { data: stages } = useColumnByUserId(
+    currentUser?.id,
+    "teachers",
+    "stages"
+  );
+
+  const { data: exams } = useExamsByTeacherId(currentUser?.id);
+
+  const { data: requests } = useStudentsAndRequestsByTeacherIdAndTable(
+    currentUser?.id,
+    "teachers_requests"
+  );
+
+  const { data: students } = useStudentsAndRequestsByTeacherIdAndTable(
+    currentUser?.id,
+    "teachers_students"
+  );
+
+  const { data: postsInTeacherPosts } = usePostsByTeacherId(currentUser?.id);
+
+  const { data: joinCodes } = useJoinCodes(currentUser?.id);
+
+  // console.log(stages);
+
   const navLinks = [
     {
       path: "/",
       icon: <HomeSVG />,
       text: "الرئيسية",
       user: "both",
+      number: null,
+    },
+    {
+      path: "/posts",
+      icon: <PostsSVG />,
+      text: "المنشورات",
+      user: "both",
+      number: postsInTeacherPosts?.length || null,
     },
     {
       path: "/exams",
       icon: <FileSVG />,
       text: "الامتحانات",
       user: "teacher",
+      number: exams?.length || null,
     },
     {
       path: "/createTest",
       icon: <FontAwesomeIcon icon={faPlus} />,
       text: "إنشاء امتحان",
       user: "teacher",
+      number: null,
     },
     {
       path: "/requests",
       icon: <RequestsSVG />,
       text: "طلبات الانضمام",
       user: "teacher",
+      number: requests?.length || null,
     },
     {
       path: "/stages",
       icon: <StagesSVG />,
-      text: "المراحل الدراسية",
+      text: "الطلاب",
       user: "teacher",
+      number: students?.length || null,
     },
     {
       path: "/joinCodes",
       icon: <JoinCodesSVG />,
       text: "اكواد الانضمام",
       user: "teacher",
+      number: joinCodes?.length || null,
     },
   ];
 
@@ -277,14 +326,20 @@ export default function App() {
             {navLinks.map((link, index) => {
               if (currentUser.type === link.user || link.user === "both") {
                 return (
-                  <Link
-                    key={index}
-                    to={link.path}
-                    className="px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md flex items-center gap-1 transition-colors md:py-1"
-                  >
-                    {link.icon}
-                    <span dir="rtl">{link.text}</span>
-                  </Link>
+                  <div className="relative" key={index}>
+                    <Link
+                      to={link.path}
+                      className="px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md flex items-center gap-1 transition-colors md:py-1"
+                    >
+                      {link.icon}
+                      <span dir="rtl">{link.text}</span>
+                    </Link>
+                    {link.number && (
+                      <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute left-1.5 -top-1.5">
+                        {link.number}
+                      </span>
+                    )}
+                  </div>
                 );
               }
             })}
@@ -302,6 +357,23 @@ export default function App() {
                 currentUser.type === "student" ? <Student /> : <Teacher />
               }
             />
+            {/* <Route
+              path="/posts"
+              element={
+                currentUser.type === "student" ? (
+                  <StudentPosts />
+                ) : (
+                  <TeacherPosts />
+                )
+              }
+            /> */}
+            {currentUser.type === "student" ? (
+              <Route path="/posts" element={<StudentPosts />} />
+            ) : (
+              <Route path="/posts" element={<TeacherPosts />}>
+                <Route path=":stage" element={<PostsInTeacherPosts />} />
+              </Route>
+            )}
             <Route path="/requests" element={<Requests />} />
             <Route path="/stages" element={<Stages />} />
             <Route path="/stages/:stage" element={<Stage />} />

@@ -14,13 +14,6 @@ export default function StageExams() {
   const newStage = stage === "جميع الصفوف" ? "" : stage;
   const isPublished = PublishedOrNot === "published";
   const { currentUser } = useCurrentUser();
-  const title = newStage
-    ? isPublished
-      ? `الامتحانات المنشورة - ${newStage}`
-      : `الامتحانات الغير منشورة - ${newStage}`
-    : isPublished
-    ? "الامتحانات العامة المنشورة"
-    : "الامتحانات العامة الغير منشورة";
 
   console.log(PublishedOrNot);
 

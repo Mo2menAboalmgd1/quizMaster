@@ -16,6 +16,11 @@ import {
   getTeachersByStudentId,
   getJoinCodes,
   getLastActions,
+  getPosts,
+  getPostsDisplayedInStudentPosts,
+  getReactionsOnPost,
+  getQuestionAnswersWithCorrection,
+  getQuestionAnswersForExam,
 } from "../api/AllApiFunctions";
 
 export const useNotificationsByUserId = (userId) => {
@@ -76,12 +81,36 @@ export const useQuestionsByExamId = (examId) => {
   });
 };
 
+export const usePostsByTeacherId = (teacherId) => {
+  return useQuery({
+    queryKey: ["posts", teacherId],
+    queryFn: () => getPosts(teacherId),
+    enabled: !!teacherId,
+  });
+};
+
+export const useReactionsByPostId = (postId) => {
+  return useQuery({
+    queryKey: ["post_reactions", postId],
+    queryFn: () => getReactionsOnPost(postId),
+    enabled: !!postId,
+  });
+};
+
+export const useTeachersPosts = (teachersIds, stages) => {
+  return useQuery({
+    queryKey: ["posts", teachersIds, [...stages]],
+    queryFn: () => getPostsDisplayedInStudentPosts(teachersIds, stages),
+    enabled: Array.isArray(teachersIds) && teachersIds.length > 0,
+  });
+};
+
 export const useExamsByTeacherId = (teacherId, done) => {
   return useQuery({
     queryKey: ["exams", teacherId],
     queryFn: () => getExams(teacherId, done),
     staleTime: 5 * 60 * 1000,
-    enabled:!!teacherId,
+    enabled: !!teacherId,
   });
 };
 
@@ -127,12 +156,12 @@ export const useJoinCodes = (teacherId) => {
   });
 };
 
-export const useTeachersFromTeachersStudents = (studentId, table) => {
+export const useTeachersFromTeachersStudents = (studentId) => {
   return useQuery({
     queryKey: ["studentTeachers", studentId],
-    queryFn: () => getTeachersByStudentId(studentId, table),
+    queryFn: () => getTeachersByStudentId(studentId),
     staleTime: 5 * 60 * 1000,
-    enabled: !!studentId && !!table,
+    enabled: !!studentId,
   });
 };
 
@@ -153,10 +182,23 @@ export const useTeachers = () => {
   });
 };
 
+export const useAnswersByQuestionId = (questionId, isExamResult) => {
+  return useQuery({
+    queryKey: ["answers", questionId, isExamResult],
+    queryFn: () =>
+      isExamResult
+        ? getQuestionAnswersWithCorrection(questionId)
+        : getQuestionAnswersForExam(questionId),
+    enabled: !!questionId,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
 export const useAnswersByStudentIdAndExamId = (studentId, examId) => {
   return useQuery({
     queryKey: ["studentAnswers", studentId, examId],
     queryFn: () => getStudentAnswers(studentId, examId),
+    enabled: !!studentId && !!examId,
     staleTime: 5 * 60 * 1000,
   });
 };

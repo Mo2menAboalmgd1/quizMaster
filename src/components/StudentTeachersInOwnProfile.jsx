@@ -14,7 +14,7 @@ export default function StudentTeachersInOwnProfile({ student }) {
     data: teachers,
     isLoading: isTeachersLoading,
     error: teachersError,
-  } = useTeachersFromTeachersStudents(student?.id, "teachers_students");
+  } = useTeachersFromTeachersStudents(student?.id);
   // console.log("teachers: ", teachers);
 
   const teachersIds = teachers?.map((teacher) => teacher.teacherId);

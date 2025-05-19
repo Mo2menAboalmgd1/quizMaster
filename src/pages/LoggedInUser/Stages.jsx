@@ -44,8 +44,8 @@ export default function Stages() {
           (student) => student.stage === stage
         );
         return (
-          <div className="relative">
-            <Folder path={stage} text={stage} key={index} />
+          <div className="relative" key={index}>
+            <Folder path={stage} text={stage} />
             {stageStudents?.length > 0 && (
               <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute -left-2 -top-1">
                 {stageStudents?.length || 0}

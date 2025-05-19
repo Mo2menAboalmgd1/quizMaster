@@ -45,6 +45,7 @@ export default function CreateExamForm({
   const { data: questions } = useQuestionsByExamId(examId);
 
   const handleCreateNewExam = (e) => {
+    toast.loading("جاري الإنشاء");
     e.preventDefault();
     const formData = new FormData(e.target);
     const testData = {
@@ -58,6 +59,7 @@ export default function CreateExamForm({
   };
 
   const handleEditExam = async (e) => {
+    toast.loading("جاري التعديل");
     e.preventDefault();
     const formData = new FormData(e.target);
     const testData = {
@@ -75,6 +77,7 @@ export default function CreateExamForm({
   };
 
   const handlePublishExam = async () => {
+    toast.loading("جاري النشر");
     console.log(questions);
     if (!questions || questions.length < 1) {
       return toast.error("لا يوجد أسئلة في الاختبار");
@@ -97,6 +100,7 @@ export default function CreateExamForm({
   const { mutateAsync: undoPublishMutation } = useEditExamDataMutation();
 
   const handleUndoPublish = async (examId) => {
+    toast.loading("جاري إلغاء النشر");
     const testData = {
       done: false,
       actionStage: examData.stage || "(اختبار عام)",

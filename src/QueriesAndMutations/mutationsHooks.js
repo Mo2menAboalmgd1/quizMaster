@@ -11,10 +11,12 @@ import {
   getColumn,
   handleCreateStudent,
   handleCreateTeacher,
+  insertPost,
   insertQuestion,
   joinTeacher,
   joinTeacherWithJoinCode,
   makeProfile,
+  reactToPost,
   readNotification,
   register,
   removeRequest,
@@ -23,10 +25,12 @@ import {
   saveResult,
   sendNotification,
   signIn,
-  uploadQuestionImages,
+  uploadAnswer,
+  UploadImages,
 } from "../api/AllApiFunctions";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../config/supabase";
 
 export const useRegister = (isStudent) => {
   const navigate = useNavigate();
@@ -135,7 +139,7 @@ export const useRemoveRequestMutation = () => {
     onSuccess: (_, data) => {
       toast.dismiss();
       sendNotification({
-        studentId: data.studentId,
+        userId: data.studentId,
         text: `تم رفض طلب انضمامك من ${data.teacherName}`,
       });
       queryClient.invalidateQueries(["students", data.teacherId]);
@@ -167,7 +171,7 @@ export const useAcceptRequestMutation = () => {
       // 👈 هنا التعديل
       toast.dismiss();
       sendNotification({
-        studentId: data.studentId,
+        userId: data.studentId,
         text: `تم قبول طلب انضمامك من ${data.teacherName}`,
       });
       queryClient.invalidateQueries(["students", data.teacherId]);
@@ -216,30 +220,95 @@ export const useDeleteNotification = (userId) => {
   });
 };
 
-export const useInsertQuestionMutation = (examData, examId) => {
+export const useReactToPost = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async ({ questionText, images, allAnswers, teacherId }) => {
-      // 1. رفع صور السؤال
+    mutationFn: (data) => reactToPost(data),
+    onError: () => {
+      toast.dismiss();
+      toast.error("حدث خطأ، أعد المحاولة");
+    },
+    onSuccess: (data) => {
+      toast.dismiss();
+      queryClient.invalidateQueries(["posts"], data.teacherId);
+    },
+  });
+};
+
+export const useCreateNewPostMutation = () => {
+  return useMutation({
+    mutationFn: async ({ text, images, stage, teacherId }) => {
+      // upload question images and get their urls back
       let uploadedQuestionImageUrls = [];
       if (images?.length > 0) {
-        uploadedQuestionImageUrls = await uploadQuestionImages(
+        uploadedQuestionImageUrls = await UploadImages(
           images,
-          teacherId
+          teacherId,
+          "postsimages"
         );
         if (uploadedQuestionImageUrls.length === 0) {
           throw new Error("فشل رفع صور السؤال، لم يتم حفظ السؤال.");
         }
       }
 
-      // 2. رفع صور الإجابات
-      const uploadedAnswers = [];
-      for (const ans of allAnswers) {
+      // upload post
+      await insertPost({
+        text,
+        images: uploadedQuestionImageUrls,
+        stage,
+        teacherId,
+      });
+
+      return teacherId;
+    },
+  });
+};
+
+export const useInsertQuestionMutation = (
+  setQuestionText,
+  setAllAnswers,
+  setCorrectIndex,
+  setQuestionImages,
+  setAddingNewQuestionLoading
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ text, images, answers, exam }) => {
+      // upload question images and get their urls back
+      let uploadedQuestionImageUrls = [];
+      if (images?.length > 0) {
+        uploadedQuestionImageUrls = await UploadImages(
+          images,
+          exam.teacherId,
+          "questionsmedia"
+        );
+        if (uploadedQuestionImageUrls.length === 0) {
+          throw new Error("فشل رفع صور السؤال، لم يتم حفظ السؤال.");
+        }
+      }
+
+      // upload question
+      const questionId = await insertQuestion({
+        examId: exam.id,
+        text,
+        images: uploadedQuestionImageUrls,
+      });
+
+      // const questionId = questionData;
+
+      console.log(questionId);
+
+      // upload answers
+      for (const ans of answers) {
         let uploadedAnswerImage = null;
 
         if (ans.image instanceof File) {
-          const uploaded = await uploadQuestionImages([ans.image], teacherId);
+          const uploaded = await UploadImages(
+            [ans.image],
+            exam.teacherId,
+            "questionsmedia"
+          );
 
           if (uploaded.length === 0) {
             throw new Error(`فشل رفع صورة إجابة: ${ans.ans}`);
@@ -248,28 +317,32 @@ export const useInsertQuestionMutation = (examData, examId) => {
           uploadedAnswerImage = uploaded[0];
         }
 
-        uploadedAnswers.push({
-          text: ans.ans,
-          image: uploadedAnswerImage,
-          isCorrect: ans.isCorrect, // ضروري لو هتستخدمه لاحقًا
-        });
+        await uploadAnswer(
+          ans.ans,
+          uploadedAnswerImage,
+          ans.isCorrect,
+          exam.id,
+          questionId
+        );
       }
 
-      const correctAnswerObject = uploadedAnswers.find(
-        (ans, i) => allAnswers[i].isCorrect
-      );
-
-      await insertQuestion({
-        examId: examData.id,
-        text: questionText,
-        images: uploadedQuestionImageUrls,
-        answers: uploadedAnswers,
-        correct: correctAnswerObject, // ← بدل النص، بنحط الأوبجكت
-      });
+      return { examId: exam.id, questionId };
     },
 
-    onSuccess: () => {
+    onSuccess: ({ examId }) => {
+      setQuestionText("");
+      setAllAnswers([]);
+      setCorrectIndex(null);
+      setQuestionImages([]);
+      setAddingNewQuestionLoading(false);
       queryClient.invalidateQueries(["questions", examId]);
+    },
+
+    onError: async ({ questionId }) => {
+      toast.dismiss();
+      toast.error("حدث خطأ اثناء رفع السؤال");
+      setAddingNewQuestionLoading(false);
+      await supabase.from("questions").delete().eq("id", questionId);
     },
   });
 };
@@ -308,6 +381,8 @@ export const useCreateNewExamMutation = (setExamId) => {
     mutationFn: createNewExam,
     onSuccess: (data) => {
       setExamId(data.id);
+      toast.dismiss();
+      toast.success("تم إنشاء الاختبار بنجاح");
       queryClient.invalidateQueries(["exam", data.id]);
     },
   });
@@ -318,7 +393,10 @@ export const useEditExamDataMutation = () => {
   return useMutation({
     mutationFn: editExamData,
     onSuccess: (allData) => {
+      toast.dismiss();
+
       if (allData.isEdit === "publish") {
+        toast.success("تم نشر الاختبار بنجاح");
         saveAction({
           userId: allData.teacherId,
           action: `تم نشر اختبار ${allData.title} - ${allData.actionStage}`,
@@ -326,6 +404,7 @@ export const useEditExamDataMutation = () => {
       }
 
       if (allData.isEdit === "unPublish") {
+        toast.success("تم إلغاء نشر الاختبار بنجاح");
         saveAction({
           userId: allData.teacherId,
           action: `تم إلغاء نشر اختبار ${allData.title} - ${allData.actionStage}`,
@@ -333,6 +412,7 @@ export const useEditExamDataMutation = () => {
       }
 
       if (allData.isEdit === "edit") {
+        toast.success("تم تعديل الاختبار بنجاح");
         saveAction({
           userId: allData.teacherId,
           action: `تم تعديل اختبار ${allData.actionTitle} - ${allData.actionStage}`,
@@ -374,10 +454,12 @@ export const useSaveStudentResult = () => {
   return useMutation({
     mutationFn: saveResult,
     onSuccess: (studentId) => {
-      toast.success("تم حفظ النتيجة بنجاح");
+      toast.dismiss();
+      toast.success("تم حفظ النتيجة");
       queryClient.invalidateQueries(["student", studentId]);
     },
     onError: () => {
+      toast.dismiss();
       toast.error("حدث خطأ أثناء حفظ النتيجة");
     },
   });

@@ -9,13 +9,14 @@ import toast from "react-hot-toast";
 import {
   faArrowLeft,
   faFileAlt,
+  faInfoCircle,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import NoDataPlaceHolder from "./NoDataPlaceHolder";
 import AlertBox from "./AlertBox";
 
-export default function TeacherExamsList({ list, isPublished, isDone }) {
+export default function TeacherExamsList({ list, isPublished }) {
   const { currentUser } = useCurrentUser();
   const [isDelete, setIsDelete] = useState(false);
 
@@ -79,20 +80,29 @@ export default function TeacherExamsList({ list, isPublished, isDone }) {
           <div className="flex gap-2">
             <button
               onClick={() => setIsDelete(true)}
-              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold px-4 rounded-lg shadow-sm transition-all flex items-center justify-center gap-1"
+              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold px-4 rounded-lg shadow-sm transition-all flex items-center justify-center gap-1 cursor-pointer"
             >
               <FontAwesomeIcon icon={faTrash} />
             </button>
             {isPublished && (
-              <button
-                onClick={() =>
-                  handleUndoPublish(exam.id, exam.title, exam.stage)
-                }
-                className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-gray-800 font-bold px-4 rounded-lg shadow-sm transition-all flex items-center justify-center gap-1"
-              >
-                <FontAwesomeIcon icon={faArrowLeft} />{" "}
-                <span className="md:hidden">إلغاء النشر</span>
-              </button>
+              <>
+                <button
+                  onClick={() =>
+                    handleUndoPublish(exam.id, exam.title, exam.stage)
+                  }
+                  className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-gray-800 font-bold px-4 rounded-lg shadow-sm transition-all flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <FontAwesomeIcon icon={faArrowLeft} />{" "}
+                  <span className="md:hidden">إلغاء النشر</span>
+                </button>
+                <Link
+                  to={"/examData/" + exam.id}
+                  className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold px-4 rounded-lg shadow-sm transition-all flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <FontAwesomeIcon icon={faInfoCircle} />{" "}
+                  <span className="md:hidden"></span>
+                </Link>
+              </>
             )}
           </div>
           {isDelete && (

@@ -31,6 +31,12 @@ export default function Request({ requestId, stage }) {
   // studentId, column, table, teacherId
   const { mutateAsync: acceptRequest } = useAcceptRequestMutation();
   const handleAcceptRequest = async (studentId) => {
+    console.log({
+      teacherId: currentUser.id,
+      teacherName: currentUser.name,
+      stage,
+      studentId,
+    })
     await acceptRequest({
       teacherId: currentUser.id,
       teacherName: currentUser.name,
@@ -81,14 +87,14 @@ export default function Request({ requestId, stage }) {
             className="p-2 px-6 flex gap-2 items-center justify-center bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg text-white cursor-pointer hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg"
           >
             <FontAwesomeIcon icon={faCheck} className="text-sm" />
-            <span>Accept</span>
+            <span>قبول</span>
           </button>
           <button
             onClick={() => handleRejectRequest(requestData.id)}
             className="p-2 px-6 flex gap-2 items-center justify-center bg-gradient-to-r from-red-500 to-rose-600 rounded-lg text-white cursor-pointer hover:from-red-600 hover:to-rose-700 transition-all duration-300 shadow-md hover:shadow-lg"
           >
             <FontAwesomeIcon icon={faX} className="text-sm" />
-            <span>Reject</span>
+            <span>رفض</span>
           </button>
         </div>
       </div>

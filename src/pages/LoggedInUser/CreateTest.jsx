@@ -55,7 +55,7 @@ export default function CreateExam() {
       )}
 
       {examId && (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="rounded-xl overflow-hidden">
           <DisplayAnswersInCreateExam examId={examId} />
         </div>
       )}

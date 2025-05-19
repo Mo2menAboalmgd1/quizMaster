@@ -12,12 +12,11 @@ import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
 import { faFileAlt, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  useSaveAnswer,
-  useSaveStudentResult,
-} from "../../QueriesAndMutations/mutationsHooks";
-import clsx from "clsx";
+import { useSaveStudentResult } from "../../QueriesAndMutations/mutationsHooks";
 import DisplayFile from "../../components/DisplayFile";
+import toast from "react-hot-toast";
+import QuestionDisplayedInCreateTest from "../../components/QuestionDisplayedInCreateTest";
+import QuestionDisplayedInTheExam from "../../components/QuestionDisplayedInTheExam";
 
 export default function Exam() {
   const { id: examId } = useParams();
@@ -36,30 +35,19 @@ export default function Exam() {
     error: questionsError,
   } = useQuestionsByExamId(examId);
 
+  console.log(questions);
+
   const {
-    data: answers,
-    isLoading: isAnswersLoading,
-    error: answersError,
-  } = useAnswersByStudentIdAndExamId(currentUser.id, examId);
+    data: studentAnswers,
+    isLoading: isStudentAnswersLoading,
+    error: studentAnswersError,
+  } = useAnswersByStudentIdAndExamId(currentUser?.id, examId);
 
   const {
     data: examResult,
     isLoading: isExamResultLoading,
     error: examResultError,
   } = useExamsResultsByStudentIdAndExamId(currentUser.id, examId);
-
-  const { mutate: saveAnswer } = useSaveAnswer();
-
-  const handleSaveAnswer = (answer, questionId, correct) => {
-    saveAnswer({
-      selectedAns: answer,
-      studentId: currentUser.id,
-      questionId,
-      examId,
-      correct,
-      isCorrect: answer.text === correct.text && answer.image === correct.image,
-    });
-  };
 
   const { mutate: sendResult } = useSaveStudentResult();
 
@@ -68,24 +56,27 @@ export default function Exam() {
     let wrongAnswers = 0;
     let notAnswered = 0;
 
+    toast.loading("جاري الحصول على النتيجة");
+
     questions.forEach((question) => {
-      const answer = answers.find(
-        (answer) => answer.questionId === question.id
+      const studentAnswer = studentAnswers.find(
+        (a) => a.questionId === question.id
       );
-      if (answer) {
-        if (answer.isCorrect) {
-          correctAnswers++;
-        } else {
-          wrongAnswers++;
-        }
-      } else {
+
+      const correctAnswer = question.answers?.find((a) => a.isCorrect);
+
+      if (!studentAnswer) {
         notAnswered++;
+      } else if (studentAnswer.answerId === correctAnswer?.id) {
+        correctAnswers++;
+      } else {
+        wrongAnswers++;
       }
     });
 
     sendResult({
-      studentId: currentUser.id,
-      teacherId: examData.teacherId,
+      studentId: currentUser?.id,
+      teacherId: examData?.teacherId,
       examId,
       total: questions.length,
       correct: correctAnswers,
@@ -102,13 +93,18 @@ export default function Exam() {
     isExamDataLoading ||
     !currentUser ||
     isQuestionsLoading ||
-    isAnswersLoading ||
-    isExamResultLoading
+    isExamResultLoading ||
+    isStudentAnswersLoading
   ) {
     return <Loader message="جاري تحميل الامتحان" />;
   }
 
-  if (examDataError || questionsError || answersError || examResultError) {
+  if (
+    examDataError ||
+    questionsError ||
+    examResultError ||
+    studentAnswersError
+  ) {
     return <ErrorPlaceHolder message={"حدث خطأ، أعد المحاولة"} />;
   }
 
@@ -148,141 +144,19 @@ export default function Exam() {
         <span>الأسئلة</span>
         <FontAwesomeIcon icon={faQuestionCircle} />
       </h2>
-      {examResult && (
-        <p className="text-center text-sm text-red-600 font-medium">
-          هذا الامتحان تم تقديمه مسبقًا
-        </p>
-      )}
 
       {/* questions iteration */}
       <div className="space-y-6">
         {questions.map((question, index) => {
-          const isQuestionSolved = answers.some(
-            (answer) => answer.questionId === question.id
-          );
-          const highlightAsNotAnswered = examResult && !isQuestionSolved;
-
           return (
-            <div
+            <QuestionDisplayedInTheExam
               key={index}
-              className={clsx(
-                "p-5 border rounded-2xl shadow-sm transition-all",
-                highlightAsNotAnswered
-                  ? "bg-yellow-50 border-yellow-400"
-                  : "bg-white border-gray-300"
-              )}
-            >
-              {highlightAsNotAnswered && (
-                <p className="h-10 w-full rounded-lg border border-yellow-500 flex items-center justify-center font-bold text-yellow-700 bg-yellow-100 mb-3">
-                  سؤال لم تتم الإجابة عليه
-                </p>
-              )}
-
-              {/* question title and text */}
-              <div className="flex gap-3 mb-2">
-                <p className="h-10 min-w-10 flex items-center justify-center bg-gray-700 text-white rounded-lg">
-                  {index + 1}
-                </p>
-                <p className="min-h-10 flex items-center bg-gray-100 border border-gray-300 p-3 rounded-lg grow text-gray-800 font-medium">
-                  {question.text}
-                </p>
-              </div>
-
-              {/* question images */}
-              {question.images && question.images.length > 0 && (
-                <div className="flex gap-2 flex-wrap py-3 pr-4 border-b border-gray-200 mb-3">
-                  {question.images.map((image, idx) => (
-                    <img
-                      key={idx}
-                      src={image}
-                      alt=""
-                      onClick={() => setFileDisplayed(image)}
-                      className="h-40 rounded-lg cursor-pointer hover:scale-105 transition-transform"
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* answers */}
-              <div className="space-y-2">
-                {question.answers.map((answer, i) => {
-                  const answerId = `question-${question.id}-answer-${i}`;
-                  const studentAnswer = answers.find(
-                    (ans) => ans.questionId === question.id
-                  );
-
-                  const isCorrectAnswer =
-                    examResult &&
-                    answer.text === question.correct.text &&
-                    answer.image === question.correct.image;
-
-                  const isAnswerWrong =
-                    examResult &&
-                    studentAnswer &&
-                    studentAnswer.selectedAns.text === answer.text &&
-                    studentAnswer.selectedAns.image === answer.image &&
-                    !studentAnswer.isCorrect;
-
-                  return (
-                    <div
-                      key={i}
-                      className={clsx(
-                        "min-h-10 w-full flex gap-3 items-center border bg-gray-50 border-gray-300 p-3 rounded-lg transition-all",
-                        examResult ? "cursor-no-drop" : "cursor-pointer",
-                        isCorrectAnswer && "bg-green-100 border-green-400",
-                        isAnswerWrong && "bg-red-100 border-red-400"
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name={`question-${question.id}`}
-                        id={answerId}
-                        checked={
-                          studentAnswer &&
-                          studentAnswer.selectedAns.text === answer.text &&
-                          studentAnswer.selectedAns.image === answer.image
-                        }
-                        onChange={() =>
-                          !examResult &&
-                          handleSaveAnswer(
-                            answer,
-                            question.id,
-                            question.correct
-                          )
-                        }
-                        disabled={examResult}
-                        className={clsx(
-                          "h-5 w-5",
-                          examResult ? "cursor-no-drop" : "cursor-pointer"
-                        )}
-                      />
-                      <label
-                        htmlFor={answerId}
-                        className={clsx(
-                          "grow flex gap-3 items-center flex-wrap text-gray-800",
-                          examResult ? "cursor-no-drop" : "cursor-pointer",
-                          isCorrectAnswer && "bg-green-100 border-green-400"
-                        )}
-                      >
-                        {answer.text}
-                      </label>
-                      {answer.image && (
-                        <img
-                          src={answer.image}
-                          alt=""
-                          className="h-20 rounded-lg shrink-0 cursor-pointer hover:scale-105 transition-transform"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            setFileDisplayed(answer.image);
-                          }}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+              question={question}
+              examResult={examResult}
+              examId={examId}
+              questionNumber={index + 1}
+              setFileDisplayed={setFileDisplayed}
+            />
           );
         })}
       </div>

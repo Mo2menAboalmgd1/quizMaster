@@ -11,6 +11,7 @@ import { useInsertQuestionMutation } from "../QueriesAndMutations/mutationsHooks
 import { useQuestionsByExamId } from "../QueriesAndMutations/QueryHooks";
 import AddNewAnswerForm from "./AddNewAnswerForm";
 import clsx from "clsx";
+import Loader from "./Loader";
 
 const MAX_IMAGE_SIZE_MB = 3;
 
@@ -21,13 +22,20 @@ export default function AddQuestionForm({ examData, examId }) {
   const [correctIndex, setCorrectIndex] = useState(null);
   const [questionImages, setQuestionImages] = useState([]);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+  const [addingNewQuestionLoading, setAddingNewQuestionLoading] =
+    useState(false);
+
   const fileInputRef = useRef(null);
 
   const { data: questions } = useQuestionsByExamId(examId);
 
-  const { mutateAsync: addQuestionMutation } = useInsertQuestionMutation(
-    examData,
-    examId
+  const { mutate: addQuestionMutation } = useInsertQuestionMutation(
+    setQuestionText,
+    setAllAnswers,
+    setCorrectIndex,
+    setQuestionImages,
+    setAddingNewQuestionLoading,
   );
 
   const handleAddNewQuestion = async () => {
@@ -39,30 +47,31 @@ export default function AddQuestionForm({ examData, examId }) {
       return alert("يجب إن تحتوى السؤال على إجابة صحيحة");
     }
 
+    setAddingNewQuestionLoading(true);
+
     const updatedAnswers = allAnswers.map((ans, i) => ({
       ...ans,
       isCorrect: i === correctIndex,
     }));
 
-    try {
-      await addQuestionMutation({
-        questionText,
-        images: questionImages,
-        allAnswers: updatedAnswers,
-        teacherId: currentUser.id,
-      });
+    console.log("examData", examData);
 
-      setQuestionText("");
-      setAllAnswers([]);
-      setCorrectIndex(null);
-      setQuestionImages([]);
-    } catch (err) {
-      alert("❌ لم يتم حفظ السؤال: " + err.message);
-    }
+    addQuestionMutation({
+      text: questionText,
+      images: questionImages,
+      answers: updatedAnswers,
+      exam: examData,
+      studentId: currentUser.id,
+    });
   };
 
   return (
-    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-emerald-400 rounded-lg mt-5 shadow-md space-y-4 p-5">
+    <div className="relative bg-gradient-to-r from-green-50 to-emerald-50 border border-emerald-400 rounded-lg mt-5 shadow-md space-y-4 p-5">
+      {addingNewQuestionLoading && (
+        <div className="h-full w-full bg-white/50 backdrop-blur-xs flex items-center justify-center absolute top-0 left-0 z-40">
+          <Loader message="جاري اضافة السؤال" />
+        </div>
+      )}
       <p
         dir="rtl"
         className="py-2 px-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center font-bold rounded-lg shadow-sm"
