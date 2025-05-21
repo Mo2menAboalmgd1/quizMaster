@@ -11,9 +11,10 @@ import {
   useLocation,
   Navigate,
   useNavigate,
+  NavLink,
 } from "react-router-dom";
 import CreateTest from "./pages/LoggedInUser/CreateTest";
-import TeacherProfile from "./pages/LoggedInUser/TeacherProfile";
+import StudentTeacher from "./pages/LoggedInUser/StudentTeacher";
 import Exam from "./pages/LoggedInUser/Exam";
 import ResumeCreateTest from "./pages/LoggedInUser/ResumeCreateTest";
 import { Toaster } from "react-hot-toast";
@@ -21,18 +22,19 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
   faBell,
+  faChalkboardTeacher,
   faPlus,
   faSignOut,
 } from "@fortawesome/free-solid-svg-icons";
 import Loader from "./components/Loader";
 import Requests from "./pages/LoggedInUser/Requests";
 import {
-  useColumnByUserId,
   useExamsByTeacherId,
   useJoinCodes,
   useNotificationsByUserId,
   usePostsByTeacherId,
   useStudentsAndRequestsByTeacherIdAndTable,
+  useTeachersFromTeachersStudents,
 } from "./QueriesAndMutations/QueryHooks";
 import Notifications from "./pages/LoggedInUser/Notifications";
 import Stages from "./pages/LoggedInUser/Stages";
@@ -59,6 +61,12 @@ import Posts from "./pages/LoggedInUser/TeacherPosts";
 import TeacherPosts from "./pages/LoggedInUser/TeacherPosts";
 import StudentPosts from "./pages/LoggedInUser/StudentPosts";
 import PostsInTeacherPosts from "./pages/LoggedInUser/PostsInTeacherPosts";
+import ExamData from "./pages/LoggedInUser/ExamData";
+import StudentsGrades from "./pages/LoggedInUser/StudentsGrades";
+import DidNotTakeExam from "./pages/LoggedInUser/DidNotTakeExam";
+import StudentTeachers from "./pages/LoggedInUser/StudentTeachers";
+import TeacherExams from "./pages/LoggedInUser/TeacherExams";
+import SearchTeachers from "./pages/LoggedInUser/SearchTeachers";
 
 export default function App() {
   const { getSession, session } = useSession();
@@ -73,12 +81,6 @@ export default function App() {
     (notification) => !notification.isRead
   );
 
-  const { data: stages } = useColumnByUserId(
-    currentUser?.id,
-    "teachers",
-    "stages"
-  );
-
   const { data: exams } = useExamsByTeacherId(currentUser?.id);
 
   const { data: requests } = useStudentsAndRequestsByTeacherIdAndTable(
@@ -91,11 +93,13 @@ export default function App() {
     "teachers_students"
   );
 
+  const { data: studentTeachers } = useTeachersFromTeachersStudents(
+    currentUser?.id
+  );
+
   const { data: postsInTeacherPosts } = usePostsByTeacherId(currentUser?.id);
 
   const { data: joinCodes } = useJoinCodes(currentUser?.id);
-
-  // console.log(stages);
 
   const navLinks = [
     {
@@ -111,6 +115,13 @@ export default function App() {
       text: "المنشورات",
       user: "both",
       number: postsInTeacherPosts?.length || null,
+    },
+    {
+      path: "/studentTeachers",
+      icon: <FontAwesomeIcon icon={faChalkboardTeacher} />,
+      text: "معلميني",
+      user: "student",
+      number: studentTeachers?.length || null,
     },
     {
       path: "/exams",
@@ -322,20 +333,27 @@ export default function App() {
             </button>
           </div>
 
-          <div className="py-4 flex flex-col md:flex-row md:justify-center md:items-center md:space-x-2 md:rtl:space-x-reverse md:px-4">
+          <div className="py-4 flex flex-col md:flex-row md:justify-center md:items-center md:space-x-2 md:rtl:space-x-reverse md:px-4 max-md:p-3 max-md:space-y-2">
             {navLinks.map((link, index) => {
               if (currentUser.type === link.user || link.user === "both") {
                 return (
                   <div className="relative" key={index}>
-                    <Link
+                    <NavLink
                       to={link.path}
-                      className="px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md flex items-center gap-1 transition-colors md:py-1"
+                      title={link.text}
+                      className={({ isActive }) =>
+                        `px-4 py-2 rounded-md flex items-center gap-1 transition-colors md:py-1 
+                      text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 h-10 border border-indigo-300/20 max-md:border-none
+                        ${isActive ? "bg-indigo-100 text-indigo-700" : ""}`
+                      }
                     >
                       {link.icon}
-                      <span dir="rtl">{link.text}</span>
-                    </Link>
+                      <p dir="rtl" className="max-lg:hidden max-md:block">
+                        {link.text}
+                      </p>
+                    </NavLink>
                     {link.number && (
-                      <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute left-1.5 -top-1.5">
+                      <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute -left-2 -top-1.5 max-lg:hidden">
                         {link.number}
                       </span>
                     )}
@@ -374,6 +392,12 @@ export default function App() {
                 <Route path=":stage" element={<PostsInTeacherPosts />} />
               </Route>
             )}
+            <Route path="/searchTeachers" element={<SearchTeachers />} />
+            <Route path="/studentTeachers" element={<StudentTeachers />} />
+            <Route path="/studentTeachers/:id" element={<StudentTeacher />}>
+              <Route index element={<TeacherExams />} />
+              <Route path=":posts" element={<StudentPosts />} />
+            </Route>
             <Route path="/requests" element={<Requests />} />
             <Route path="/stages" element={<Stages />} />
             <Route path="/stages/:stage" element={<Stage />} />
@@ -383,7 +407,6 @@ export default function App() {
               path="/resumeCreateTest/:id"
               element={<ResumeCreateTest />}
             />
-            <Route path="/teacherProfile/:id" element={<TeacherProfile />} />
             <Route path="/joinCodes" element={<JoinCodes />} />
             <Route path="/joinCodes/:group" element={<JoinCodesGroup />} />
             <Route path="/userProfile/:id" element={<UserProfile />} />
@@ -396,6 +419,16 @@ export default function App() {
               </Route>
             </Route>
             <Route path="/exam/:id" element={<Exam />} />
+            <Route path="/examData/:id" element={<ExamData />}>
+              <Route
+                index
+                element={<StudentsGrades />}
+              />
+              <Route
+                path="/examData/:id/didNotTakeExam"
+                element={<DidNotTakeExam />}
+              />
+            </Route>
           </Routes>
         </div>
       </main>

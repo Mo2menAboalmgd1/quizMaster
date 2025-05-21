@@ -1,0 +1,162 @@
+import React, { useEffect, useState } from "react";
+import { supabase } from "../../config/supabase";
+import { useCurrentUser } from "../../store/useStore";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCheckCircle,
+  faSearch,
+  faUserCheck,
+} from "@fortawesome/free-solid-svg-icons";
+
+export default function SearchTeachers() {
+  const { currentUser } = useCurrentUser();
+  const userId = currentUser?.id;
+
+  const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  // 🕒 Debounce manually
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [query]);
+
+  // 🔄 جلب المدرسين اللي الطالب مشترك معاهم
+  const { data: myTeachers, isLoading: isLoadingMyTeachers } = useQuery({
+    queryKey: ["myTeachers", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teachers_students")
+        .select("teacherId")
+        .eq("studentId", userId);
+
+      if (error) throw new Error(error.message);
+      return data.map((d) => d.teacherId);
+    },
+    enabled: !!userId,
+  });
+
+  // 🔎 البحث في المدرسين
+  const { data: results = [], isLoading: isSearching } = useQuery({
+    queryKey: ["searchTeachers", debouncedQuery],
+    queryFn: async () => {
+      if (!debouncedQuery) return [];
+
+      const { data, error } = await supabase
+        .from("teachers")
+        .select("id, name, userName")
+        .or(
+          `name.ilike.%${debouncedQuery}%,userName.ilike.%${debouncedQuery}%`
+        );
+
+      if (error) throw new Error(error.message);
+      return data;
+    },
+    enabled: !!debouncedQuery,
+  });
+
+  return (
+    <div
+      className="max-w-xl mx-auto p-6 bg-gradient-to-b from-blue-50 to-white rounded-2xl shadow-lg"
+      dir="rtl"
+    >
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          البحث عن المعلمين
+        </h2>
+        <p className="text-gray-500">
+          ابحث واتصل بأفضل المعلمين لمساعدتك في دراستك
+        </p>
+      </div>
+
+      <div className="relative mb-6">
+        <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-400">
+          <FontAwesomeIcon icon={faSearch} />
+        </div>
+        <input
+          type="text"
+          placeholder="ابحث بالاسم أو اسم المستخدم"
+          className="w-full p-4 pr-12 border-0 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+      {!query && (
+        <p className="text-xs text-gray-400 -mt-3 px-1">
+          مثال: أحمد حسن أو ahmed224
+        </p>
+      )}
+
+      {(isSearching || isLoadingMyTeachers) && (
+        <div className="flex items-center justify-center py-8 text-blue-500">
+          <p>جارٍ البحث...</p>
+        </div>
+      )}
+
+      {!isSearching &&
+        !isLoadingMyTeachers &&
+        results.length === 0 &&
+        debouncedQuery && (
+          <div className="bg-gray-50 rounded-xl p-6 text-center">
+            <p className="text-gray-500 font-medium">لا يوجد نتائج مطابقة</p>
+            <p className="text-gray-400 text-sm mt-1">
+              حاول استخدام كلمات بحث مختلفة
+            </p>
+          </div>
+        )}
+
+      <div className="space-y-3">
+        {results.map((teacher) => {
+          const alreadyJoined = myTeachers?.includes(teacher.id);
+
+          return (
+            <Link
+              key={teacher.id}
+              to={`/studentTeachers/${teacher.id}`}
+              className="p-4 bg-white border border-gray-100 rounded-xl hover:bg-blue-50 transition-all duration-200 flex justify-between items-center shadow-sm hover:shadow-md group"
+            >
+              <div className="flex items-center gap-2">
+                <div className="bg-blue-100 text-blue-600 rounded-full h-12 w-12 flex items-center justify-center shrink-0">
+                  <FontAwesomeIcon icon={faUserCheck} />
+                </div>
+                <div>
+                  <p className="font-bold text-gray-800 group-hover:text-blue-700 transition-colors">
+                    {teacher.name}
+                  </p>
+                  <p className="text-sm text-gray-500">@{teacher.userName}</p>
+                </div>
+              </div>
+              {alreadyJoined ? (
+                <span className="flex items-center text-green-600 text-sm font-medium bg-green-50 py-1 px-3 rounded-full">
+                  <FontAwesomeIcon icon={faCheckCircle} />
+                  مشترك
+                </span>
+              ) : (
+                <span className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 text-sm font-medium">
+                  عرض الملف الشخصي
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Show this when no search is active */}
+      {!debouncedQuery && !isSearching && (
+        <div className="mt-8 bg-blue-50 rounded-xl p-6 text-center border border-blue-100">
+          <p className="text-blue-800 font-medium">
+            ابدأ البحث للعثور على المعلمين
+          </p>
+          <p className="text-blue-600 text-sm mt-1">
+            يمكنك البحث بالاسم أو اسم المستخدم
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}

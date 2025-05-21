@@ -1,5 +1,8 @@
 import React from "react";
-import { useStudentsAndRequestsByTeacherIdAndTable } from "../../QueriesAndMutations/QueryHooks";
+import {
+  useStudentsAndRequestsByTeacherIdAndTable,
+  useStudentsFromStudentsIds,
+} from "../../QueriesAndMutations/QueryHooks";
 import { useCurrentUser } from "../../store/useStore";
 import Loader from "../../components/Loader";
 import { useParams } from "react-router-dom";
@@ -20,8 +23,17 @@ export default function Stage() {
     "teachers_students"
   );
 
-  if (isStudentsLoading) return <Loader message="جاري تحميل الطلاب" />;
-  if (studentsError) {
+  const studentsIds = students?.map((student) => student.studentId);
+
+  const {
+    data: studentsData,
+    isLoading: isStudentsDataLoading,
+    error: studentsDataError,
+  } = useStudentsFromStudentsIds(studentsIds);
+
+  if (isStudentsLoading || isStudentsDataLoading)
+    return <Loader message="جاري تحميل الطلاب" />;
+  if (studentsError || studentsDataError) {
     return <ErrorPlaceHolder message="حدث خطأ اثناء جلب الطلاب" />;
   }
 
@@ -44,6 +56,7 @@ export default function Stage() {
             <StudentComponent
               key={student.studentId}
               studentId={student.studentId}
+              students={studentsData}
             />
           );
         })}

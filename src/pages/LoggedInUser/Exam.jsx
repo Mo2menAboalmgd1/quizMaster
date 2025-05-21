@@ -15,8 +15,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useSaveStudentResult } from "../../QueriesAndMutations/mutationsHooks";
 import DisplayFile from "../../components/DisplayFile";
 import toast from "react-hot-toast";
-import QuestionDisplayedInCreateTest from "../../components/QuestionDisplayedInCreateTest";
 import QuestionDisplayedInTheExam from "../../components/QuestionDisplayedInTheExam";
+import { supabase } from "../../config/supabase";
 
 export default function Exam() {
   const { id: examId } = useParams();
@@ -51,38 +51,39 @@ export default function Exam() {
 
   const { mutate: sendResult } = useSaveStudentResult();
 
-  const handleSendResult = () => {
-    let correctAnswers = 0;
-    let wrongAnswers = 0;
-    let notAnswered = 0;
+  const handleSendResult = async () => {
+    if (!currentUser?.id || !examId || !examData?.teacherId) {
+      toast.error("بيانات ناقصة لحساب النتيجة");
+      return;
+    }
 
-    toast.loading("جاري الحصول على النتيجة");
+    toast.loading("جاري حساب نتيجتك...");
 
-    questions.forEach((question) => {
-      const studentAnswer = studentAnswers.find(
-        (a) => a.questionId === question.id
-      );
-
-      const correctAnswer = question.answers?.find((a) => a.isCorrect);
-
-      if (!studentAnswer) {
-        notAnswered++;
-      } else if (studentAnswer.answerId === correctAnswer?.id) {
-        correctAnswers++;
-      } else {
-        wrongAnswers++;
-      }
+    const { data, error } = await supabase.rpc("calculate_exam_result", {
+      studentid: currentUser.id,
+      examid: examId,
     });
+
+    if (error) {
+      toast.error("حدث خطأ أثناء حساب النتيجة");
+      console.error("Supabase RPC error:", error.message);
+      return;
+    }
+
+    const { correct, wrong, not_answered, total } = data[0];
 
     sendResult({
-      studentId: currentUser?.id,
-      teacherId: examData?.teacherId,
+      studentId: currentUser.id,
+      teacherId: examData.teacherId,
       examId,
-      total: questions.length,
-      correct: correctAnswers,
-      wrong: wrongAnswers,
-      notAnswered,
+      total,
+      correct,
+      wrong,
+      notAnswered: not_answered,
     });
+
+    toast.dismiss();
+    toast.success("تم إرسال النتيجة بنجاح");
   };
 
   if (currentUser.type === "teacher") {
@@ -147,8 +148,8 @@ export default function Exam() {
 
       {/* questions iteration */}
       <div className="space-y-6">
-        {questions.map((question, index) => {
-          return (
+        {(!examResult || examData.isShowCorrection) &&
+          questions.map((question, index) => (
             <QuestionDisplayedInTheExam
               key={index}
               question={question}
@@ -157,8 +158,7 @@ export default function Exam() {
               questionNumber={index + 1}
               setFileDisplayed={setFileDisplayed}
             />
-          );
-        })}
+          ))}
       </div>
 
       {/* send exam button */}

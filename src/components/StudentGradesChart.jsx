@@ -44,7 +44,7 @@ const CustomTooltip = ({ active, payload }) => {
         <div className="mt-1 pt-1 border-t border-gray-100">
           <p className="text-sm">
             <span className="text-gray-600">Grade:</span>
-            <span className="font-medium ml-1">{data.grade}</span>
+            <span className="font-medium ml-1">{data.correct}</span>
             <span className="text-gray-500 mx-1">of</span>
             <span className="font-medium">{data.total}</span>
           </p>
@@ -74,6 +74,8 @@ export default function StudentGradesChart({ teacher, student }) {
     isLoading: isExmasResultsLoading,
     error: exmasResultsError,
   } = useExamsResultsByTeacherId(teacher.id, student.id);
+  
+  console.log(exmasResults);
 
   const examsTakenByStudent = exmasResults?.filter(
     (examResult) => examResult.studentId === student.id
@@ -118,8 +120,8 @@ export default function StudentGradesChart({ teacher, student }) {
       const data = await Promise.all(
         examsTakenByStudent.map(async (exam) => ({
           examName: await getExamName(exam.examId),
-          percentage: Math.round((exam.grade / exam.total) * 100),
-          grade: exam.grade,
+          percentage: Math.round((exam.correct / exam.total) * 100),
+          correct: exam.correct,
           total: exam.total,
         }))
       );

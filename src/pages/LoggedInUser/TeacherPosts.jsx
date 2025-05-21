@@ -35,9 +35,7 @@ export default function TeacherPosts() {
 
   if (stagesError || postsError) {
     return (
-      <ErrorPlaceHolder
-        message={"حدث خطأ أثناء جلب المراحل الدراسية، أعد المحاولة"}
-      />
+      <ErrorPlaceHolder message={"حدث خطأ أثناء جلب المنشورات، أعد المحاولة"} />
     );
   }
 
@@ -60,7 +58,7 @@ export default function TeacherPosts() {
             </span>
           )}
         </div>
-        {stages.map((stage, index) => {
+        {stages?.map((stage, index) => {
           const stagePosts = posts?.filter((post) => post.stage === stage);
           return (
             <div

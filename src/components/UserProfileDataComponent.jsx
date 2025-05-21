@@ -10,12 +10,12 @@ import { useCurrentUser } from "../store/useStore";
 import { useStudentsAndRequestsByTeacherIdAndTable } from "../QueriesAndMutations/QueryHooks";
 import Loader from "./Loader";
 import ErrorPlaceHolder from "./ErrorPlaceHolder";
-import NoDataPlaceHolder from "./NoDataPlaceHolder";
 
 export default function UserProfileDataComponent({ user }) {
   const [isMore, setIsMore] = React.useState(false);
   const [isEdit, setIsEdit] = React.useState(false);
   const { currentUser } = useCurrentUser();
+  console.log(isEdit);
 
   const isCurrentUserTeacher = currentUser?.type === "teacher";
   const isCurrentUserStudent = currentUser?.type === "student";
@@ -54,28 +54,52 @@ export default function UserProfileDataComponent({ user }) {
     isWatchingMyProfile,
   });
 
-  // const isMyAccount = currentUser?.id === user?.id;
-  // const amIStudent = isMyAccount && user?.type === "student";
-  // const amITeacher = isMyAccount && user?.type === "teacher";
+  const handleEditUserData = () => {};
 
-  // console.log("is my account: ", isMyAccount);
-  // const isTeacherLookingToHisStudentProfile =
-  //   amITeacher && user?.type === "student" &&
+  if (isStudentsLoading) {
+    return <Loader message="جاري التحميل" />;
+  }
 
-  // if (isTeacherLookingToHisStudentProfile) {
-  //   console.log("students: ", students);
-  // }
-
-  // if (isTeacherLookingToHisStudentProfile && isStudentsLoading) {
-  //   return <Loader message="جاري التحميل" />;
-  // }
-
-  // if (isTeacherLookingToHisStudentProfile && isStudentsError) {
-  //   return <ErrorPlaceHolder message="حدث خطأ ما، أعد المحاولة" />;
-  // }
+  if (isStudentsError) {
+    return <ErrorPlaceHolder message="حدث خطأ ما، أعد المحاولة" />;
+  }
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
+      {!isEdit && (
+        <ShowUserData
+          user={user}
+          isMore={isMore}
+          setIsMore={setIsMore}
+          isWatchingMyProfile={isWatchingMyProfile}
+          isEdit={isEdit}
+          setIsEdit={setIsEdit}
+          isCurrentUserTeacherAndWatchingHisStudentProfile={
+            isCurrentUserTeacherAndWatchingHisStudentProfile
+          }
+          handleEditUserData={handleEditUserData}
+          isCurrentUserStudentAndWatchingHisTeacherProfile={
+            isCurrentUserStudentAndWatchingHisTeacherProfile
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+function ShowUserData({
+  user,
+  isMore,
+  setIsMore,
+  isWatchingMyProfile,
+  isEdit,
+  setIsEdit,
+  isCurrentUserTeacherAndWatchingHisStudentProfile,
+  handleEditUserData,
+  isCurrentUserStudentAndWatchingHisTeacherProfile,
+}) {
+  return (
+    <>
       <div className="flex items-center gap-4">
         <img
           src={
@@ -122,7 +146,10 @@ export default function UserProfileDataComponent({ user }) {
         <div className="mt-4 pt-4 border-t border-gray-100 flex gap-2">
           {isWatchingMyProfile && (
             <>
-              <button className="px-3 py-1.5 space-x-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors cursor-pointer">
+              <button
+                onClick={() => setIsEdit(!isEdit)}
+                className="px-3 py-1.5 space-x-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors cursor-pointer"
+              >
                 <FontAwesomeIcon icon={faEdit} />
                 <span>تعديل البيانات</span>
               </button>
@@ -148,6 +175,6 @@ export default function UserProfileDataComponent({ user }) {
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }

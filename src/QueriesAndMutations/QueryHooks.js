@@ -21,7 +21,36 @@ import {
   getReactionsOnPost,
   getQuestionAnswersWithCorrection,
   getQuestionAnswersForExam,
+  getResults,
+  getStudentsFromStudentsIds,
+  getReactionsOnPostByTeacherId,
+  getReactionsOnPostByTeachersIds,
+  getExamsResultsByStudentId,
+  getUsersData,
 } from "../api/AllApiFunctions";
+
+// export const useCommonQuery = ({
+//   arguments,
+//   queryKey,
+//   queryFn,
+//   enabled = true,
+//   staleTime = 0,
+// }) => {
+//   return useQuery({
+//     queryKey,
+//     queryFn: () => queryFn(arguments),
+//     enabled,
+//     staleTime,
+//   });
+// };
+/*
+(
+  { studentId: currentUser?.id },
+  ["studentTeachers", currentUser?.id],
+  getTeachersByStudentId,
+  5 * 60 * 1000
+)
+*/
 
 export const useNotificationsByUserId = (userId) => {
   return useQuery({
@@ -65,6 +94,14 @@ export const useUserDataByUserId = (userId, table) => {
   });
 };
 
+export const useUserDataByUsersIdsAndKey = (usersIds, key, table) => {
+  return useQuery({
+    queryKey: [key, usersIds],
+    queryFn: () => getUsersData(usersIds, table),
+    enabled: usersIds?.length > 0,
+  });
+};
+
 export const useProfileByUserId = (userId) => {
   return useQuery({
     queryKey: ["profile", userId],
@@ -73,10 +110,19 @@ export const useProfileByUserId = (userId) => {
   });
 };
 
-export const useQuestionsByExamId = (examId) => {
+export const useQuestionsByExamId = (examId, type) => {
   return useQuery({
-    queryKey: ["questions", examId],
-    queryFn: () => getQuestions(examId),
+    queryKey:
+      type === "length" ? ["questionsLength", examId] : ["questions", examId],
+    queryFn: () => getQuestions(examId, type),
+    enabled: !!examId,
+  });
+};
+
+export const useReslutsByExamId = (examId) => {
+  return useQuery({
+    queryKey: ["examStudents", examId],
+    queryFn: () => getResults(examId),
     enabled: !!examId,
   });
 };
@@ -94,6 +140,22 @@ export const useReactionsByPostId = (postId) => {
     queryKey: ["post_reactions", postId],
     queryFn: () => getReactionsOnPost(postId),
     enabled: !!postId,
+  });
+};
+
+export const useReactionsByTeacherId = (teacherId) => {
+  return useQuery({
+    queryKey: ["post_reactions_teacherId", teacherId],
+    queryFn: () => getReactionsOnPostByTeacherId(teacherId),
+    enabled: !!teacherId,
+  });
+};
+
+export const useReactionsByTeachersIds = (teachersIds) => {
+  return useQuery({
+    queryKey: ["post_reactions_teacherIds", teachersIds],
+    queryFn: () => getReactionsOnPostByTeachersIds(teachersIds),
+    enabled: teachersIds?.length > 0,
   });
 };
 
@@ -123,6 +185,15 @@ export const useExamsResultsByTeacherId = (teacherId, studentId) => {
   });
 };
 
+export const useExamsResultsByStudentId = (studentId) => {
+  return useQuery({
+    queryKey: ["examsResults", studentId],
+    queryFn: () => getExamsResultsByStudentId(studentId),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!studentId,
+  });
+};
+
 // export const useStudentsAndRequestsByTeacherId = (teacherId) => {
 //   return useQuery({
 //     queryKey: ["studentsAndRequests", teacherId],
@@ -144,6 +215,15 @@ export const useStudentsAndRequestsByTeacherIdAndTable = (teacherId, table) => {
     queryFn: () => getStudentsAndRequests(teacherId, table),
     staleTime: 5 * 60 * 1000,
     enabled: !!teacherId && !!table,
+  });
+};
+
+export const useStudentsFromStudentsIds = (studentsIds) => {
+  return useQuery({
+    queryKey: ["students", studentsIds],
+    queryFn: () => getStudentsFromStudentsIds(studentsIds),
+    staleTime: 5 * 60 * 1000,
+    enabled: studentsIds?.length > 0,
   });
 };
 

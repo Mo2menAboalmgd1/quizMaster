@@ -392,34 +392,50 @@ export const useEditExamDataMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: editExamData,
-    onSuccess: (allData) => {
+    onSuccess: (action) => {
       toast.dismiss();
 
-      if (allData.isEdit === "publish") {
+      if (action.isEdit === "publish") {
         toast.success("تم نشر الاختبار بنجاح");
         saveAction({
-          userId: allData.teacherId,
-          action: `تم نشر اختبار ${allData.title} - ${allData.actionStage}`,
+          userId: action.teacherId,
+          action: `تم نشر اختبار ${action.title} - ${action.stage}`,
         });
       }
 
-      if (allData.isEdit === "unPublish") {
+      if (action.isEdit === "unPublish") {
         toast.success("تم إلغاء نشر الاختبار بنجاح");
         saveAction({
-          userId: allData.teacherId,
-          action: `تم إلغاء نشر اختبار ${allData.title} - ${allData.actionStage}`,
+          userId: action.teacherId,
+          action: `تم إلغاء نشر اختبار ${action.title} - ${action.stage}`,
         });
       }
 
-      if (allData.isEdit === "edit") {
+      if (action.isEdit === "edit") {
         toast.success("تم تعديل الاختبار بنجاح");
         saveAction({
-          userId: allData.teacherId,
-          action: `تم تعديل اختبار ${allData.actionTitle} - ${allData.actionStage}`,
+          userId: action.teacherId,
+          action: `تم تعديل اختبار ${action.title} - ${action.stage}`,
         });
       }
 
-      queryClient.invalidateQueries(["exam", allData.examId]);
+      if (action.isEdit === "showCorrection") {
+        toast.success("تم إظهار الاجابات الصحيحة للاختبار بنجاح");
+        saveAction({
+          userId: action.teacherId,
+          action: `تم إظهار الاجابات الصحيحة لإختبار ${action.title} - ${action.stage}`,
+        });
+      }
+
+      if (action.isEdit === "hideCorrection") {
+        toast.success("تم إخفاء الاجابات الصحيحة للاختبار بنجاح");
+        saveAction({
+          userId: action.teacherId,
+          action: `تم إخفاء الاجابات الصحيحة لإختبار ${action.title} - ${action.stage}`,
+        });
+      }
+
+      queryClient.invalidateQueries(["exam", action.examId]);
     },
   });
 };

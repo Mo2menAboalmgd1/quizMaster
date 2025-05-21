@@ -255,6 +255,17 @@ export const getUser = async (userId, table) => {
   return data;
 };
 
+export const getUsersData = async (usersIds, table) => {
+  const { error, data } = await supabase
+    .from(table)
+    .select("*")
+    .in("id", usersIds);
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
 export const getProfile = async (userId) => {
   const { error, data } = await supabase
     .from("profiles")
@@ -435,29 +446,47 @@ export const createNewExam = async (testData) => {
   return data;
 };
 
-export const editExamData = async (allData) => {
+export const editExamData = async ({ update, action }) => {
+  console.log("examId", action.examId);
   const { error } = await supabase
     .from("exams")
-    .update({
-      teacherId: allData.teacherId,
-      title: allData.title,
-      stage: allData.stage,
-      subject: allData.subject,
-      done: allData.done,
-    })
-    .eq("id", allData.examId);
+    .update(update)
+    .eq("id", action.examId);
 
   if (error) throw new Error(error.message);
 
-  return allData;
+  return action;
 };
 
-export const getQuestions = async (examId) => {
+export const getQuestions = async (examId, type) => {
+  if (type === "length") {
+    const { count, error } = await supabase
+      .from("questions")
+      .select("id", { count: "exact", head: true })
+      .eq("examId", examId);
+
+    if (error) throw new Error(error.message);
+    return count;
+  } else {
+    const { error, data } = await supabase
+      .from("questions")
+      .select(
+        "id, text, images, examId, answers:questionsAnswers(id, text, image, questionId)"
+      )
+      .eq("examId", examId)
+      .order("created_at", { ascending: true });
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+export const getResults = async (examId) => {
   const { error, data } = await supabase
-    .from("questions")
-    .select("*, answers:questionsAnswers(*)") // ✅ نجيب الإجابات كـ relation داخل السؤال
+    .from("examsResults")
+    .select("*")
     .eq("examId", examId)
-    .order("created_at", { ascending: true });
+    .order("correct", { ascending: false });
 
   if (error) throw new Error(error.message);
 
@@ -466,15 +495,14 @@ export const getQuestions = async (examId) => {
 
 export const reactToPost = async (data) => {
   // console.log("post_react_details: ", data)
+  const { error } = await supabase
+    .from("posts_reacts")
+    .delete()
+    .eq("post_id", data.postId)
+    .eq("user_id", data.userId);
+
+  if (error) throw new Error(error.message);
   if (data.type === "none") {
-    const { error } = await supabase
-      .from("posts_reacts")
-      .delete()
-      .eq("post_id", data.postId)
-      .eq("user_id", data.userId);
-
-    if (error) throw new Error(error.message);
-
     sendNotification({
       userId: data.teacherId,
       text: `قام ${
@@ -482,18 +510,11 @@ export const reactToPost = async (data) => {
       } بإزالة الإعجاب من منشورك (${data.postText.slice(0, 20)})`,
     });
   } else {
-    const { error: deletePreviousLikeError } = await supabase
-      .from("posts_reacts")
-      .delete()
-      .eq("post_id", data.postId)
-      .eq("user_id", data.userId);
-
-    if (deletePreviousLikeError) throw new Error(error.message);
-
     const { error } = await supabase.from("posts_reacts").upsert(
       {
         post_id: data.postId,
         user_id: data.userId,
+        teacher_id: data.teacherId,
         type: data.type,
       },
       { onConflict: ["post_id", "user_id"] }
@@ -526,12 +547,36 @@ export const getReactionsOnPost = async (postId) => {
   return data;
 };
 
+export const getReactionsOnPostByTeacherId = async (teacherId) => {
+  // console.log("post_react_details: ", data);
+  const { error, data } = await supabase
+    .from("posts_reacts")
+    .select("*")
+    .eq("teacher_id", teacherId);
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
+export const getReactionsOnPostByTeachersIds = async (teachersIds) => {
+  // console.log("post_react_details: ", data);
+  const { error, data } = await supabase
+    .from("posts_reacts")
+    .select("*")
+    .in("teacher_id", teachersIds);
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
 export const getPosts = async (teacherId) => {
   const { error, data } = await supabase
     .from("posts")
     .select("*")
     .eq("teacherId", teacherId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
 
@@ -545,6 +590,17 @@ export const getPostsDisplayedInStudentPosts = async (teachersIds, stages) => {
     .in("teacherId", teachersIds)
     .or(`stage.in.(${stages.map((s) => `"${s}"`).join(",")}),stage.eq.""`)
     .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
+export const getStudentsFromStudentsIds = async (studentsIds) => {
+  const { error, data } = await supabase
+    .from("students")
+    .select("*")
+    .in("id", studentsIds);
 
   if (error) throw new Error(error.message);
 
@@ -637,7 +693,7 @@ export const getQuestionAnswersForExam = async (questionId) => {
 export const getQuestionAnswersWithCorrection = async (questionId) => {
   const { error, data } = await supabase
     .from("questionsAnswers")
-    .select("*") // فيها isCorrect
+    .select("*") // فيها isCorrect، وتستخدم بعد ظهور النتيجة فقط
     .eq("questionId", questionId);
 
   if (error) throw new Error(error.message);
@@ -682,6 +738,16 @@ export const getExamsResults = async (teacherId, studentId) => {
     .from("examsResults")
     .select("*")
     .eq("teacherId", teacherId)
+    .eq("studentId", studentId);
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const getExamsResultsByStudentId = async (studentId) => {
+  const { data, error } = await supabase
+    .from("examsResults")
+    .select("*")
     .eq("studentId", studentId);
 
   if (error) throw new Error(error.message);

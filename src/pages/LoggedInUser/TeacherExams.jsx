@@ -1,24 +1,21 @@
+import { faArrowLeft, faFileAlt } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
-import { Link, useParams } from "react-router-dom";
 import {
-  useColumnByUserId,
   useExamsByTeacherId,
   useExamsResultsByTeacherId,
   useStudentsAndRequestsByTeacherIdAndTable,
 } from "../../QueriesAndMutations/QueryHooks";
-import { faArrowLeft, faFileAlt } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import ExamItemInTeacherProfile from "../../components/ExamItemInTeacherProfile";
-import toast from "react-hot-toast";
-import Loader from "../../components/Loader";
-import { useCurrentUser } from "../../store/useStore";
-import Join from "../../components/Join";
+import { Link, useParams } from "react-router-dom";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
+import { useCurrentUser } from "../../store/useStore";
 import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
+import Loader from "../../components/Loader";
+import ExamItemInTeacherProfile from "../../components/ExamItemInTeacherProfile";
 
-export default function TeacherProfile() {
+export default function TeacherExams() {
   const { id: teacherId } = useParams();
-  const { currentUser } = useCurrentUser(); // Assuming you have a useCurrentUser hook to get the current use
+  const { currentUser } = useCurrentUser();
 
   const {
     data: exams,
@@ -26,11 +23,7 @@ export default function TeacherProfile() {
     error: examsError,
   } = useExamsByTeacherId(teacherId, true);
 
-  const {
-    data: stages,
-    isLoading: isStagesLoading,
-    error: stagesError,
-  } = useColumnByUserId(teacherId, "teachers", "stages");
+  console.log(exams);
 
   const {
     data: examsTakenByStudent,
@@ -55,76 +48,19 @@ export default function TeacherProfile() {
   );
   const isTherePublicExam = exams?.some((exam) => exam.stage == "");
 
-  const {
-    data: requests,
-    isLoading: isRequestsLoading,
-    error: requestsError,
-  } = useStudentsAndRequestsByTeacherIdAndTable(teacherId, "teachers_requests");
-
-  if (
-    isStudentsLoading ||
-    isRequestsLoading ||
-    isStagesLoading ||
-    isStudentsLoading ||
-    isexamsTakenByStudentLoading
-  ) {
+  if (isExamsLoading || isexamsTakenByStudentLoading || isStudentsLoading) {
     return <Loader message="جري التحميل" />;
   }
 
-  if (studentsError) {
-    toast.error(studentsError.message);
-    return;
-  }
-
-  if (examsTakenByStudentError) {
-    toast.error(examsTakenByStudentError.message);
-    return;
-  }
-
-  if (requestsError) {
-    toast.error(requestsError.message);
-    return;
-  }
-
-  if (stagesError) {
-    toast.error(stagesError.message);
-    return;
-  }
-
-  if (studentsError) {
-    toast.error(studentsError.message);
-    return;
-  }
-
-  const isStudent = students.some(
-    (student) => student.studentId === currentUser.id
-  );
-  const isRequested = requests.some(
-    (request) => request.studentId === currentUser.id
-  );
-
-  if (!isStudent && !isRequested) {
-    return <Join teacherId={teacherId} stages={stages} requests={requests} />;
-  }
-
-  if (!isStudent && isRequested) {
+  if (examsError || examsTakenByStudentError || studentsError) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-center">
-        <p className="mt-4 text-lg font-medium text-red-600">
-          سيصلك إشعار في حال قبول أو رفض انضمامك إلى المعلم
-        </p>
-      </div>
+      <ErrorPlaceHolder
+        message={"حدث خطأ أثناء جلب الامتحانات، أعد المحاولة"}
+      />
     );
   }
 
-  if (isExamsLoading) return <Loader message="جري تحميل الامتحانات" />;
-
-  if (examsError) {
-    toast.error(examsError.message);
-    return <ErrorPlaceHolder message={examsError.message} />;
-  }
-
-  if (exams.length === 0 || (!isThereAnyExamForMyId && !isTherePublicExam))
+  if (exams?.length === 0 || (!isThereAnyExamForMyId && !isTherePublicExam))
     return (
       <NoDataPlaceHolder
         icon={faFileAlt}

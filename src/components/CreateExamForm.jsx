@@ -4,10 +4,7 @@ import {
   useCreateNewExamMutation,
   useEditExamDataMutation,
 } from "../QueriesAndMutations/mutationsHooks";
-import {
-  useColumnByUserId,
-  useQuestionsByExamId,
-} from "../QueriesAndMutations/QueryHooks";
+import { useColumnByUserId } from "../QueriesAndMutations/QueryHooks";
 import toast from "react-hot-toast";
 import {
   faArrowRotateBack,
@@ -41,9 +38,7 @@ export default function CreateExamForm({
   } = useColumnByUserId(currentUser?.id, "teachers", "stages");
 
   const { mutate: newExamMutation } = useCreateNewExamMutation(setExamId);
-  const { mutateAsync: editExamMutation } = useEditExamDataMutation();
-  const { data: questions } = useQuestionsByExamId(examId);
-
+  const { mutateAsync: editExam } = useEditExamDataMutation();
   const handleCreateNewExam = (e) => {
     toast.loading("جاري الإنشاء");
     e.preventDefault();
@@ -62,55 +57,34 @@ export default function CreateExamForm({
     toast.loading("جاري التعديل");
     e.preventDefault();
     const formData = new FormData(e.target);
-    const testData = {
-      title: formData.get("examName"),
-      stage: selectedStage,
-      teacherId: currentUser.id,
-      actionStage: examData.stage || "(اختبار عام)",
-      actionTitle: examData.title,
-    };
-    await editExamMutation({
-      ...testData,
-      examId: examData.id,
-      isEdit: "edit",
+    await editExam({
+      action: {
+        teacherId: currentUser.id,
+        stage: examData.stage || "(اختبار عام)",
+        title: examData.title,
+        isEdit: "publish",
+        examId,
+      },
+      update: {
+        title: formData.get("examName"),
+        stage: selectedStage,
+      },
     });
   };
 
-  const handlePublishExam = async () => {
-    toast.loading("جاري النشر");
-    console.log(questions);
-    if (!questions || questions.length < 1) {
-      return toast.error("لا يوجد أسئلة في الاختبار");
-    }
-
-    const testData = {
-      done: true,
-      actionStage: examData.stage || "(اختبار عام)",
-      teacherId: currentUser?.id,
-      title: examData.title,
-    };
-
-    await editExamMutation({
-      ...testData,
-      examId: examData.id,
-      isEdit: "publish",
+  const handlePublishAndUndoPublish = async (isPublish) => {
+    await editExam({
+      action: {
+        teacherId: currentUser.id,
+        title: examData.title,
+        stage: examData.stage || "(اختبار عام)",
+        isEdit: isPublish ? "publish" : "unPublish",
+        examId,
+      },
+      update: {
+        done: isPublish,
+      },
     });
-  };
-
-  const { mutateAsync: undoPublishMutation } = useEditExamDataMutation();
-
-  const handleUndoPublish = async (examId) => {
-    toast.loading("جاري إلغاء النشر");
-    const testData = {
-      done: false,
-      actionStage: examData.stage || "(اختبار عام)",
-      teacherId: currentUser?.id,
-      title: examData.title,
-    };
-
-    console.log(testData);
-
-    await undoPublishMutation({ ...testData, examId, isEdit: "unPublish" });
   };
 
   if (isStagesLoading) {
@@ -188,7 +162,7 @@ export default function CreateExamForm({
 
         {examData && !examData?.done ? (
           <button
-            onClick={handlePublishExam}
+            onClick={() => handlePublishAndUndoPublish(true)}
             type="button"
             className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 px-6 rounded-lg shadow-sm transition-all shrink-0 flex items-center justify-center gap-2"
           >
@@ -197,7 +171,7 @@ export default function CreateExamForm({
           </button>
         ) : examData && examData?.done ? (
           <button
-            onClick={() => handleUndoPublish(examId)}
+            onClick={() => handlePublishAndUndoPublish(false)}
             type="button"
             className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black py-3 px-6 rounded-lg shadow-sm transition-all shrink-0 flex items-center justify-center gap-2"
           >

@@ -2,7 +2,6 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import {
   useProfileByUserId,
-  useStudentsAndRequestsByTeacherIdAndTable,
   useUserDataByUserId,
 } from "../../QueriesAndMutations/QueryHooks";
 import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";

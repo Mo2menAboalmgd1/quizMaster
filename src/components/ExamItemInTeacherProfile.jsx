@@ -15,7 +15,7 @@ export default function ExamItemInTeacherProfile({ exam, isExamTaken }) {
   const {
     data: questions,
     error: questionsError,
-  } = useQuestionsByExamId(exam.id);
+  } = useQuestionsByExamId(exam.id, "length");
 
   if (questionsError) {
     toast.error(questionsError.message);
@@ -63,7 +63,7 @@ export default function ExamItemInTeacherProfile({ exam, isExamTaken }) {
               icon={faQuestionCircle}
               className="text-gray-400"
             />
-            {questions?.length || 0} سؤال
+            {questions} سؤال
           </span>
         </div>
       </div>

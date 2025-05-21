@@ -3,13 +3,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { NavLink } from "react-router-dom";
 
-export default function Folder({ path, text }) {
+export default function Folder({ path, text, isEnd }) {
   return (
-    <NavLink to={path} className="relative">
+    <NavLink end={isEnd} to={path} className="relative">
       {({ isActive }) => (
         <div
           className={`p-4 border bg-white hover:bg-gray-50 rounded-xl hover:shadow-md transition-all duration-300
-            w-fit flex items-center gap-3 group
+            flex items-center gap-3 group max-sm:w-[calc(100vw-30px)]
             ${isActive ? "border-blue-500" : "border-gray-200"}
           `}
         >
