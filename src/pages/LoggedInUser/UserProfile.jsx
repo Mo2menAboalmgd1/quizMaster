@@ -18,12 +18,12 @@ export default function UserProfile() {
   // console.log("current user: ", currentUser);
 
   const {
-    data: userType,
-    isLoading: isUserTypeLoading,
-    error: userTypeError,
+    data: profile,
+    isLoading: isProfileLoading,
+    error: profileError,
   } = useProfileByUserId(userId);
 
-  const userTableName = userType?.type ? `${userType?.type}s` : null;
+  const userTableName = profile?.type ? `${profile?.type}s` : null;
 
   const {
     data: user,
@@ -31,17 +31,15 @@ export default function UserProfile() {
     error: userError,
   } = useUserDataByUserId(userId, userTableName);
 
-  // console.log("user: ", user);
+  if (isProfileLoading || isUserLoading) return <p>Loading...</p>;
 
-  if (isUserTypeLoading || isUserLoading) return <p>Loading...</p>;
-
-  if (!user || !userType) {
+  if (!user || !profile) {
     return (
       <NoDataPlaceHolder icon={faUser} message={"لم يتم العثور على المستخدم"} />
     );
   }
 
-  if (userTypeError || userError) {
+  if (profileError || userError) {
     return (
       <ErrorPlaceHolder
         message={"حدث خطأ أثناء العثور على المستخدم، حاول مجدداً"}
@@ -59,8 +57,15 @@ export default function UserProfile() {
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6 p-4">
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm">
-        <UserProfileDataComponent user={user} userType={userType} />
+      <div
+        className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm"
+        dir="rtl"
+      >
+        <UserProfileDataComponent
+          userId={userId}
+          profile={profile}
+          userTableName={userTableName}
+        />
       </div>
 
       {isCurrentUserTeacherInStudentTeachersList && (

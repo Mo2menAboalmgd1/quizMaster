@@ -13,10 +13,12 @@
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
-    "@supabase/supabase-js": "^2.49.4",
+    "@supabase/supabase-js": "^2.49.8",
     "@tailwindcss/vite": "^4.1.4",
     "@tanstack/react-query": "^5.74.11",
     "clsx": "^2.1.1",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
     "iconify": "^1.4.0",
     "nanoid": "^5.1.5",
     "react": "^19.0.0",
@@ -38,5 +40,18 @@
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
     "vite": "^6.3.1"
-  }
+  },
+  "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mo2menAboalmgd1/quizMaster.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Mo2menAboalmgd1/quizMaster/issues"
+  },
+  "homepage": "https://github.com/Mo2menAboalmgd1/quizMaster#readme"
 }

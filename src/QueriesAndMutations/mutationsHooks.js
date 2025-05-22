@@ -6,6 +6,7 @@ import {
   deleteNotification,
   deleteQuestion,
   editExamData,
+  editProfile,
   editQeustion,
   generateJoinCode,
   getColumn,
@@ -25,6 +26,7 @@ import {
   saveResult,
   sendNotification,
   signIn,
+  unJoinTeacher,
   uploadAnswer,
   UploadImages,
 } from "../api/AllApiFunctions";
@@ -92,6 +94,39 @@ export const useJoinTeacherMutation = (setIsJoin) => {
       toast.success("تم الإرسال بنجاح، في انتظار الموافقة");
       setIsJoin(false);
       queryClient.invalidateQueries(["requests", teacherId]);
+    },
+  });
+};
+
+export const useUnJoinMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: unJoinTeacher,
+    onError: (error) => {
+      toast.dismiss();
+      toast.error(error.message);
+    },
+    onSuccess: ({ user, currentUser }) => {
+      toast.dismiss();
+      if (currentUser?.type === "teacher") {
+        toast.success("تم إزالة الطالب بنجاح");
+        sendNotification({
+          userId: user.id,
+          text: `تم طردك من قبل ${
+            currentUser.gender === "male" ? "الأستاذ" : "الأستاذة"
+          } ${currentUser.name}`,
+        });
+        queryClient.invalidateQueries(["students", currentUser.id]);
+      } else {
+        toast.success("لقد غادرت هذه المجموعة");
+        saveAction({
+          userId: user.id,
+          action: `لقد غادرت مجموعة ${
+            currentUser.gender === "male" ? "الأستاذ" : "الأستاذة"
+          } ${user.name}`,
+        });
+        queryClient.invalidateQueries(["students", user.id]);
+      }
     },
   });
 };
@@ -436,6 +471,21 @@ export const useEditExamDataMutation = () => {
       }
 
       queryClient.invalidateQueries(["exam", action.examId]);
+    },
+  });
+};
+
+export const useEditUserdataMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: editProfile,
+    onSuccess: async ({ update, action }) => {
+      toast.success("تم تعديل البيانات بنجاح");
+      saveAction({
+        userId: action.userId,
+        action: `قمت بتعديل بياناتك الشخصية`,
+      });
+      queryClient.invalidateQueries(["userData", action.userId, update.table]);
     },
   });
 };

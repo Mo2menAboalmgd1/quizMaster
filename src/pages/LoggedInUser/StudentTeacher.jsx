@@ -104,6 +104,7 @@ export default function StudentTeacher() {
       <div className="flex gap-5 justify-center flex-wrap">
         <Folder path={""} text={"الامتحانات"} isEnd={true} />
         <Folder path={"posts"} text={"المنشورات"} />
+        <Folder path={`/userProfile/${teacherId}`} text={"الملف الشخصي"} />
       </div>
       <div className="pt-4">
         <Outlet />

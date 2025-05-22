@@ -42,6 +42,17 @@ export default function AlertBox({
       : type === "yellow"
       ? "text-yellow-500"
       : "text-gray-700";
+
+  const buttonsColor =
+    type === "red"
+      ? "bg-red-500 hover:bg-red-700"
+      : type === "green"
+      ? "bg-green-500 hover:bg-green-700"
+      : type === "blue"
+      ? "bg-blue-500 hover:bg-blue-700"
+      : type === "yellow"
+      ? "bg-yellow-500 hover:bg-yellow-700"
+      : "bg-gray-500 hover:bg-gray-700";
   return (
     <div
       className="h-screen w-screen bg-black/40 fixed inset-0 z-30"
@@ -61,7 +72,7 @@ export default function AlertBox({
               <button
                 onClick={secondOptionFunction}
                 title={secondOptionDescription}
-                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                className={`${buttonsColor} text-white font-bold py-2 px-4 rounded cursor-pointer`}
               >
                 {secondOptionText}
               </button>
@@ -69,7 +80,7 @@ export default function AlertBox({
             <button
               title={firstOptionDescription}
               onClick={firstOptionFunction}
-              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+              className={`${buttonsColor} text-white font-bold py-2 px-4 rounded cursor-pointer`}
             >
               {firstOptionText}
             </button>

@@ -115,6 +115,28 @@ export const joinTeacher = async ({ teacherId, stage, studentId }) => {
   return teacherId;
 };
 
+export const unJoinTeacher = async ({ user, currentUser }) => {
+  if (currentUser?.type === "teacher") {
+    const { error } = await supabase
+      .from("teachers_students")
+      .delete()
+      .eq("teacherId", currentUser.id)
+      .eq("studentId", user.id);
+
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase
+      .from("teachers_students")
+      .delete()
+      .eq("teacherId", user.id)
+      .eq("studentId", currentUser.id);
+
+    if (error) throw new Error(error.message);
+  }
+
+  return { user, currentUser };
+};
+
 export const joinTeacherWithJoinCode = async ({
   value,
   teacherId,
@@ -264,6 +286,45 @@ export const getUsersData = async (usersIds, table) => {
   if (error) throw new Error(error.message);
 
   return data;
+};
+
+export const editProfile = async ({ update, action }) => {
+  let avatarUrl = update.avatar;
+
+  if (update.avatar instanceof File) {
+    const uniqueName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 8)}-${update.avatar.name}`;
+    const imgPath = `${action.userId}/userimages/${uniqueName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("userimages")
+      .upload(imgPath, update.avatar);
+
+    if (uploadError) {
+      console.error(
+        "❌ فشل رفع الصورة:",
+        update.avatar.name,
+        uploadError.message
+      );
+      throw new Error(`فشل رفع الصورة: ${update.avatar.name}`);
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("userimages")
+      .getPublicUrl(imgPath);
+
+    avatarUrl = urlData.publicUrl;
+  }
+
+  const { error } = await supabase
+    .from(update.table)
+    .update({ ...update.userData, avatar: avatarUrl })
+    .eq("id", action.userId);
+
+  if (error) throw new Error(error.message);
+
+  return { update, action };
 };
 
 export const getProfile = async (userId) => {
