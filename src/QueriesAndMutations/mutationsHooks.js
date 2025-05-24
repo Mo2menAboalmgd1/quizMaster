@@ -139,8 +139,34 @@ export const useJoinTeacherWithJoinCodeMutation = (setIsJoin) => {
     onError: (error) => {
       toast.error(error.message);
     },
-    onSuccess: (teacherId) => {
-      toast.success("لقد انضممت لهذه المجموعة بنجاح");
+    onSuccess: ({
+      teacherId,
+      teacherGender,
+      teacherName,
+      stage,
+      value,
+      studentId,
+    }) => {
+      // {teacherId, teacherName:teacher.name, teacherGender: teacher.gender, stage,  value}
+      if (value === "directJoin") {
+        toast.success("تمت إضافة الطالب بنجاح");
+        console.log({
+          teacherId,
+          teacherGender,
+          teacherName,
+          stage,
+          value,
+          studentId,
+        });
+        sendNotification({
+          userId: studentId,
+          text: `تم ضمك إلى (${stage}) بواسطة ${
+            teacherGender === "male" ? "الأستاذ" : "الأستاذة"
+          } ${teacherName}`,
+        });
+      } else {
+        toast.success("لقد انضممت لهذه المجموعة بنجاح");
+      }
       setIsJoin(false);
       queryClient.invalidateQueries(["students", teacherId]);
     },

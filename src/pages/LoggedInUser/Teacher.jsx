@@ -16,7 +16,7 @@ export default function Teacher() {
     data: teacherExams,
     isLoading: isTeacherExamsLoading,
     error: teacherExamsError,
-  } = useExamsByTeacherId(currentUser.id, false);
+  } = useExamsByTeacherId(currentUser.id, "all");
 
   const {
     data: students,
@@ -41,7 +41,7 @@ export default function Teacher() {
   if (teacherExamsError || studentsError || actionsError)
     return <ErrorPlaceHolder message={"حدث خطأ ما، أعد المحاولة"} />;
 
-  const unPublishedExams = teacherExams.filter((exam) => !exam.done);
+  const unPublishedExams = teacherExams.filter((exam) => !exam.isPublished);
 
   // const completedExams = teacherExams.filter((exam) => exam.done);
   // const incompletedExams = teacherExams.filter((exam) => !exam.done);

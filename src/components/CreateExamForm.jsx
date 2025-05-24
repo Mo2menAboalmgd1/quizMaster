@@ -4,7 +4,10 @@ import {
   useCreateNewExamMutation,
   useEditExamDataMutation,
 } from "../QueriesAndMutations/mutationsHooks";
-import { useColumnByUserId } from "../QueriesAndMutations/QueryHooks";
+import {
+  useColumnByUserId,
+  useQuestionsByExamId,
+} from "../QueriesAndMutations/QueryHooks";
 import toast from "react-hot-toast";
 import {
   faArrowRotateBack,
@@ -37,6 +40,12 @@ export default function CreateExamForm({
     error: stagesError,
   } = useColumnByUserId(currentUser?.id, "teachers", "stages");
 
+  const {
+    data: questions,
+    isLoading: isQuestionsLoading,
+    error: questionsError,
+  } = useQuestionsByExamId(examId);
+
   const { mutate: newExamMutation } = useCreateNewExamMutation(setExamId);
   const { mutateAsync: editExam } = useEditExamDataMutation();
   const handleCreateNewExam = (e) => {
@@ -62,7 +71,7 @@ export default function CreateExamForm({
         teacherId: currentUser.id,
         stage: examData.stage || "(اختبار عام)",
         title: examData.title,
-        isEdit: "publish",
+        isEdit: "edit",
         examId,
       },
       update: {
@@ -73,6 +82,10 @@ export default function CreateExamForm({
   };
 
   const handlePublishAndUndoPublish = async (isPublish) => {
+    if (questions?.length < 2) {
+      toast.error("يجب إضافة سؤالين على الأقل");
+      return;
+    }
     await editExam({
       action: {
         teacherId: currentUser.id,
@@ -82,17 +95,17 @@ export default function CreateExamForm({
         examId,
       },
       update: {
-        done: isPublish,
+        isPublished: isPublish,
       },
     });
   };
 
-  if (isStagesLoading) {
+  if (isStagesLoading || isQuestionsLoading) {
     return <Loader message="جاري التحميل" />;
   }
 
-  if (stagesError) {
-    toast.error("حدث خطأ أثناء تحميل المراحل");
+  if (stagesError || questionsError) {
+    toast.error("حدث خطأ ما، أعد المحاولة");
     return null; // Render nothing or handle the error appropriately
   }
 
@@ -160,20 +173,20 @@ export default function CreateExamForm({
           {isCreate ? (examData ? "تعديل" : "إنشاء") : "تعديل"}
         </button>
 
-        {examData && !examData?.done ? (
+        {examData && !examData?.isPublished ? (
           <button
             onClick={() => handlePublishAndUndoPublish(true)}
             type="button"
-            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 px-6 rounded-lg shadow-sm transition-all shrink-0 flex items-center justify-center gap-2"
+            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 px-6 rounded-lg shadow-sm transition-all shrink-0 flex items-center justify-center gap-2 cursor-pointer"
           >
             <FontAwesomeIcon icon={faUpload} />
             نشر الاختبار
           </button>
-        ) : examData && examData?.done ? (
+        ) : examData && examData?.isPublished ? (
           <button
             onClick={() => handlePublishAndUndoPublish(false)}
             type="button"
-            className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black py-3 px-6 rounded-lg shadow-sm transition-all shrink-0 flex items-center justify-center gap-2"
+            className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black py-3 px-6 rounded-lg shadow-sm transition-all shrink-0 flex items-center justify-center gap-2 cursor-pointer"
           >
             <FontAwesomeIcon icon={faArrowRotateBack} />
             إلغاء نشر الاختبار

@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import StduentGradesChart from "./StudentGradesChart";
 import {
   useAlotIfRowsInAnyTable,
   useTeachersFromTeachersStudents,
@@ -8,6 +7,7 @@ import ErrorPlaceHolder from "./ErrorPlaceHolder";
 import NoDataPlaceHolder from "./NoDataPlaceHolder";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import Loader from "./Loader";
+import GradesChart from "./StudentGradesChart";
 
 export default function StudentTeachersInOwnProfile({ student }) {
   const {
@@ -70,7 +70,7 @@ export default function StudentTeachersInOwnProfile({ student }) {
       {/* Selected Teacher Chart */}
       <div className="p-2">
         {selectedTeacher ? (
-          <StduentGradesChart teacher={selectedTeacher} student={student} />
+          <GradesChart teacher={selectedTeacher} student={student} />
         ) : (
           <div className="text-center py-6 px-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
             <p className="text-gray-500">

@@ -2,6 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import {
   useProfileByUserId,
+  useStudentsAndRequestsByTeacherIdAndTable,
   useUserDataByUserId,
 } from "../../QueriesAndMutations/QueryHooks";
 import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
@@ -9,8 +10,10 @@ import { faUser } from "@fortawesome/free-solid-svg-icons";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import UserProfileDataComponent from "../../components/UserProfileDataComponent";
 import { useCurrentUser } from "../../store/useStore";
-import StudentGradesChart from "../../components/StudentGradesChart";
 import StudentTeachersInOwnProfile from "../../components/StudentTeachersInOwnProfile";
+import Loader from "../../components/Loader";
+import GradesChart from "../../components/StudentGradesChart";
+import StudentGradesOverview from "../../components/StudentGradesOverview";
 
 export default function UserProfile() {
   const { id: userId } = useParams();
@@ -31,7 +34,23 @@ export default function UserProfile() {
     error: userError,
   } = useUserDataByUserId(userId, userTableName);
 
-  if (isProfileLoading || isUserLoading) return <p>Loading...</p>;
+  const {
+    data: teacherStudents,
+    isLoading: isTeacherStudentsLoading,
+    error: teacherStudentsError,
+  } = useStudentsAndRequestsByTeacherIdAndTable(
+    currentUser?.id,
+    "teachers_students"
+  );
+
+  const studentStage = teacherStudents.find(
+    (student) => student.studentId === user?.id
+  )?.stage;
+
+  console.log("studentStage: ", studentStage);
+
+  if (isProfileLoading || isUserLoading || isTeacherStudentsLoading)
+    return <Loader message="جاري التحميل" />;
 
   if (!user || !profile) {
     return (
@@ -39,7 +58,7 @@ export default function UserProfile() {
     );
   }
 
-  if (profileError || userError) {
+  if (profileError || userError || teacherStudentsError) {
     return (
       <ErrorPlaceHolder
         message={"حدث خطأ أثناء العثور على المستخدم، حاول مجدداً"}
@@ -47,38 +66,40 @@ export default function UserProfile() {
     );
   }
 
+  const isCurrentUserTeacher = currentUser.type === "teacher";
+
+  const isCurrentUserStudent = currentUser.type === "student";
+
+  // const isViewedProfileTeacher = user.type === "teacher";
+
+  const isViewedProfileStudent = user.type === "student";
+
   const isCurrentUserTeacherInStudentTeachersList =
-    currentUser.type === "teacher" &&
-    user.type === "student" &&
-    user.teachers?.some((teacherId) => teacherId === currentUser.id);
+    isCurrentUserTeacher &&
+    isViewedProfileStudent &&
+    teacherStudents?.some((student) => student.studentId === user.id);
+
+  console.log(teacherStudents);
 
   const isCurrentUserStudentVeiwingOwnProfile =
-    currentUser.type === "student" && user.id === currentUser.id;
+    isCurrentUserStudent && user.id === currentUser.id;
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-6 p-4">
-      <div
-        className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm"
-        dir="rtl"
-      >
+    <div className="w-full space-y-6 p-4">
+      <div dir="rtl">
         <UserProfileDataComponent
-          userId={userId}
           profile={profile}
           userTableName={userTableName}
+          user={user}
         />
       </div>
 
       {isCurrentUserTeacherInStudentTeachersList && (
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 border-b border-green-100">
-            <h2 className="text-lg font-semibold text-green-800 text-center">
-              أداء الطالب في الاختبارات
-            </h2>
-          </div>
-          <div className="p-4">
-            <StudentGradesChart teacher={currentUser} student={user} />
-          </div>
-        </div>
+        <StudentGradesOverview
+          user={user}
+          currentUser={currentUser}
+          stage={studentStage}
+        />
       )}
 
       {isCurrentUserStudentVeiwingOwnProfile && (

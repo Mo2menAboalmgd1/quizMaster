@@ -27,6 +27,7 @@ import {
   getReactionsOnPostByTeachersIds,
   getExamsResultsByStudentId,
   getUsersData,
+  getExamsDataFromIds,
 } from "../api/AllApiFunctions";
 
 // export const useCommonQuery = ({
@@ -167,12 +168,22 @@ export const useTeachersPosts = (teachersIds, stages) => {
   });
 };
 
-export const useExamsByTeacherId = (teacherId, done) => {
+export const useExamsByTeacherId = (teacherId, isPublished) => {
+  console.log("isPublished", isPublished);
   return useQuery({
-    queryKey: ["exams", teacherId],
-    queryFn: () => getExams(teacherId, done),
+    queryKey: ["exams", teacherId, isPublished],
+    queryFn: () => getExams(teacherId, isPublished),
     staleTime: 5 * 60 * 1000,
     enabled: !!teacherId,
+  });
+};
+
+export const useExamsDataByExamsIds = (examsIds) => {
+  return useQuery({
+    queryKey: ["exams", examsIds],
+    queryFn: () => getExamsDataFromIds(examsIds),
+    staleTime: 5 * 60 * 1000,
+  enabled: examsIds?.length > 0,
   });
 };
 
@@ -193,14 +204,6 @@ export const useExamsResultsByStudentId = (studentId) => {
     enabled: !!studentId,
   });
 };
-
-// export const useStudentsAndRequestsByTeacherId = (teacherId) => {
-//   return useQuery({
-//     queryKey: ["studentsAndRequests", teacherId],
-//     queryFn: () => (teacherId ? getStudentsAndRequests(teacherId) : null),
-//     staleTime: 5 * 60 * 1000,
-//   });
-// };
 
 export const useStudentsAndRequestsByTeacherIdAndTable = (teacherId, table) => {
   return useQuery({

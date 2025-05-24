@@ -21,7 +21,7 @@ export default function StageExams() {
     data: exams,
     isLoading: isExamsLoading,
     isError: examsError,
-  } = useExamsByTeacherId(currentUser.id);
+  } = useExamsByTeacherId(currentUser.id, "all");
 
   if (isExamsLoading) {
     return <Loader message="جاري التحميل" />;
@@ -37,10 +37,10 @@ export default function StageExams() {
     return <NoDataPlaceHolder message={"لا يوجد امتحانات"} icon={faFileAlt} />;
   }
 
-  const doneExams = exams.filter((exam) => exam.done);
-  const notDoneExams = exams.filter((exam) => !exam.done);
-  const doneStageExams = doneExams.filter((exam) => exam.stage === newStage);
-  const notDoneStageExams = notDoneExams.filter(
+  const publishedExams = exams.filter((exam) => exam.isPublished);
+  const notPublishedExams = exams.filter((exam) => !exam.isPublished);
+  const publishedStageExams = publishedExams.filter((exam) => exam.stage === newStage);
+  const notPublishedStageExams = notPublishedExams.filter(
     (exam) => exam.stage === newStage
   );
 
@@ -53,7 +53,7 @@ export default function StageExams() {
       </div>
       {
         <TeacherExamsList
-          list={isPublished ? doneStageExams : notDoneStageExams}
+          list={isPublished ? publishedStageExams : notPublishedStageExams}
           isPublished={isPublished}
         />
       }

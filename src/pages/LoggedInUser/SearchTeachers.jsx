@@ -49,7 +49,7 @@ export default function SearchTeachers() {
 
       const { data, error } = await supabase
         .from("teachers")
-        .select("id, name, userName")
+        .select("id, name, userName, subject, avatar")
         .or(
           `name.ilike.%${debouncedQuery}%,userName.ilike.%${debouncedQuery}%`
         );
@@ -113,6 +113,7 @@ export default function SearchTeachers() {
       <div className="space-y-3">
         {results.map((teacher) => {
           const alreadyJoined = myTeachers?.includes(teacher.id);
+          console.log(teacher);
 
           return (
             <Link
@@ -121,20 +122,29 @@ export default function SearchTeachers() {
               className="p-4 bg-white border border-gray-100 rounded-xl hover:bg-blue-50 transition-all duration-200 flex justify-between items-center shadow-sm hover:shadow-md group"
             >
               <div className="flex items-center gap-2">
-                <div className="bg-blue-100 text-blue-600 rounded-full h-12 w-12 flex items-center justify-center shrink-0">
-                  <FontAwesomeIcon icon={faUserCheck} />
-                </div>
+                {teacher.avatar ? (
+                  <img
+                    src={teacher.avatar}
+                    alt={teacher.name}
+                    className="w-12 h-12 rounded-full object-cover shadow-md"
+                  />
+                ) : (
+                  <div className="bg-blue-100 text-blue-600 rounded-full h-12 w-12 flex items-center justify-center shrink-0">
+                    <FontAwesomeIcon icon={faUserCheck} />
+                  </div>
+                )}
                 <div>
                   <p className="font-bold text-gray-800 group-hover:text-blue-700 transition-colors">
-                    {teacher.name}
+                    <span>{teacher.name}</span>
+                    <span> - {teacher.subject}</span>
                   </p>
                   <p className="text-sm text-gray-500">@{teacher.userName}</p>
                 </div>
               </div>
               {alreadyJoined ? (
-                <span className="flex items-center text-green-600 text-sm font-medium bg-green-50 py-1 px-3 rounded-full">
+                <span className="flex items-center gap-1.5 text-green-600 text-sm font-medium bg-green-50 py-1 px-3 rounded-full">
                   <FontAwesomeIcon icon={faCheckCircle} />
-                  مشترك
+                  <span>مشترك</span>
                 </span>
               ) : (
                 <span className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 text-sm font-medium">

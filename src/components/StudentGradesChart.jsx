@@ -62,7 +62,7 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-export default function StudentGradesChart({ teacher, student }) {
+export default function GradesChart({ teacher, student }) {
   const [chartData, setChartData] = useState([]);
   const [isLoadingNames, setIsLoadingNames] = useState(true);
   const chartRef = useRef(null);
@@ -74,7 +74,7 @@ export default function StudentGradesChart({ teacher, student }) {
     isLoading: isExmasResultsLoading,
     error: exmasResultsError,
   } = useExamsResultsByTeacherId(teacher.id, student.id);
-  
+
   console.log(exmasResults);
 
   const examsTakenByStudent = exmasResults?.filter(
@@ -226,16 +226,8 @@ export default function StudentGradesChart({ teacher, student }) {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden p-4">
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-1">
-            Grade Performance
-          </h3>
-          <p className="text-sm text-gray-500">
-            Track student progress across examinations
-          </p>
-        </div>
+    <div className="bg-white rounded-xl overflow-hidden p-4">
+      <div className="flex justify-between items-center mb-4" dir="rtl">
         {student.id !== currentUser.id && (
           <button
             onClick={handlePrintChart}
@@ -249,7 +241,7 @@ export default function StudentGradesChart({ teacher, student }) {
 
       <div
         ref={chartRef}
-        className="border border-gray-100 rounded-lg bg-gray-50 p-4"
+        className="border border-gray-300 rounded-lg bg-gray-50 p-4"
         style={{ height: "300px", maxHeight: "300px" }}
       >
         <ResponsiveContainer height={250}>

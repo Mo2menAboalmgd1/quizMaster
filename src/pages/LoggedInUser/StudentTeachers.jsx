@@ -58,7 +58,7 @@ export default function StudentTeachers() {
           icon={faUser}
         />
         <Link
-          to="/anotherTeachers"
+          to="/searchTeachers"
           className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
         >
           انضم الآن
@@ -89,9 +89,17 @@ export default function StudentTeachers() {
                   to={teacher.id}
                   key={teacher.id}
                 >
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white shadow-sm">
-                    <FontAwesomeIcon icon={faUser} />
-                  </div>
+                  {teacher.avatar ? (
+                    <img
+                      className="w-12 h-12 rounded-full object-cover shadow-md"
+                      src={teacher.avatar}
+                      alt={teacher.name}
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white shadow-sm">
+                      <FontAwesomeIcon icon={faUser} />
+                    </div>
+                  )}
                   <div className="grow">
                     <h3 className="font-medium text-gray-800 group-hover:text-green-700 transition-colors">
                       {teacher.name}

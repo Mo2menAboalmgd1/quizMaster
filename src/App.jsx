@@ -81,7 +81,7 @@ export default function App() {
     (notification) => !notification.isRead
   );
 
-  const { data: exams } = useExamsByTeacherId(currentUser?.id);
+  const { data: exams } = useExamsByTeacherId(currentUser?.id, "all");
 
   const { data: requests } = useStudentsAndRequestsByTeacherIdAndTable(
     currentUser?.id,

@@ -141,10 +141,12 @@ export default function Exam() {
       </div>
 
       {/* questions */}
-      <h2 className="font-extrabold text-center text-3xl p-3 flex gap-2 items-center justify-center text-blue-700">
-        <span>الأسئلة</span>
-        <FontAwesomeIcon icon={faQuestionCircle} />
-      </h2>
+      {(!examResult || examData.isShowCorrection) && (
+        <h2 className="font-extrabold text-center text-3xl p-3 flex gap-2 items-center justify-center text-blue-700">
+          <span>الأسئلة</span>
+          <FontAwesomeIcon icon={faQuestionCircle} />
+        </h2>
+      )}
 
       {/* questions iteration */}
       <div className="space-y-6">

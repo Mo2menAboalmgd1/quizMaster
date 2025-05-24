@@ -27,7 +27,7 @@ export default function StudentDashboard() {
     data: studentExams,
     isLoading: isTeacherExamsLoading,
     error: teacherExamsError,
-  } = useExamsResultsByStudentId(currentUser?.id, "studentId");
+  } = useExamsResultsByStudentId(currentUser?.id);
 
   const grades =
     studentExams?.map((exam) => (exam.correct / exam.total) * 100) || [];

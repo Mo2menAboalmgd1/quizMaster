@@ -14,13 +14,13 @@ export default function Exams() {
       id: 1,
       path: "unPublished",
       text: "الامتحانات الغير منشورة",
-      done: false,
+      isPublished: false,
     },
     {
       id: 2,
       path: "published",
       text: "الامتحانات المنشورة",
-      done: true,
+      isPublished: true,
     },
   ];
 
@@ -28,23 +28,23 @@ export default function Exams() {
     data: exams,
     isLoading: isExamsLoading,
     isError: examsError,
-  } = useExamsByTeacherId(currentUser?.id);
+  } = useExamsByTeacherId(currentUser?.id, "all");
 
   if (!currentUser || isExamsLoading) {
     return <Loader message="جاري التحميل" />;
   }
 
   if (examsError) {
-    return <ErrorPlaceHolder message="حدث خطأ أثناء جلب الأكواد" />;
+    return (
+      <ErrorPlaceHolder message="حدث خطأ أثناء جلب الامتحانات، أعد المحاولة" />
+    );
   }
 
   return (
     <div>
       <div className="flex items-center justify-center flex-wrap gap-5 p-5 pt-0">
         {statesFolders.map((folder) => {
-          const stateExams = exams?.filter(
-            (exam) => exam.done === folder.done
-          );
+          const stateExams = exams?.filter((exam) => exam.isPublished === folder.isPublished);
           return (
             <div className="relative" key={folder.id}>
               <Folder path={folder.path} text={folder.text} />
