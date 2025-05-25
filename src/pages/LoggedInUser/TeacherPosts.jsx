@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useCurrentUser } from "../../store/useStore";
 import {
-  useColumnByUserId,
   usePostsByTeacherId,
+  useStagesByTeacherId,
 } from "../../QueriesAndMutations/QueryHooks";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import Loader from "../../components/Loader";
@@ -21,7 +21,7 @@ export default function TeacherPosts() {
     data: stages,
     isLoading: isStagesLoading,
     error: stagesError,
-  } = useColumnByUserId(currentUser?.id, "teachers", "stages");
+  } = useStagesByTeacherId(currentUser?.id);
 
   const {
     data: posts,
@@ -39,7 +39,7 @@ export default function TeacherPosts() {
     );
   }
 
-  const publicPosts = posts?.filter((post) => !post.stage);
+  const publicPosts = posts?.filter((post) => !post.stage_id);
 
   return (
     <div className="space-y-5" dir="rtl">
@@ -51,7 +51,7 @@ export default function TeacherPosts() {
       />
       <div className="flex gap-5 flex-wrap justify-center">
         <div className="relative" onClick={() => setSelectedStage("")}>
-          <Folder path={"جميع الصفوف"} text={`منشورات عامة`} />
+          <Folder path={"all"} text={`منشورات عامة`} />
           {publicPosts.length > 0 && (
             <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute -left-3 -top-2">
               {publicPosts?.length || 0}
@@ -59,14 +59,14 @@ export default function TeacherPosts() {
           )}
         </div>
         {stages?.map((stage, index) => {
-          const stagePosts = posts?.filter((post) => post.stage === stage);
+          const stagePosts = posts?.filter((post) => post.stage_id === stage.id);
           return (
             <div
               className="relative"
               key={index}
-              onClick={() => setSelectedStage(stage)}
+              onClick={() => setSelectedStage(stage.id)}
             >
-              <Folder key={index} path={stage} text={`منشورات ${stage}`} />
+              <Folder key={index} path={stage.id} text={`منشورات ${stage.name}`} />
               {stagePosts.length > 0 && (
                 <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute -left-3 -top-2">
                   {stagePosts?.length || 0}

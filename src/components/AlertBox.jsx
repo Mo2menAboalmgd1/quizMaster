@@ -59,7 +59,7 @@ export default function AlertBox({
       onClick={() => setOpen(false)}
     >
       <div
-        className="fixed inset-0 flex justify-center items-center z-50"
+        className="fixed inset-0 flex justify-center items-center z-50 mx-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-white p-4 rounded shadow-md">

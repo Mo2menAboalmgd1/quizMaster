@@ -33,8 +33,11 @@ import {
   useJoinCodes,
   useNotificationsByUserId,
   usePostsByTeacherId,
+  useProfileByUserId,
   useStudentsAndRequestsByTeacherIdAndTable,
   useTeachersFromTeachersStudents,
+  useUserDataByUserId,
+  // useUserDataByUserId,
 } from "./QueriesAndMutations/QueryHooks";
 import Notifications from "./pages/LoggedInUser/Notifications";
 import Stages from "./pages/LoggedInUser/Stages";
@@ -56,7 +59,7 @@ import {
 } from "../public/SVGs";
 import Exams from "./pages/LoggedInUser/Exams";
 import PublishedAndUnPublishedExams from "./pages/LoggedInUser/PublishedAndUnPublishedExams";
-import StageExams from "./pages/LoggedInUser/StageExams";
+import StageExams from "./pages/LoggedInUser/StageExamsTypes";
 import Posts from "./pages/LoggedInUser/TeacherPosts";
 import TeacherPosts from "./pages/LoggedInUser/TeacherPosts";
 import StudentPosts from "./pages/LoggedInUser/StudentPosts";
@@ -67,6 +70,9 @@ import DidNotTakeExam from "./pages/LoggedInUser/DidNotTakeExam";
 import StudentTeachers from "./pages/LoggedInUser/StudentTeachers";
 import TeacherExams from "./pages/LoggedInUser/TeacherExams";
 import SearchTeachers from "./pages/LoggedInUser/SearchTeachers";
+import ChooseTestType from "./pages/LoggedInUser/ChooseTestType";
+import StageExamsTypes from "./pages/LoggedInUser/StageExamsTypes";
+import TypeStageExams from "./pages/LoggedInUser/TypeStageExams";
 
 export default function App() {
   const { getSession, session } = useSession();
@@ -74,6 +80,12 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // const {
+  //   data: userData,
+  //   isLoading: userDataLoading,
+  //   isError: userDataError,
+  // } = useUserDataByUserId(currentUser?.id, "teachers");
 
   const { data: notifications } = useNotificationsByUserId(currentUser?.id);
 
@@ -177,38 +189,32 @@ export default function App() {
     };
   }, [getSession]);
 
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+    isError: profileError,
+  } = useProfileByUserId(session?.user?.id);
+
+  let userTable = profile?.type === "student" ? "students" : "teachers";
+
+  const {
+    data: userData,
+    isLoading: isUserDataLoading,
+    isError: userDataError,
+  } = useUserDataByUserId(session?.user?.id, userTable);
+
   useEffect(() => {
-    async function getCurrentUserData() {
-      if (!session?.user?.id) return;
-
-      // 1. Get user type from profiles table
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("type")
-        .eq("id", session.user.id)
-        .single();
-
-      if (profileError) throw new Error(profileError.message);
-
-      let userTable = profile.type === "student" ? "students" : "teachers";
-
-      // 2. Get user data from corresponding table
-      const { data: userData, error: userError } = await supabase
-        .from(userTable)
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
-      if (userError) throw new Error(userError.message);
-
+    if (userData) {
       getCurrentUser(userData);
     }
+  }, [userData]);
 
-    getCurrentUserData();
-  }, [session?.user?.id, getCurrentUser]);
-
-  if (session === undefined || currentUser === undefined) {
+  if (isProfileLoading || isUserDataLoading) {
     return <Loader message="جاري التحقق من الجلسة..." />;
+  }
+
+  if (profileError || userDataError) {
+    return <ErrorPlaceHolder message={"حدث خطأ ما، أعد المحاولة"} />;
   }
 
   // If no session, show the Landing page with routes for auth
@@ -242,12 +248,6 @@ export default function App() {
 
   if (!currentUser) return <Loader message="جري تحميل الامتحانات" />;
 
-  // if () {
-  //   return (
-  //     <ErrorPlaceHolder message={"حدث خطأ اثناء تحميل الصفحة، أعد المحاولة"} />
-  //   );
-  // }
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header */}
@@ -280,11 +280,11 @@ export default function App() {
                     to={"/userProfile/" + currentUser.id}
                     className="text-gray-700 font-medium hidden md:block"
                   >
-                    {currentUser.name}
+                    {currentUser?.name}
                   </Link>
                   {currentUser.type === "teacher" && (
                     <span className="text-gray-700 font-medium hidden md:block">
-                      {currentUser.subject}
+                      {currentUser?.subject}
                     </span>
                   )}
                 </div>
@@ -375,21 +375,11 @@ export default function App() {
                 currentUser.type === "student" ? <Student /> : <Teacher />
               }
             />
-            {/* <Route
-              path="/posts"
-              element={
-                currentUser.type === "student" ? (
-                  <StudentPosts />
-                ) : (
-                  <TeacherPosts />
-                )
-              }
-            /> */}
             {currentUser.type === "student" ? (
               <Route path="/posts" element={<StudentPosts />} />
             ) : (
               <Route path="/posts" element={<TeacherPosts />}>
-                <Route path=":stage" element={<PostsInTeacherPosts />} />
+                <Route path=":stageId" element={<PostsInTeacherPosts />} />
               </Route>
             )}
             <Route path="/searchTeachers" element={<SearchTeachers />} />
@@ -400,9 +390,10 @@ export default function App() {
             </Route>
             <Route path="/requests" element={<Requests />} />
             <Route path="/stages" element={<Stages />} />
-            <Route path="/stages/:stage" element={<Stage />} />
+            <Route path="/stages/:stageId" element={<Stage />} />
             <Route path="/notifications" element={<Notifications />} />
-            <Route path="/createTest" element={<CreateTest />} />
+            <Route path="/createTest" element={<ChooseTestType />} />
+            <Route path="/createTest/:type" element={<CreateTest />} />
             <Route
               path="/resumeCreateTest/:id"
               element={<ResumeCreateTest />}
@@ -415,15 +406,14 @@ export default function App() {
                 path=":PublishedOrNot"
                 element={<PublishedAndUnPublishedExams />}
               >
-                <Route path=":stage" element={<StageExams />} />
+                <Route path=":stageId" element={<StageExamsTypes />}>
+                  <Route path=":type" element={<TypeStageExams />} />
+                </Route>
               </Route>
             </Route>
             <Route path="/exam/:id" element={<Exam />} />
             <Route path="/examData/:id" element={<ExamData />}>
-              <Route
-                index
-                element={<StudentsGrades />}
-              />
+              <Route index element={<StudentsGrades />} />
               <Route
                 path="/examData/:id/didNotTakeExam"
                 element={<DidNotTakeExam />}

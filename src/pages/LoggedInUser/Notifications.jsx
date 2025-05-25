@@ -2,7 +2,6 @@ import React from "react";
 import { useCurrentUser } from "../../store/useStore";
 import { useNotificationsByUserId } from "../../QueriesAndMutations/QueryHooks";
 import Loader from "../../components/Loader";
-import Notification from "../../components/Notification";
 import clsx from "clsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faTrash } from "@fortawesome/free-solid-svg-icons";
@@ -20,7 +19,7 @@ export default function Notifications() {
     error: notificationsError,
   } = useNotificationsByUserId(currentUser?.id);
 
-  console.log(notifications);
+  notifications;
 
   const { mutateAsync: readNotification } = useReadNotificationMutation(
     currentUser.id

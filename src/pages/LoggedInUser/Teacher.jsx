@@ -33,7 +33,7 @@ export default function Teacher() {
     error: actionsError,
   } = useLastActionsByUserId(currentUser?.id);
 
-  console.log(actions);
+  actions;
 
   if (isTeacherExamsLoading || isStudentsLoading || isActionsLoading)
     return <Loader message="جاري التحميل" />;

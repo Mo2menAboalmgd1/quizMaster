@@ -18,13 +18,6 @@ export default function SignUp({ initialType = "student" }) {
       gender: formdata.get("gender"),
       subject: formdata.get("subject"),
       phoneNumber: formdata.get("phoneNumber"),
-      stages: !isStudent
-        ? formdata
-            .get("stages")
-            ?.split(/[-،,]/)
-            .map((stage) => stage.trim())
-            .filter((stage) => stage) || []
-        : [],
     };
 
     if (
@@ -42,7 +35,6 @@ export default function SignUp({ initialType = "student" }) {
           !userData.password ||
           !userData.gender ||
           !userData.phoneNumber ||
-          !userData.stages.length ||
           !userData.subject))
     ) {
       toast.error("الرجاء ملئ جميع الحقول");
@@ -91,7 +83,7 @@ export default function SignUp({ initialType = "student" }) {
 
         <div className="space-y-2">
           <label htmlFor="name" className="block text-gray-700 font-medium">
-            {isStudent ? "الاسم ثلاثي:" : "الاسم ثنائي:"}
+            الاسم:
           </label>
           <input
             dir="rtl"
@@ -178,34 +170,6 @@ export default function SignUp({ initialType = "student" }) {
             className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
           />
         </div>
-
-        {!isStudent && (
-          <div className="space-y-2">
-            <label htmlFor="stages" className="block text-gray-700 font-medium">
-              المراحل الدراسية:
-            </label>
-            <input
-              type="text"
-              id="stages"
-              name="stages"
-              placeholder="الصف الأول الثانوي - الصف الثاني الثانوي - ..."
-              className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
-            />
-            <p className="text-sm">
-              <span className="font-bold text-red-500">ملحوظة:</span> افصل بين
-              المراحل بـ - أو ،
-            </p>
-            <details>
-              <summary className="cursor-pointer text-green-500 font-bold select-none">
-                أمثلة أخرى
-              </summary>
-              <p>
-                <span className="text-green-500">&#9830;</span> مبتدئ - متوسط -
-                متقدم
-              </p>
-            </details>
-          </div>
-        )}
 
         <div className="space-y-2">
           <label htmlFor="email" className="block text-gray-700 font-medium">

@@ -14,9 +14,9 @@ export default function Request({ requestId, stage }) {
   const { currentUser } = useCurrentUser();
 
   const {
-    data: requestData,
-    isLoading: isRequestLoading,
-    error: requestError,
+    data: student,
+    isLoading: isStudentLoading,
+    error: studentError,
   } = useUserDataByUserId(requestId, "students");
 
   const { mutateAsync: rejectRequest } = useRemoveRequestMutation();
@@ -31,23 +31,17 @@ export default function Request({ requestId, stage }) {
   // studentId, column, table, teacherId
   const { mutateAsync: acceptRequest } = useAcceptRequestMutation();
   const handleAcceptRequest = async (studentId) => {
-    console.log({
-      teacherId: currentUser.id,
-      teacherName: currentUser.name,
-      stage,
-      studentId,
-    })
     await acceptRequest({
       teacherId: currentUser.id,
       teacherName: currentUser.name,
-      stage,
+      stageId: stage.id,
       studentId,
     });
   };
 
-  if (isRequestLoading) return <Loader message="جاري تحميل طلبات الانضمام" />;
-  if (requestError) {
-    toast.error(requestError.message);
+  if (isStudentLoading) return <Loader message="جاري تحميل طلبات الانضمام" />;
+  if (studentError) {
+    toast.error(studentError.message);
     return;
   }
 
@@ -61,7 +55,7 @@ export default function Request({ requestId, stage }) {
           <div className="relative">
             <img
               src={
-                requestData.image ||
+                student.image ||
                 "https://cdn-icons-png.freepik.com/512/8801/8801434.png"
               }
               alt="Student img"
@@ -71,26 +65,26 @@ export default function Request({ requestId, stage }) {
           </div>
           <div className="flex-1">
             <h3 className="font-bold text-xl text-green-600">
-              {requestData.name}
+              {student.name}
             </h3>
             <div className="flex items-center text-gray-600 mt-1">
               <span className="font-bold">المرحلة المعنية:</span>
               <span className="mr-1 bg-gray-100 px-2 py-0.5 rounded-full text-sm">
-                {stage}
+                {stage.name}
               </span>
             </div>
           </div>
         </div>
         <div className="mt-4 flex justify-end gap-3 w-full">
           <button
-            onClick={() => handleAcceptRequest(requestData.id)}
+            onClick={() => handleAcceptRequest(student.id)}
             className="p-2 px-6 flex gap-2 items-center justify-center bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg text-white cursor-pointer hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg"
           >
             <FontAwesomeIcon icon={faCheck} className="text-sm" />
             <span>قبول</span>
           </button>
           <button
-            onClick={() => handleRejectRequest(requestData.id)}
+            onClick={() => handleRejectRequest(student.id)}
             className="p-2 px-6 flex gap-2 items-center justify-center bg-gradient-to-r from-red-500 to-rose-600 rounded-lg text-white cursor-pointer hover:from-red-600 hover:to-rose-700 transition-all duration-300 shadow-md hover:shadow-lg"
           >
             <FontAwesomeIcon icon={faX} className="text-sm" />

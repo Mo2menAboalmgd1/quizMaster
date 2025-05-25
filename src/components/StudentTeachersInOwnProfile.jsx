@@ -15,7 +15,6 @@ export default function StudentTeachersInOwnProfile({ student }) {
     isLoading: isTeachersLoading,
     error: teachersError,
   } = useTeachersFromTeachersStudents(student?.id);
-  // console.log("teachers: ", teachers);
 
   const teachersIds = teachers?.map((teacher) => teacher.teacherId);
 
@@ -24,8 +23,6 @@ export default function StudentTeachersInOwnProfile({ student }) {
     isLoading: isTeachersDataLoading,
     error: teachersDataError,
   } = useAlotIfRowsInAnyTable(teachersIds, "teachers");
-
-  console.log("teachers data: ", teachersData);
 
   const [selectedTeacherId, setSelectedTeacherId] = useState(null);
 
@@ -46,7 +43,6 @@ export default function StudentTeachersInOwnProfile({ student }) {
   const selectedTeacher = teachersData.find((t) => t.id === selectedTeacherId);
 
   return (
-    // <div>mo2men</div>
     <div className="bg-white rounded-xl shadow-md p-4">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">My Teachers</h2>
 

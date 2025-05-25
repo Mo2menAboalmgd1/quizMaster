@@ -35,4 +35,4 @@ app.delete("/delete-account", async (req, res) => {
   return res.status(200).json({ message: "Account deleted successfully" });
 });
 
-app.listen(5000, () => console.log("Server running on http://localhost:5000"));
+app.listen(5000, () => "Server running on http://localhost:5000");

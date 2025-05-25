@@ -28,6 +28,7 @@ import {
   getExamsResultsByStudentId,
   getUsersData,
   getExamsDataFromIds,
+  getTeacherStages,
 } from "../api/AllApiFunctions";
 
 // export const useCommonQuery = ({
@@ -74,6 +75,15 @@ export const useColumnByUserId = (userId, table, column) => {
     queryKey: [column, table, userId],
     queryFn: () => getColumn(userId, table, column),
     enabled: !!userId && !!table && !!column,
+    staleTime: 5 * 60 * 1000, // 5 minu
+  });
+};
+
+export const useStagesByTeacherId = (teacherId) => {
+  return useQuery({
+    queryKey: ["stages", teacherId],
+    queryFn: () => getTeacherStages(teacherId),
+    enabled: !!teacherId,
     staleTime: 5 * 60 * 1000, // 5 minu
   });
 };
@@ -160,16 +170,16 @@ export const useReactionsByTeachersIds = (teachersIds) => {
   });
 };
 
-export const useTeachersPosts = (teachersIds, stages) => {
+export const useTeachersPosts = (teachersIds, stagesIds) => {
   return useQuery({
-    queryKey: ["posts", teachersIds, [...stages]],
-    queryFn: () => getPostsDisplayedInStudentPosts(teachersIds, stages),
+    queryKey: ["posts", teachersIds, stagesIds],
+    queryFn: () => getPostsDisplayedInStudentPosts(teachersIds, stagesIds),
     enabled: Array.isArray(teachersIds) && teachersIds.length > 0,
   });
 };
 
 export const useExamsByTeacherId = (teacherId, isPublished) => {
-  console.log("isPublished", isPublished);
+  "isPublished", isPublished;
   return useQuery({
     queryKey: ["exams", teacherId, isPublished],
     queryFn: () => getExams(teacherId, isPublished),
@@ -183,7 +193,7 @@ export const useExamsDataByExamsIds = (examsIds) => {
     queryKey: ["exams", examsIds],
     queryFn: () => getExamsDataFromIds(examsIds),
     staleTime: 5 * 60 * 1000,
-  enabled: examsIds?.length > 0,
+    enabled: examsIds?.length > 0,
   });
 };
 

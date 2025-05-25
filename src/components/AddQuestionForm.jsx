@@ -35,7 +35,7 @@ export default function AddQuestionForm({ examData, examId }) {
     setAllAnswers,
     setCorrectIndex,
     setQuestionImages,
-    setAddingNewQuestionLoading,
+    setAddingNewQuestionLoading
   );
 
   const handleAddNewQuestion = async () => {
@@ -54,7 +54,7 @@ export default function AddQuestionForm({ examData, examId }) {
       isCorrect: i === correctIndex,
     }));
 
-    console.log("examData", examData);
+    "examData", examData;
 
     addQuestionMutation({
       text: questionText,
@@ -162,7 +162,7 @@ export default function AddQuestionForm({ examData, examId }) {
                         if (!isDuplicate) {
                           setQuestionImages((prev) => [...prev, file]);
                         } else {
-                          console.log("❌ صورة مكررة، لم يتم إضافتها");
+                          ("❌ صورة مكررة، لم يتم إضافتها");
                         }
                       }
                     }
@@ -242,7 +242,7 @@ export default function AddQuestionForm({ examData, examId }) {
                     return [...prev, ...newFiles];
                   });
 
-                  console.log("✅ الصور المختارة:", validFiles);
+                  "✅ الصور المختارة:", validFiles;
                 }}
               />
             </div>

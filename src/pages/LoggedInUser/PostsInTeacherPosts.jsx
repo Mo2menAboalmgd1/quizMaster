@@ -4,15 +4,16 @@ import { useCurrentUser } from "../../store/useStore";
 import {
   usePostsByTeacherId,
   useReactionsByTeacherId,
+  useStagesByTeacherId,
 } from "../../QueriesAndMutations/QueryHooks";
 import Loader from "../../components/Loader";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import { PostInTeachersProfile } from "../../components/PostInTeachersProfile";
 
 export default function PostsInTeacherPosts() {
-  const { stage } = useParams();
+  const { stageId } = useParams();
   const { currentUser } = useCurrentUser();
-  const newStage = stage === "جميع الصفوف" ? "" : stage;
+  const newStage = stageId === "all" ? null : stageId;
 
   const {
     data: posts,
@@ -21,36 +22,46 @@ export default function PostsInTeacherPosts() {
   } = usePostsByTeacherId(currentUser?.id);
 
   const {
+    data: stages,
+    isLoading: isStagesLoading,
+    error: stagesError,
+  } = useStagesByTeacherId(currentUser?.id);
+
+  const {
     data: postReactions,
     isLoading: isPostReactionsLoading,
     error: postReactionsError,
   } = useReactionsByTeacherId(currentUser?.id);
 
-  console.log(postReactions);
+  postReactions;
 
-  if (isPostsLoading || isPostReactionsLoading) {
+  if (isPostsLoading || isPostReactionsLoading || isStagesLoading) {
     return <Loader message="جاري التحميل" />;
   }
 
-  if (postsError || postReactionsError) {
+  if (postsError || postReactionsError || stagesError) {
     return (
       <ErrorPlaceHolder message={"حدث خطأ أثناء جلب المنشورات أعد المحاولة"} />
     );
   }
 
   const stagePosts = posts.filter((post) => {
-    return post.stage === newStage;
+    return post.stage_id === newStage;
   });
 
   return (
     <div className="w-full flex flex-col items-center gap-5 max-w-2xl mt-8 mx-auto">
-      {stagePosts.map((post, index) => (
-        <PostInTeachersProfile
-          key={index}
-          post={post}
-          reactions={postReactions}
-        />
-      ))}
+      {stagePosts.map((post, index) => {
+        const stage = stages.find((stage) => stage.id === post.stage_id);
+        return (
+          <PostInTeachersProfile
+            key={index}
+            post={post}
+            reactions={postReactions}
+            stage={stage}
+          />
+        );
+      })}
     </div>
   );
 }

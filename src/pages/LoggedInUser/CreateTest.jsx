@@ -3,11 +3,18 @@ import { useCurrentUser } from "../../store/useStore";
 import DisplayAnswersInCreateExam from "../../components/DisplayAnswersInCreateExam";
 import CreateExamForm from "../../components/CreateExamForm";
 import AddQuestionForm from "../../components/AddQuestionForm";
-import { useExamByItsId } from "../../QueriesAndMutations/QueryHooks";
+import {
+  useExamByItsId,
+  useStagesByTeacherId,
+} from "../../QueriesAndMutations/QueryHooks";
 import toast from "react-hot-toast";
 import Loader from "../../components/Loader";
+import { useParams } from "react-router-dom";
+import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 
 export default function CreateExam() {
+  const { type } = useParams();
+
   const { currentUser } = useCurrentUser();
   const [examId, setExamId] = useState(null);
 
@@ -17,7 +24,11 @@ export default function CreateExam() {
     error: examDataError,
   } = useExamByItsId(examId);
 
-  console.log(examData);
+  const {
+    data: stages,
+    isLoading: isStagesLoading,
+    error: stagesError,
+  } = useStagesByTeacherId(currentUser.id);
 
   if (currentUser.type === "student") {
     return (
@@ -33,16 +44,26 @@ export default function CreateExam() {
     );
   }
 
+  if (isExamDataLoading || isStagesLoading) {
+    return <Loader message="جاري التحميل" />;
+  }
+
+  if (stagesError || examDataError) {
+    <ErrorPlaceHolder message={"حدث خطأ أثناء تحميل الصفحة"} />;
+  }
+
   if (examDataError) toast.error(examDataError.message);
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         <CreateExamForm
+          type={type}
           examData={examData}
           examId={examId}
           setExamId={setExamId}
           isCreate={true}
+          stages={stages}
         />
       </div>
 

@@ -35,7 +35,7 @@ export default function Exam() {
     error: questionsError,
   } = useQuestionsByExamId(examId);
 
-  console.log(questions);
+  questions;
 
   const {
     data: studentAnswers,
@@ -118,7 +118,7 @@ export default function Exam() {
     );
   }
 
-  console.log(examResult);
+  examResult;
 
   return (
     <div dir="rtl" className="max-w-5xl mx-auto px-4 py-6 space-y-6">

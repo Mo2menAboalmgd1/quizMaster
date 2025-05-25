@@ -2,10 +2,12 @@ import React from "react";
 import { useCurrentUser } from "../../store/useStore";
 import Loader from "../../components/Loader";
 import {
-  useColumnByUserId,
+  useStagesByTeacherId,
 } from "../../QueriesAndMutations/QueryHooks";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import Folder from "../../components/Folder";
+import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
+import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 
 export default function JoinCodes() {
   const { currentUser } = useCurrentUser();
@@ -14,7 +16,7 @@ export default function JoinCodes() {
     data: stages,
     isLoading: isStagesLoading,
     error: stagesError,
-  } = useColumnByUserId(currentUser?.id, "teachers", "stages");
+  } = useStagesByTeacherId(currentUser?.id);
 
   if (!currentUser || isStagesLoading) {
     return <Loader message="جاري التحميل" />;
@@ -25,10 +27,13 @@ export default function JoinCodes() {
   }
 
   if (!stages || stages.length === 0) {
-    return <NoDataPlaceHolder message="لم يتم العثور على أكواد انضمام" />;
+    return (
+      <NoDataPlaceHolder
+        message="قم بإضافة مراحل دراسية أولا"
+        icon={faExclamationCircle}
+      />
+    );
   }
-
-  console.log(stages);
 
   return (
     <div>

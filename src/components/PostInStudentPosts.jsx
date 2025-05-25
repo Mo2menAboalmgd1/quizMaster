@@ -15,8 +15,6 @@ export function PostInStudentPosts({ post, reactions }) {
   const [expanded, setExpanded] = useState(false);
   const [fileDisplayed, setFileDisplayed] = useState(null);
 
-  console.log(post.text, reactions);
-
   const isLiked = reactions?.some((reaction) => {
     return reaction.user_id === currentUser?.id;
   });
@@ -63,8 +61,8 @@ export function PostInStudentPosts({ post, reactions }) {
       <div className="flex gap-3 items-center">
         <img
           src={
-            teacher?.image ||
-            "https://static-00.iconduck.com/assets.00/user-icon-1024x1024-dtzturco.png"
+            teacher?.avatar ||
+            "https://i.pinimg.com/736x/2f/15/f2/2f15f2e8c688b3120d3d26467b06330c.jpg"
           }
           alt="teacher"
           className="w-12 h-12 rounded-full object-cover"

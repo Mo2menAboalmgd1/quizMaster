@@ -1,8 +1,8 @@
 import React from "react";
 import { Outlet, useParams } from "react-router-dom";
 import {
-  useColumnByUserId,
   useExamsByTeacherId,
+  useStagesByTeacherId,
 } from "../../QueriesAndMutations/QueryHooks";
 import { useCurrentUser } from "../../store/useStore";
 import Loader from "../../components/Loader";
@@ -21,7 +21,7 @@ export default function PublishedAndUnPublishedExams() {
     data: stages,
     isLoading: isStagesLoading,
     error: stagesError,
-  } = useColumnByUserId(currentUser?.id, "teachers", "stages");
+  } = useStagesByTeacherId(currentUser?.id);
 
   const {
     data: exams,
@@ -45,23 +45,37 @@ export default function PublishedAndUnPublishedExams() {
     );
   }
 
+  const publicExams = exams?.filter(
+    (exam) => !exam.stage_id && exam.isPublished === isPublished
+  );
+  "publicExams", publicExams;
+
   return (
-    <div>
-      <div className="text-center mb-5 text-blue-500">
+    <div dir="rtl">
+      <div className="text-center mb-3 text-blue-500">
         <FontAwesomeIcon icon={faAngleDown} />
       </div>
 
       <div className="flex gap-5 items-center justify-center flex-wrap">
-        {[...stages, ""].map((stage) => {
+        <div className="relative">
+          <Folder path={"all"} text={"الامتحانات العامة"} isSmall />
+          {publicExams?.length > 0 && (
+            <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute -left-3 -top-2">
+              {publicExams?.length || 0}
+            </span>
+          )}
+        </div>
+        {stages.map((stage) => {
           const stageExams = exams?.filter(
-            (exam) => exam.stage === stage && exam.isPublished === isPublished
+            (exam) =>
+              exam.stage_id === stage.id && exam.isPublished === isPublished
           );
           return (
-            <div className="relative" key={stage}>
+            <div className="relative" key={stage.id || "all"}>
               <Folder
-                key={stage}
-                path={stage || "جميع الصفوف"}
-                text={stage || "الامتحانات العامة"}
+                path={stage.id || "all"}
+                text={stage.name || "الامتحانات العامة"}
+                isSmall
               />
               {stageExams?.length > 0 && (
                 <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute -left-3 -top-2">

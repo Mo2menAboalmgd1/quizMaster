@@ -27,7 +27,7 @@ export default function DisplayAnswersInCreateExam({ examId }) {
       />
     );
 
-  console.log(questions);
+  questions;
 
   return (
     <div className="space-y-6 p-3">

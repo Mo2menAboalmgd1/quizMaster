@@ -41,7 +41,7 @@ export default function DidNotTakeExam() {
     "teachers_students"
   );
 
-  console.log(allStudents, resluts);
+  allStudents, resluts;
 
   const studentsDidNotTakeExam = allStudents?.filter(
     (student) =>
@@ -58,7 +58,7 @@ export default function DidNotTakeExam() {
     error: studentsDidNotTakeExamDataError,
   } = useStudentsFromStudentsIds(studentsDidNotTakeExamIds);
 
-  console.log(studentsDidNotTakeExamIds);
+  studentsDidNotTakeExamIds;
 
   if (
     isReslutsLoading ||

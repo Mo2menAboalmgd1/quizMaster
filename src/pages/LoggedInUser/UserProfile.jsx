@@ -18,7 +18,6 @@ import StudentGradesOverview from "../../components/StudentGradesOverview";
 export default function UserProfile() {
   const { id: userId } = useParams();
   const { currentUser } = useCurrentUser();
-  // console.log("current user: ", currentUser);
 
   const {
     data: profile,
@@ -43,11 +42,9 @@ export default function UserProfile() {
     "teachers_students"
   );
 
-  const studentStage = teacherStudents.find(
+  const studentStage = teacherStudents?.find(
     (student) => student.studentId === user?.id
   )?.stage;
-
-  console.log("studentStage: ", studentStage);
 
   if (isProfileLoading || isUserLoading || isTeacherStudentsLoading)
     return <Loader message="جاري التحميل" />;
@@ -78,8 +75,6 @@ export default function UserProfile() {
     isCurrentUserTeacher &&
     isViewedProfileStudent &&
     teacherStudents?.some((student) => student.studentId === user.id);
-
-  console.log(teacherStudents);
 
   const isCurrentUserStudentVeiwingOwnProfile =
     isCurrentUserStudent && user.id === currentUser.id;

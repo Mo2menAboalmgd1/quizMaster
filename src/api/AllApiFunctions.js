@@ -37,7 +37,6 @@ export const handleCreateTeacher = async (data) => {
     gender: data.gender,
     subject: data.subject,
     phoneNumber: data.phoneNumber,
-    stages: data.stages,
     email: data.email,
   });
   if (error) throw new Error(error.message);
@@ -105,10 +104,10 @@ export const deleteNotification = async (notificationId) => {
   if (error) throw new Error(error.message);
 };
 
-export const joinTeacher = async ({ teacherId, stage, studentId }) => {
+export const joinTeacher = async ({ teacherId, stageId, studentId }) => {
   const { error } = await supabase
     .from("teachers_requests")
-    .insert({ teacherId, stage, studentId });
+    .insert({ teacherId, stage_id: stageId, studentId });
 
   if (error) throw new Error(error.message);
 
@@ -143,16 +142,13 @@ export const joinTeacherWithJoinCode = async ({
   stage,
   studentId,
 }) => {
-  console.log({ value, teacher, stage, studentId });
   if (value === "directJoin") {
-    // add student
-    console.log("add student manullay");
     const { error: addStudentError } = await supabase
       .from("teachers_students")
       .insert({
         teacherId: teacher?.id,
         studentId,
-        stage: stage,
+        stage_id: stage.id,
       });
 
     if (addStudentError) throw new Error(addStudentError.message);
@@ -165,8 +161,7 @@ export const joinTeacherWithJoinCode = async ({
       studentId,
     };
   }
-  // get all codes
-  console.log("should not write this");
+
   const { error: getCodeError, data: code } = await supabase
     .from("join_codes")
     .select("*")
@@ -186,7 +181,9 @@ export const joinTeacherWithJoinCode = async ({
   }
 
   // check stage if only code.stage exists
-  if (code.stage && code.stage !== stage) {
+  code.stage_id;
+  stage.id;
+  if (code.stage_id !== stage.id) {
     throw new Error("كود الانضمام غير متوافق مع المرحلة");
   }
 
@@ -196,7 +193,7 @@ export const joinTeacherWithJoinCode = async ({
     .insert({
       teacherId: teacher.id,
       studentId,
-      stage: stage || code.stage,
+      stage_id: stage.id || code.stage_id,
     });
 
   if (addStudentError) throw new Error(addStudentError.message);
@@ -223,14 +220,13 @@ export const removeRequest = async ({ teacherId, teacherName, studentId }) => {
 
   if (error) throw new Error(error.message);
 
-  // لازم ترجعهم عشان onSuccess تلاقيهم
   return { teacherId, teacherName, studentId };
 };
 
 export const acceptRequest = async ({
   teacherId,
   teacherName,
-  stage,
+  stageId,
   studentId,
 }) => {
   // 1️⃣
@@ -245,7 +241,7 @@ export const acceptRequest = async ({
   // 2️⃣
   const { error: studentFetchError } = await supabase
     .from("teachers_students")
-    .insert({ teacherId, studentId, stage });
+    .insert({ teacherId, studentId, stage_id: stageId });
 
   if (studentFetchError) throw new Error(studentFetchError.message);
 
@@ -450,7 +446,7 @@ export const insertQuestion = async (questionData) => {
     .select()
     .single(); // ⬅️ مهم جدًا علشان ترجع الصف الجديد مباشرة
 
-  console.log("Inserted question:", questionDataResponse);
+  "Inserted question:", questionDataResponse;
 
   if (questionError) throw new Error(questionError.message);
 
@@ -527,13 +523,83 @@ export const createNewExam = async (testData) => {
 
   if (error) throw new Error(error.message);
 
+  data;
+
+  return data.id;
+};
+
+export const getTeacherStages = async (teacherId) => {
+  const { error, data } = await supabase
+    .from("teachers_stages")
+    .select("*")
+    .eq("teacherId", teacherId)
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
   return data;
 };
 
+export const addNewStage = async ({ stage, teacherId }) => {
+  const { selectError, data } = await supabase
+    .from("teachers_stages")
+    .select("*")
+    .eq("teacherId", teacherId)
+    .eq("name", stage);
+
+  if (selectError) throw new Error(selectError.message);
+
+  if (data.length > 0) {
+    throw new Error("المرحلة موجودة بالفعل");
+  }
+
+  const { error } = await supabase
+    .from("teachers_stages")
+    .insert({ name: stage, teacherId });
+
+  if (error) throw new Error(error.message);
+
+  return teacherId;
+};
+
+export const updateStageName = async (stage) => {
+  const { selectError, data } = await supabase
+    .from("teachers_stages")
+    .select("*")
+    .eq("teacherId", stage.teacherId)
+    .eq("name", stage.stageName);
+
+  if (selectError) throw new Error(selectError.message);
+
+  if (data.length > 0) {
+    throw new Error("المرحلة موجودة بالفعل");
+  }
+
+  const { error } = await supabase
+    .from("teachers_stages")
+    .update({ name: stage.stageName })
+    .eq("id", stage.stageId);
+
+  if (error) throw new Error(error.message);
+
+  return stage.teacherId;
+};
+
+export const deleteStage = async ({ stageId, teacherId }) => {
+  const { error } = await supabase
+    .from("teachers_stages")
+    .delete()
+    .eq("id", stageId);
+
+  if (error) throw new Error(error.message);
+
+  return teacherId;
+};
+
 export const editExamData = async ({ update, action }) => {
-  console.log("update", update);
-  console.log("action", action);
-  // console.log("examId", action.examId);
+  "update", update;
+  "action", action;
+  // ("examId", action.examId);
   const { error } = await supabase
     .from("exams")
     .update(update)
@@ -580,7 +646,7 @@ export const getResults = async (examId) => {
 };
 
 export const reactToPost = async (data) => {
-  // console.log("post_react_details: ", data)
+  // ("post_react_details: ", data)
   const { error } = await supabase
     .from("posts_reacts")
     .delete()
@@ -608,7 +674,7 @@ export const reactToPost = async (data) => {
 
     if (error) throw new Error(error.message);
 
-    console.log("post_react_details: ", data);
+    "post_react_details: ", data;
     sendNotification({
       userId: data.teacherId,
       text: `قام ${data.userName} بالإعجاب على منشورك (${data.postText.slice(
@@ -622,7 +688,7 @@ export const reactToPost = async (data) => {
 };
 
 export const getReactionsOnPost = async (postId) => {
-  // console.log("post_react_details: ", data);
+  // ("post_react_details: ", data);
   const { error, data } = await supabase
     .from("posts_reacts")
     .select("*")
@@ -634,7 +700,7 @@ export const getReactionsOnPost = async (postId) => {
 };
 
 export const getReactionsOnPostByTeacherId = async (teacherId) => {
-  // console.log("post_react_details: ", data);
+  // ("post_react_details: ", data);
   const { error, data } = await supabase
     .from("posts_reacts")
     .select("*")
@@ -646,7 +712,7 @@ export const getReactionsOnPostByTeacherId = async (teacherId) => {
 };
 
 export const getReactionsOnPostByTeachersIds = async (teachersIds) => {
-  // console.log("post_react_details: ", data);
+  // ("post_react_details: ", data);
   const { error, data } = await supabase
     .from("posts_reacts")
     .select("*")
@@ -669,15 +735,29 @@ export const getPosts = async (teacherId) => {
   return data;
 };
 
-export const getPostsDisplayedInStudentPosts = async (teachersIds, stages) => {
-  const { error, data } = await supabase
+export const getPostsDisplayedInStudentPosts = async (
+  teachersIds,
+  stagesIds
+) => {
+  if (!teachersIds?.length) return [];
+
+  let query = supabase
     .from("posts")
-    .select("*")
+    .select("*") // بدون join
     .in("teacherId", teachersIds)
-    .or(`stage.in.(${stages.map((s) => `"${s}"`).join(",")}),stage.eq.""`)
     .order("created_at", { ascending: false });
 
-  if (error) throw new Error(error.message);
+  if (stagesIds?.length) {
+    const stageFilter = `stage_id.in.(${stagesIds.join(",")}),stage_id.is.null`;
+    query = query.or(stageFilter);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Supabase error:", error);
+    throw new Error(error.message);
+  }
 
   return data;
 };
@@ -807,7 +887,7 @@ export const saveResult = async (result) => {
 };
 
 export const getExamResult = async (studentId, examId) => {
-  // console.log("Querying examsResults with:", { studentId, examId });
+  // ("Querying examsResults with:", { studentId, examId });
   const { data, error } = await supabase
     .from("examsResults")
     .select("*")

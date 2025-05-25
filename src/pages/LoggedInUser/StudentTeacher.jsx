@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, Outlet, useParams } from "react-router-dom";
 import {
-  useColumnByUserId,
+  useStagesByTeacherId,
   useStudentsAndRequestsByTeacherIdAndTable,
   useUserDataByUserId,
 } from "../../QueriesAndMutations/QueryHooks";
@@ -20,7 +20,7 @@ export default function StudentTeacher() {
     data: stages,
     isLoading: isStagesLoading,
     error: stagesError,
-  } = useColumnByUserId(teacherId, "teachers", "stages");
+  } = useStagesByTeacherId(teacherId);
 
   const {
     data: teacherData,
@@ -77,21 +77,15 @@ export default function StudentTeacher() {
   const isCurrentUserInTeacherStudents = students.some(
     (student) => student.studentId === currentUser.id
   );
-  console.log("isCurrentUserInTeacherStudents", isCurrentUserInTeacherStudents);
+  "isCurrentUserInTeacherStudents", isCurrentUserInTeacherStudents;
 
   const isCurrentUserInTeacherRequests = requests.some(
     (request) => request.studentId === currentUser.id
   );
-  console.log("isCurrentUserInTeacherRequests", isCurrentUserInTeacherRequests);
+  "isCurrentUserInTeacherRequests", isCurrentUserInTeacherRequests;
 
   if (!isCurrentUserInTeacherStudents && !isCurrentUserInTeacherRequests) {
-    return (
-      <Join
-        stages={stages}
-        teacher={teacherData}
-        student={currentUser}
-      />
-    );
+    return <Join stages={stages} teacher={teacherData} student={currentUser} />;
   }
 
   if (!isCurrentUserInTeacherStudents && isCurrentUserInTeacherRequests) {

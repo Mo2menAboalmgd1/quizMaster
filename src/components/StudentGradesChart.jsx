@@ -75,8 +75,6 @@ export default function GradesChart({ teacher, student }) {
     error: exmasResultsError,
   } = useExamsResultsByTeacherId(teacher.id, student.id);
 
-  console.log(exmasResults);
-
   const examsTakenByStudent = exmasResults?.filter(
     (examResult) => examResult.studentId === student.id
   );

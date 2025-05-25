@@ -8,7 +8,12 @@ import { useCurrentUser } from "../store/useStore";
 
 const MAX_IMAGE_SIZE_MB = 3;
 
-export default function CreatePostForm({ stages, setFileDisplayed, selectedStage, setSelectedStage }) {
+export default function CreatePostForm({
+  stages,
+  setFileDisplayed,
+  selectedStage,
+  setSelectedStage,
+}) {
   const { currentUser } = useCurrentUser();
 
   const [postImages, setPostImages] = useState([]);
@@ -19,7 +24,7 @@ export default function CreatePostForm({ stages, setFileDisplayed, selectedStage
 
   const queryClient = useQueryClient();
   useEffect(() => {
-    setSelectedStage(stages?.[0]);
+    setSelectedStage(stages?.[0]?.id);
   }, [stages]);
 
   const { mutate: createNewPost } = useCreateNewPostMutation(); // Track loading state
@@ -37,7 +42,7 @@ export default function CreatePostForm({ stages, setFileDisplayed, selectedStage
       {
         text: postText,
         images: postImages,
-        stage: selectedStage,
+        stageId: selectedStage || null,
         teacherId: currentUser?.id,
       },
       {
@@ -81,8 +86,8 @@ export default function CreatePostForm({ stages, setFileDisplayed, selectedStage
           className="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:border-blue-500 shadow-sm transition-all duration-200 ease-in-out"
         >
           {stages?.map((stage, index) => (
-            <option key={index} value={stage}>
-              {stage}
+            <option key={index} value={stage.id}>
+              {stage.name}
             </option>
           ))}
           <option value="">جميع الصفوف</option>

@@ -113,7 +113,7 @@ export default function SearchTeachers() {
       <div className="space-y-3">
         {results.map((teacher) => {
           const alreadyJoined = myTeachers?.includes(teacher.id);
-          console.log(teacher);
+          teacher;
 
           return (
             <Link

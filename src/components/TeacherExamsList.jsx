@@ -19,7 +19,6 @@ import AlertBox from "./AlertBox";
 export default function TeacherExamsList({ list, isPublished }) {
   const { currentUser } = useCurrentUser();
   const [isDelete, setIsDelete] = useState(false);
-  // const [isShowCorrection, setIsShowCorrection] = useState(false);
 
   const { mutate: deleteExamMutation } = useDeleteExamMutation();
 

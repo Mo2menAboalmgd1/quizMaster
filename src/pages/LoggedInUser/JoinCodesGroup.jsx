@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useCurrentUser } from "../../store/useStore";
 import {
-  useColumnByUserId,
   useJoinCodes,
+  useStagesByTeacherId,
 } from "../../QueriesAndMutations/QueryHooks";
 import Loader from "../../components/Loader";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
-import { faFire, faLock, faX } from "@fortawesome/free-solid-svg-icons";
+import { faCopy, faFire, faLock, faX } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import { useParams } from "react-router-dom";
@@ -19,7 +19,8 @@ export default function JoinCodesGroup() {
   const { currentUser } = useCurrentUser();
   const { group } = useParams();
   const [selectedStage, setSelectedStage] = useState("");
-  console.log(selectedStage);
+  const [isCopyCode, setIsCopyCode] = useState(false);
+  selectedStage;
 
   const {
     data: allJoinCodes,
@@ -31,23 +32,22 @@ export default function JoinCodesGroup() {
     data: stages,
     isLoading: isStagesLoading,
     error: stagesError,
-  } = useColumnByUserId(currentUser?.id, "teachers", "stages");
+  } = useStagesByTeacherId(currentUser?.id);
 
-  console.log(stages);
   useEffect(() => {
-    if (stages?.length > 1 || stages) setSelectedStage(stages[0]);
+    if (stages?.length > 1 || stages) setSelectedStage(stages[0].id);
   }, [stages]);
 
   const { mutate: generateCode } = useGenerateJoinCodeMutation();
 
   const handleGenerateCode = async () => {
     const randomCode = nanoid(14);
-    console.log(randomCode);
+    randomCode;
     generateCode({
       teacherId: currentUser?.id,
       value: randomCode,
       isPublic: group === "public",
-      stage: selectedStage,
+      stage_id: selectedStage || null,
     });
   };
 
@@ -77,7 +77,6 @@ export default function JoinCodesGroup() {
     // return joinCode.isPublic ? === (group === "public");
     return joinCode.isPublic === isPublic;
   });
-  console.log(groupJoinCodes);
 
   return (
     <div className="container mx-auto px-4 py-6" dir="rtl">
@@ -101,8 +100,8 @@ export default function JoinCodesGroup() {
             className="text-center h-12 border border-gray-300 bg-white w-full rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 shadow-sm appearance-none hover:border-green-400"
           >
             {stages?.map((stage, index) => (
-              <option key={index} value={stage}>
-                {stage}
+              <option key={index} value={stage.id}>
+                {stage.name}
               </option>
             ))}
             <option value="">جميع الصفوف</option>
@@ -135,13 +134,32 @@ export default function JoinCodesGroup() {
                 <div className="space-y-2">
                   <p className="text-gray-700 font-medium">
                     <span className="text-gray-500">المرحلة:</span>{" "}
-                    {joinCode.stage || "جميع الصفوف"}
+                    {stages.find((stage) => stage.id === joinCode.stage_id)
+                      ?.name || "جميع الصفوف"}
                   </p>
 
-                  <h3 className="text-xl font-bold tracking-wide">
+                  <div className="text-xl font-bold tracking-wide flex gap-2">
                     <span className="text-gray-500">الكود:</span>{" "}
-                    {joinCode.value}
-                  </h3>
+                    <div className="flex gap-2">
+                      <span>{joinCode.value}</span>
+                      <button
+                        className={clsx(
+                          "text-gray-500 hover:text-gray-600 transition-all duration-200 cursor-pointer",
+                          isCopyCode && "text-green-500"
+                        )}
+                        onClick={() => {
+                          navigator.clipboard.writeText(joinCode.value);
+                          toast.success("تم النسخ", { duration: 1000 });
+                          setIsCopyCode(true);
+                          setTimeout(() => {
+                            setIsCopyCode(false);
+                          }, 1000);
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faCopy} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <p className="flex items-center gap-2">

@@ -5,9 +5,10 @@ import DisplayFile from "./DisplayFile";
 import { formatTime } from "../utils/getData";
 import { isToday } from "../utils/isToday";
 
-export function PostInTeachersProfile({ post, reactions }) {
+export function PostInTeachersProfile({ post, reactions, stage }) {
   const [expanded, setExpanded] = useState(false);
   const [fileDisplayed, setFileDisplayed] = useState(null);
+  const stageName = stage?.name || "منشور عام";
 
   const MAX_TEXT_LENGTH = 130; // Define max length before truncating
 
@@ -26,9 +27,7 @@ export function PostInTeachersProfile({ post, reactions }) {
         isToday(post.created_at) ? "border-blue-300" : "border-gray-200"
       }`}
     >
-      <h2 className="font-semibold text-gray-600">
-        {post.stage || "منشور عام"}
-      </h2>
+      <h2 className="font-semibold text-gray-600">{stageName}</h2>
       <p className="text-sm text-gray-500 -mt-3">
         {formatTime(post.created_at)}
       </p>

@@ -32,7 +32,7 @@ export default function TeacherExams() {
   const CurrentStudentStage = teacherStudents.find(
     (student) => student.studentId === currentUser.id
   )?.stage;
-  console.log("CurrentStudentStage", CurrentStudentStage);
+  "CurrentStudentStage", CurrentStudentStage;
 
   const {
     data: takenExams,
@@ -155,7 +155,7 @@ export default function TeacherExams() {
     error: examsError,
   } = useExamsByTeacherId(teacherId, true);
 
-  console.log(exams);
+  (exams);
 
   const {
     data: examsTakenByStudent,
@@ -163,7 +163,7 @@ export default function TeacherExams() {
     error: examsTakenByStudentError,
   } = useExamsResultsByTeacherId(teacherId, currentUser?.id);
 
-  console.log("examsTakenByStudent: ", examsTakenByStudent);
+  ("examsTakenByStudent: ", examsTakenByStudent);
 
   const {
     data: students,

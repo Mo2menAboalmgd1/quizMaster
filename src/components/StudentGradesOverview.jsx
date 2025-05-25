@@ -21,8 +21,6 @@ export default function StudentGradesOverview({ user, currentUser, stage }) {
     (exam) => exam.stage === stage || exam.stage === ""
   );
 
-  console.log("allExams: ", allStudentStageExams);
-
   const {
     data: examsTaken,
     isLoading: isLoadingExamsTaken,
@@ -32,6 +30,7 @@ export default function StudentGradesOverview({ user, currentUser, stage }) {
   const teacherTakenExams = examsTaken?.filter(
     (exam) => exam.teacherId === currentUser.id
   );
+
   const teacherTakenExamsIds = teacherTakenExams?.map((exam) => exam.examId);
 
   const {
@@ -43,10 +42,6 @@ export default function StudentGradesOverview({ user, currentUser, stage }) {
   const notTakenExams = allStudentStageExams?.filter(
     (exam) => !teacherTakenExamsIds?.includes(exam.id)
   );
-
-  console.log("notTakenExam: ", notTakenExams);
-
-  console.log("examsData: ", teacherExamsTakenData);
 
   if (
     isLoadingExamsTaken ||

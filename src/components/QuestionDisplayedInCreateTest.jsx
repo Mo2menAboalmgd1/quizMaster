@@ -15,8 +15,8 @@ export default function QuestionDisplayedInCreateTest({
     data: questionAnswers,
     isLoading: isQuestionAnswersLoading,
     error: questionAnswersError,
-  } = useAnswersByQuestionId(question?.id, true); // the second argument is true => to get answers with (isCorrect) property
-
+  } = useAnswersByQuestionId(question?.id, true);
+  
   if (isQuestionAnswersLoading) {
     return <Loader message="جاري تحميل الاجابات" />;
   }

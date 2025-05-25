@@ -1,6 +1,7 @@
 import React from "react";
 import { useCurrentUser } from "../../store/useStore";
 import {
+  useStagesByTeacherId,
   useStudentsAndRequestsByTeacherIdAndTable,
 } from "../../QueriesAndMutations/QueryHooks";
 import Request from "../../components/Request";
@@ -19,13 +20,19 @@ export default function Requests() {
   } = useStudentsAndRequestsByTeacherIdAndTable(
     currentUser?.id,
     "teachers_requests"
-  );
+    );
+  
+  const {
+    data: stages,
+    isLoading: isStagesLoading,
+    error: stagesError,
+  } = useStagesByTeacherId(currentUser?.id)
 
-  if (isRequestsLoading) {
+  if (isRequestsLoading || isStagesLoading) {
     return <Loader message="جاري تحميل طلبات الانضمام المتاحة" />;
   }
 
-  if (requestsError) {
+  if (requestsError || stagesError) {
     return (
       <ErrorPlaceHolder message="حدث خطأ أثناء جلب طلبات الانضمام، أعد المحاولة" />
     );
@@ -40,11 +47,12 @@ export default function Requests() {
   return (
     <div className="space-y-3">
       {requests.map((request) => {
+        const stage = stages.find(stage => stage.id === request.stage_id)
         return (
           <Request
             key={request.studentId}
             requestId={request.studentId}
-            stage={request.stage}
+            stage={stage}
           />
         );
       })}

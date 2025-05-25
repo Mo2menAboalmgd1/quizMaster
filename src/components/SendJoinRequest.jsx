@@ -1,5 +1,8 @@
 import React from "react";
-import { useJoinTeacherMutation, useJoinTeacherWithJoinCodeMutation } from "../QueriesAndMutations/mutationsHooks";
+import {
+  useJoinTeacherMutation,
+  useJoinTeacherWithJoinCodeMutation,
+} from "../QueriesAndMutations/mutationsHooks";
 import toast from "react-hot-toast";
 import clsx from "clsx";
 
@@ -11,7 +14,6 @@ export default function SendJoinRequest({
   studentId,
   setIsJoin,
 }) {
-  console.log("teacher: ", teacher);
   const [hasJoinCode, setHasJoinCode] = React.useState(false);
   const [joinCode, setJoinCode] = React.useState("");
 
@@ -23,15 +25,20 @@ export default function SendJoinRequest({
       await joinTeacherWithJoinCode({
         value: joinCode,
         teacher: teacher,
-        stage: selectedStage,
+        stage: JSON.parse(selectedStage),
         studentId,
       });
       return;
     } else {
       toast.loading("جاري إرسال طلب انضمامك إلى المعلم");
-      await joinTeacher({
+      console.log({
         teacher: teacher,
-        stage: selectedStage,
+        stageId: JSON.parse(selectedStage).id,
+        studentId,
+      });
+      await joinTeacher({
+        teacherId: teacher.id,
+        stageId: JSON.parse(selectedStage).id,
         studentId,
       });
     }
@@ -59,8 +66,8 @@ export default function SendJoinRequest({
             onChange={(e) => setSelectedStage(e.target.value)}
           >
             {stages?.map((stage, index) => (
-              <option key={index} value={stage}>
-                {stage}
+              <option key={index} value={JSON.stringify(stage)}>
+                {stage.name}
               </option>
             ))}
           </select>

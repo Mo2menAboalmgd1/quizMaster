@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   acceptRequest,
+  addNewStage,
   createNewExam,
   deleteExam,
   deleteNotification,
   deleteQuestion,
+  deleteStage,
   editExamData,
   editProfile,
   editQeustion,
@@ -27,6 +29,7 @@ import {
   sendNotification,
   signIn,
   unJoinTeacher,
+  updateStageName,
   uploadAnswer,
   UploadImages,
 } from "../api/AllApiFunctions";
@@ -150,17 +153,9 @@ export const useJoinTeacherWithJoinCodeMutation = (setIsJoin) => {
       // {teacherId, teacherName:teacher.name, teacherGender: teacher.gender, stage,  value}
       if (value === "directJoin") {
         toast.success("تمت إضافة الطالب بنجاح");
-        console.log({
-          teacherId,
-          teacherGender,
-          teacherName,
-          stage,
-          value,
-          studentId,
-        });
         sendNotification({
           userId: studentId,
-          text: `تم ضمك إلى (${stage}) بواسطة ${
+          text: `تم ضمك إلى (${stage.name}) بواسطة ${
             teacherGender === "male" ? "الأستاذ" : "الأستاذة"
           } ${teacherName}`,
         });
@@ -298,7 +293,7 @@ export const useReactToPost = () => {
 
 export const useCreateNewPostMutation = () => {
   return useMutation({
-    mutationFn: async ({ text, images, stage, teacherId }) => {
+    mutationFn: async ({ text, images, stageId, teacherId }) => {
       // upload question images and get their urls back
       let uploadedQuestionImageUrls = [];
       if (images?.length > 0) {
@@ -316,7 +311,7 @@ export const useCreateNewPostMutation = () => {
       await insertPost({
         text,
         images: uploadedQuestionImageUrls,
-        stage,
+        stage_id: stageId,
         teacherId,
       });
 
@@ -358,7 +353,7 @@ export const useInsertQuestionMutation = (
 
       // const questionId = questionData;
 
-      console.log(questionId);
+      questionId;
 
       // upload answers
       for (const ans of answers) {
@@ -440,11 +435,49 @@ export const useCreateNewExamMutation = (setExamId) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createNewExam,
-    onSuccess: (data) => {
-      setExamId(data.id);
+    onSuccess: (examId) => {
+      setExamId(examId);
       toast.dismiss();
       toast.success("تم إنشاء الاختبار بنجاح");
-      queryClient.invalidateQueries(["exam", data.id]);
+      queryClient.invalidateQueries(["exam", examId]);
+    },
+  });
+};
+
+export const useAddNewStageMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: addNewStage,
+    onSuccess: (teacherId) => {
+      queryClient.invalidateQueries(["stages", teacherId]);
+    },
+    onError: (error) => {
+      toast.dismiss();
+      toast.error(error.message);
+    },
+  });
+};
+
+export const useUpdateStageMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateStageName,
+    onSuccess: (teacherId) => {
+      queryClient.invalidateQueries(["stages", teacherId]);
+    },
+    onError: (error) => {
+      toast.dismiss();
+      toast.error(error.message);
+    },
+  });
+};
+
+export const useDeleteStageMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteStage,
+    onSuccess: (teacherId) => {
+      queryClient.invalidateQueries(["stages", teacherId]);
     },
   });
 };

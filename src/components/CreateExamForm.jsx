@@ -5,8 +5,8 @@ import {
   useEditExamDataMutation,
 } from "../QueriesAndMutations/mutationsHooks";
 import {
-  useColumnByUserId,
   useQuestionsByExamId,
+  useStagesByTeacherId,
 } from "../QueriesAndMutations/QueryHooks";
 import toast from "react-hot-toast";
 import {
@@ -20,25 +20,29 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Loader from "./Loader";
+import clsx from "clsx";
 
 export default function CreateExamForm({
   examData,
   examId,
   setExamId,
   isCreate,
+  type,
 }) {
+  const examType = type === "time" ? "انجز نفسك" : "على مهلك";
+  const isTime = type === "time";
   const { currentUser } = useCurrentUser();
   const [selectedStage, setSelectedStage] = useState("");
 
   useEffect(() => {
-    if (examData?.stage) setSelectedStage(examData.stage);
+    if (examData?.stage_id) setSelectedStage(examData.stage_id);
   }, [examData]);
 
   const {
     data: stages,
     isLoading: isStagesLoading,
     error: stagesError,
-  } = useColumnByUserId(currentUser?.id, "teachers", "stages");
+  } = useStagesByTeacherId(currentUser?.id);
 
   const {
     data: questions,
@@ -55,10 +59,15 @@ export default function CreateExamForm({
     const testData = {
       subject: currentUser.subject,
       title: formData.get("examName"),
-      stage: selectedStage,
+      isTime,
+      stage_id: selectedStage || null, // ✅ صح، مفيش حاجة اسمها stage بس
       teacherId: currentUser.id,
     };
-    if (!testData.title) return;
+    if (!testData.title) {
+      toast.dismiss();
+      toast.error("يجب إضافة اسم للاختبار");
+      return;
+    }
     newExamMutation(testData);
   };
 
@@ -69,14 +78,14 @@ export default function CreateExamForm({
     await editExam({
       action: {
         teacherId: currentUser.id,
-        stage: examData.stage || "(اختبار عام)",
+        stage: examData.stage_id || "(اختبار عام)",
         title: examData.title,
         isEdit: "edit",
         examId,
       },
       update: {
         title: formData.get("examName"),
-        stage: selectedStage,
+        stage_id: selectedStage || null,
       },
     });
   };
@@ -90,7 +99,7 @@ export default function CreateExamForm({
       action: {
         teacherId: currentUser.id,
         title: examData.title,
-        stage: examData.stage || "(اختبار عام)",
+        stage_id: examData.stage_id || null,
         isEdit: isPublish ? "publish" : "unPublish",
         examId,
       },
@@ -118,18 +127,44 @@ export default function CreateExamForm({
             : handleCreateNewExam
           : handleEditExam
       }
-      className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg flex flex-col gap-4 items-center p-6 relative shadow-sm w-full"
+      className={clsx(
+        "bg-gradient-to-r rounded-lg flex flex-col gap-4 items-center p-6 relative shadow-sm w-full",
+        isTime ? "from-red-50 to-red-100" : "from-green-50 to-emerald-100"
+      )}
     >
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-emerald-500"></div>
+      <div
+        className={clsx(
+          "absolute top-0 left-0 w-full h-1 bg-gradient-to-r",
+          isTime ? "from-red-400 to-red-600" : "from-green-500 to-emerald-600"
+        )}
+      ></div>
 
-      <p className="py-2 px-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center font-bold text-lg rounded-lg shadow-sm">
-        {isCreate ? "إنشاء" : "تعديل"} اختبار {currentUser.subject}
-      </p>
+      <div className="flex gap-2" dir="rtl">
+        <p
+          className={clsx(
+            "py-2 px-6 bg-gradient-to-r text-white text-center font-bold text-lg rounded-lg shadow-sm",
+            isTime ? "from-red-400 to-red-600" : "from-green-500 to-emerald-600"
+          )}
+        >
+          {isCreate ? "إنشاء" : "تعديل"} اختبار {currentUser.subject}
+        </p>
+        <p
+          className={clsx(
+            "py-2 px-6 bg-gradient-to-r text-white text-center font-bold text-lg rounded-lg shadow-sm",
+            isTime ? "from-red-400 to-red-600" : "from-green-500 to-emerald-600"
+          )}
+        >
+          {examType}
+        </p>
+      </div>
 
       <div className="w-full space-y-4">
         <div className="relative">
           <input
-            className="text-center h-12 border border-gray-300 bg-white w-full rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all shadow-sm"
+            className={clsx(
+              "text-center h-12 border border-gray-300 bg-white w-full rounded-lg px-4 focus:outline-none focus:ring-2 focus:border-transparent transition-all shadow-sm",
+              isTime ? "focus:ring-red-400" : "focus:ring-green-400"
+            )}
             name="examName"
             type="text"
             placeholder="اسم الاختبار"
@@ -146,11 +181,14 @@ export default function CreateExamForm({
             id="stage"
             value={selectedStage}
             onChange={(e) => setSelectedStage(e.target.value)}
-            className="text-center h-12 border border-gray-300 bg-white w-full rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all shadow-sm appearance-none"
+            className={clsx(
+              "text-center h-12 border border-gray-300 bg-white w-full rounded-lg px-4 focus:outline-none focus:ring-2 focus:border-transparent transition-all shadow-sm appearance-none",
+              isTime ? "focus:ring-red-400" : "focus:ring-green-400"
+            )}
           >
             {stages?.map((stage, index) => (
-              <option key={index} value={stage}>
-                {stage}
+              <option key={index} value={stage.id}>
+                {stage.name}
               </option>
             ))}
             <option value="">جميع الصفوف</option>
@@ -166,7 +204,14 @@ export default function CreateExamForm({
       </div>
 
       <div className="flex gap-3 w-full mt-2">
-        <button className="py-3 px-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-center font-bold rounded-lg shadow-sm w-full transition-all flex items-center justify-center gap-2">
+        <button
+          className={clsx(
+            "py-3 px-6 bg-gradient-to-r text-white text-center font-bold rounded-lg shadow-sm w-full transition-all flex items-center justify-center gap-2 cursor-pointer",
+            isTime
+              ? "bg-black/70"
+              : "from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+          )}
+        >
           <FontAwesomeIcon
             icon={isCreate ? (examData ? faEdit : faPlus) : faEdit}
           />

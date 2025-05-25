@@ -16,7 +16,7 @@ import { PostInStudentPosts } from "../../components/PostInStudentPosts";
 export default function StudentPosts() {
   const { currentUser } = useCurrentUser();
   const { id: teacherId } = useParams();
-  teacherId;
+  (teacherId);
 
   // get my teachers
   const {
@@ -25,45 +25,56 @@ export default function StudentPosts() {
     error: mySubscriptionsError,
   } = useTeachersFromTeachersStudents(currentUser?.id);
 
+  (mySubscriptions);
+
   const {
     data: teacherPosts,
     isLoading: isTeacherPostsLoading,
     error: teacherPostsError,
   } = usePostsByTeacherId(teacherId);
 
-  teacherPosts;
+  (teacherPosts);
 
   const teachersIds = Array.isArray(mySubscriptions)
     ? mySubscriptions.map((sub) => sub.teacherId)
     : [];
 
-  const stagesIds = Array.isArray(mySubscriptions)
-    ? mySubscriptions.map((sub) => sub.stage_id)
+  const subscriptions = Array.isArray(mySubscriptions)
+    ? mySubscriptions.map((sub) => ({
+        teacherId: sub.teacherId,
+        stage_id: sub.stage_id,
+      }))
     : [];
 
-  const stageIdsCleaned = stagesIds.filter(Boolean); // يشيل null و undefined
-
   const allowedPairs = new Set(
-    mySubscriptions?.map((sub) => `${sub.teacherId}_${sub.stage_id}`)
+    mySubscriptions?.map((sub) => `${sub.teacherId}_${sub.stage}`)
   );
 
   const {
     data: teachersPosts,
     isLoading: isTeachersPostsLoading,
     error: teachersPostsError,
-  } = useTeachersPosts(teachersIds, stageIdsCleaned);
+  } = useTeachersPosts(subscriptions);
 
   // filter posts depending on myTeachers and stage
-  const filteredPosts = (teacherId ? teacherPosts : teachersPosts)?.filter(
-    (post) => {
-      if (post.stage_id !== null) {
-        return allowedPairs.has(`${post.teacherId}_${post.stage_id}`);
+  let filteredPosts;
+  if (teacherId) {
+    filteredPosts = teacherPosts?.filter((post) => {
+      if (post.stage !== "") {
+        return allowedPairs.has(`${post.teacherId}_${post.stage}`);
       }
 
-      // بوست عام
       return mySubscriptions.some((sub) => sub.teacherId === post.teacherId);
-    }
-  );
+    });
+  } else {
+    filteredPosts = teachersPosts?.filter((post) => {
+      if (post.stage !== "") {
+        return allowedPairs.has(`${post.teacherId}_${post.stage}`);
+      }
+
+      return mySubscriptions.some((sub) => sub.teacherId === post.teacherId);
+    });
+  }
 
   const {
     data: postReactions,
@@ -71,7 +82,7 @@ export default function StudentPosts() {
     error: postReactionsError,
   } = useReactionsByTeachersIds(teachersIds);
 
-  postReactions;
+  (postReactions);
 
   // loader and errors
   if (

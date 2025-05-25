@@ -47,7 +47,7 @@ export default function Exams() {
           const stateExams = exams?.filter((exam) => exam.isPublished === folder.isPublished);
           return (
             <div className="relative" key={folder.id}>
-              <Folder path={folder.path} text={folder.text} />
+              <Folder path={folder.path} text={folder.text} isSmall />
               {stateExams?.length > 0 && (
                 <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute -left-3 -top-2">
                   {stateExams?.length || 0}

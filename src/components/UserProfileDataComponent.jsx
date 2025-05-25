@@ -119,23 +119,6 @@ function ShowUserData({ user, isTeacher }) {
             <FontAwesomeIcon icon={faCopy} />
           </button>
         </p>
-        {isTeacher && (
-          <div className="flex gap-2 flex-col border border-gray-200 bg-gray-50 p-2 rounded-xl">
-            <span className="font-bold text-gray-700 shrink-0">
-              المراحل الدراسية:{" "}
-            </span>
-            <div className="flex gap-2 items-center flex-wrap">
-              {user.stages.map((stage, index) => (
-                <span
-                  key={index}
-                  className="py-1 px-2 rounded-lg bg-blue-100 border border-blue-300"
-                >
-                  {stage}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -145,28 +128,18 @@ function EditUserData({ user, isTeacher, setIsEdit }) {
   const { currentUser } = useCurrentUser();
   const [isSubmitEdit, setIsSubmitEdit] = React.useState(false);
   const [avatar, setAvatar] = React.useState(user.avatar);
-  console.log(avatar);
   const [userData, setUserData] = React.useState({
     name: user.name,
     phoneNumber: user.phoneNumber,
     subject: user.subject,
     gender: user.gender,
-    stages: user.stages,
   });
-
-  console.log(userData);
 
   const handleChangeUserData = (e) => {
     const { name, value } = e.target;
     setUserData({
       ...userData,
-      [name]:
-        name !== "stages"
-          ? value
-          : value
-              .split(/[-،,]/)
-              .map((stage) => stage.trim())
-              .filter((stage) => stage) || [],
+      [name]: value,
     });
   };
 
@@ -186,6 +159,7 @@ function EditUserData({ user, isTeacher, setIsEdit }) {
     setIsSubmitEdit(false);
     setIsEdit(false);
   };
+  
   return (
     <div dir="rtl">
       <h1 className="text-center text-blue-500 text-lg font-bold mb-3">
@@ -203,7 +177,7 @@ function EditUserData({ user, isTeacher, setIsEdit }) {
                   avatar instanceof File
                     ? URL.createObjectURL(avatar)
                     : avatar ||
-                      "https://cdn-icons-png.freepik.com/512/8801/8801434.png"
+                      "https://i.pinimg.com/736x/2f/15/f2/2f15f2e8c688b3120d3d26467b06330c.jpg"
                 }
                 alt="edit user image"
               />
@@ -284,27 +258,6 @@ function EditUserData({ user, isTeacher, setIsEdit }) {
               className="mt-1 p-2 border border-gray-300 rounded-md w-full"
               placeholder="المادة الدراسية"
               defaultValue={user.subject}
-              onChange={handleChangeUserData}
-            />
-          </div>
-        )}
-
-        {/* stages */}
-        {isTeacher && (
-          <div className="grow mt-2">
-            <label
-              htmlFor="subject"
-              className="block text-sm font-medium text-gray-700"
-            >
-              المجموعات
-            </label>
-            <input
-              type="text"
-              name="stages"
-              id="stages"
-              className="mt-1 p-2 border border-gray-300 rounded-md w-full"
-              placeholder="المجموعات"
-              defaultValue={user.stages.join(" - ")}
               onChange={handleChangeUserData}
             />
           </div>

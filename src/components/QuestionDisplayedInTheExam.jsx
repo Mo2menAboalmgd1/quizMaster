@@ -40,7 +40,6 @@ const handleSaveAnswer = (answer, questionId) => {
     studentId: currentUser.id,
     questionId,
     examId,
-    // ❌ لا ترسل isCorrect
   });
 };
 
