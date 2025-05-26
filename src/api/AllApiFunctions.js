@@ -181,9 +181,7 @@ export const joinTeacherWithJoinCode = async ({
   }
 
   // check stage if only code.stage exists
-  code.stage_id;
-  stage.id;
-  if (code.stage_id !== stage.id) {
+  if (code.stage_id && code.stage_id !== stage.id) {
     throw new Error("كود الانضمام غير متوافق مع المرحلة");
   }
 
@@ -540,6 +538,61 @@ export const getTeacherStages = async (teacherId) => {
   return data;
 };
 
+export const getStudentStages = async (studentId) => {
+  const { error, data } = await supabase
+    .from("teachers_students")
+    .select("*")
+    .eq("studentId", studentId)
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
+export const getStagesByStagesIds = async (stagesIds) => {
+  const { error, data } = await supabase
+    .from("teachers_stages")
+    .select("*")
+    .in("id", stagesIds)
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
+export const checkTask = async ({ usersIds, taskId, studentId, isChecked }) => {
+  if (isChecked) {
+    const { error } = await supabase
+      .from("students_done_tasks")
+      .insert({ task_id: taskId, student_id: studentId });
+
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase
+      .from("students_done_tasks")
+      .delete()
+      .eq("task_id", taskId);
+
+    if (error) throw new Error(error.message);
+  }
+
+  return usersIds;
+};
+
+
+export const getDoneTasks = async (studentId) => {
+  const { error, data } = await supabase
+    .from("students_done_tasks")
+    .select("*")
+    .eq("student_id", studentId);
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
 export const addNewStage = async ({ stage, teacherId }) => {
   const { selectError, data } = await supabase
     .from("teachers_stages")
@@ -733,6 +786,46 @@ export const getPosts = async (teacherId) => {
   if (error) throw new Error(error.message);
 
   return data;
+};
+
+export const getTasks = async (userId) => {
+  const { error, data } = await supabase
+    .from("tasks")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
+export const getTasksByUsersIds = async (userIds) => {
+  const { error, data } = await supabase
+    .from("tasks")
+    .select("*")
+    .in("user_id", userIds)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
+export const insertTask = async (task) => {
+  const { error } = await supabase.from("tasks").insert(task);
+
+  if (error) throw new Error(error.message);
+
+  return task.user_id;
+};
+
+export const deleteTask = async (task) => {
+  const { error } = await supabase.from("tasks").delete().eq("id", task.id);
+
+  if (error) throw new Error(error.message);
+
+  return task.userId;
 };
 
 export const getPostsDisplayedInStudentPosts = async (

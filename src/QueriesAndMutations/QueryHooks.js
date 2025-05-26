@@ -29,6 +29,11 @@ import {
   getUsersData,
   getExamsDataFromIds,
   getTeacherStages,
+  getTasks,
+  getTasksByUsersIds,
+  getStudentStages,
+  getStagesByStagesIds,
+  getDoneTasks,
 } from "../api/AllApiFunctions";
 
 // export const useCommonQuery = ({
@@ -88,6 +93,24 @@ export const useStagesByTeacherId = (teacherId) => {
   });
 };
 
+export const useStagesByStudentId = (studentId) => {
+  return useQuery({
+    queryKey: ["stages", studentId],
+    queryFn: () => getStudentStages(studentId),
+    enabled: !!studentId,
+    staleTime: 5 * 60 * 1000, // 5 minu
+  });
+};
+
+export const useStagesByStagesIds = (stagesIds) => {
+  return useQuery({
+    queryKey: ["stages", stagesIds],
+    queryFn: () => getStagesByStagesIds(stagesIds),
+    enabled: stagesIds?.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minu
+  });
+};
+
 export const useAlotIfRowsInAnyTable = (teachersIds, table) => {
   return useQuery({
     queryKey: ["many-rows", table, teachersIds],
@@ -143,6 +166,30 @@ export const usePostsByTeacherId = (teacherId) => {
     queryKey: ["posts", teacherId],
     queryFn: () => getPosts(teacherId),
     enabled: !!teacherId,
+  });
+};
+
+export const useTasksByUserId = (userId) => {
+  return useQuery({
+    queryKey: ["tasks", userId],
+    queryFn: () => getTasks(userId),
+    enabled: !!userId,
+  });
+};
+
+export const useTasksByUsersIds = (usersIds) => {
+  return useQuery({
+    queryKey: ["tasks", usersIds],
+    queryFn: () => getTasksByUsersIds(usersIds),
+    enabled: usersIds.length > 0,
+  });
+};
+
+export const useDoneTasksByStudentId = (studentId) => {
+  return useQuery({
+    queryKey: ["doneTasks", studentId],
+    queryFn: () => getDoneTasks(studentId),
+    enabled: !!studentId,
   });
 };
 

@@ -42,7 +42,12 @@ export default function JoinCodesGroup() {
 
   const handleGenerateCode = async () => {
     const randomCode = nanoid(14);
-    randomCode;
+    console.log({
+      teacherId: currentUser?.id,
+      value: randomCode,
+      isPublic: group === "public",
+      stage_id: selectedStage || null,
+    });
     generateCode({
       teacherId: currentUser?.id,
       value: randomCode,

@@ -21,24 +21,24 @@ export default function SendJoinRequest({
   const { mutateAsync: joinTeacherWithJoinCode } =
     useJoinTeacherWithJoinCodeMutation(setIsJoin);
   const handleJoin = async () => {
+    if (!selectedStage) {
+      toast.error("يجب اختيار المرحلة الدراسية");
+      return;
+    }
+
     if (hasJoinCode) {
       await joinTeacherWithJoinCode({
         value: joinCode,
-        teacher: teacher,
-        stage: JSON.parse(selectedStage),
+        teacher,
+        stage: selectedStage,
         studentId,
       });
       return;
     } else {
       toast.loading("جاري إرسال طلب انضمامك إلى المعلم");
-      console.log({
-        teacher: teacher,
-        stageId: JSON.parse(selectedStage).id,
-        studentId,
-      });
       await joinTeacher({
         teacherId: teacher.id,
-        stageId: JSON.parse(selectedStage).id,
+        stageId: selectedStage.id,
         studentId,
       });
     }
@@ -63,10 +63,15 @@ export default function SendJoinRequest({
             className="h-10 w-full mt-2 px-3 outline-none border border-gray-300 rounded-lg"
             name="stage"
             id="stage"
-            onChange={(e) => setSelectedStage(e.target.value)}
+            onChange={(e) => {
+              const selected = stages.find(
+                (stage) => stage.id === e.target.value
+              );
+              setSelectedStage(selected); // ✅ كده بتخزن object مش string
+            }}
           >
             {stages?.map((stage, index) => (
-              <option key={index} value={JSON.stringify(stage)}>
+              <option key={index} value={stage.id}>
                 {stage.name}
               </option>
             ))}

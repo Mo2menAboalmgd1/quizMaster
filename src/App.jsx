@@ -25,6 +25,7 @@ import {
   faChalkboardTeacher,
   faPlus,
   faSignOut,
+  faTasks,
 } from "@fortawesome/free-solid-svg-icons";
 import Loader from "./components/Loader";
 import Requests from "./pages/LoggedInUser/Requests";
@@ -35,6 +36,7 @@ import {
   usePostsByTeacherId,
   useProfileByUserId,
   useStudentsAndRequestsByTeacherIdAndTable,
+  useTasksByUserId,
   useTeachersFromTeachersStudents,
   useUserDataByUserId,
   // useUserDataByUserId,
@@ -73,6 +75,8 @@ import SearchTeachers from "./pages/LoggedInUser/SearchTeachers";
 import ChooseTestType from "./pages/LoggedInUser/ChooseTestType";
 import StageExamsTypes from "./pages/LoggedInUser/StageExamsTypes";
 import TypeStageExams from "./pages/LoggedInUser/TypeStageExams";
+import TeacherTasks from "./pages/LoggedInUser/TeacherTasks";
+import StudentTasks from "./pages/LoggedInUser/StudentTasks";
 
 export default function App() {
   const { getSession, session } = useSession();
@@ -109,6 +113,8 @@ export default function App() {
     currentUser?.id
   );
 
+  const { data: tasks } = useTasksByUserId(currentUser?.id);
+
   const { data: postsInTeacherPosts } = usePostsByTeacherId(currentUser?.id);
 
   const { data: joinCodes } = useJoinCodes(currentUser?.id);
@@ -127,6 +133,13 @@ export default function App() {
       text: "المنشورات",
       user: "both",
       number: postsInTeacherPosts?.length || null,
+    },
+    {
+      path: "/tasks",
+      icon: <FontAwesomeIcon icon={faTasks} className="pr-1" />,
+      text: "المهام",
+      user: "both",
+      number: tasks?.length || null,
     },
     {
       path: "/studentTeachers",
@@ -419,6 +432,16 @@ export default function App() {
                 element={<DidNotTakeExam />}
               />
             </Route>
+            <Route
+              path="/tasks"
+              element={
+                currentUser?.type === "teacher" ? (
+                  <TeacherTasks />
+                ) : (
+                  <StudentTasks />
+                )
+              }
+            />
           </Routes>
         </div>
       </main>

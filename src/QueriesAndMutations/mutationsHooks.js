@@ -2,11 +2,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   acceptRequest,
   addNewStage,
+  checkTask,
   createNewExam,
   deleteExam,
   deleteNotification,
   deleteQuestion,
   deleteStage,
+  deleteTask,
   editExamData,
   editProfile,
   editQeustion,
@@ -16,6 +18,7 @@ import {
   handleCreateTeacher,
   insertPost,
   insertQuestion,
+  insertTask,
   joinTeacher,
   joinTeacherWithJoinCode,
   makeProfile,
@@ -319,6 +322,87 @@ export const useCreateNewPostMutation = () => {
     },
   });
 };
+
+export const useAddNewTaskMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: insertTask,
+    onError: () => {
+      toast.dismiss();
+      toast.error("حدث خطأ، أعد المحاولة");
+    },
+    onSuccess: (userId) => {
+      toast.dismiss();
+      toast.success("تم إضافة المهمة بنجاح");
+      queryClient.invalidateQueries(["tasks", userId]);
+    },
+  });
+};
+
+export const useDeleteTaskMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteTask,
+    onError: () => {
+      toast.dismiss();
+      toast.error("حدث خطأ، أعد المحاولة");
+    },
+    onSuccess: (userId) => {
+      toast.dismiss();
+      toast.success("تم حذف المهمة");
+      queryClient.invalidateQueries(["tasks", userId]);
+    },
+  });
+};
+
+export const useCheckTaskMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: checkTask,
+
+    // ✅ التحديث اللحظي قبل إرسال الطلب
+    onMutate: async ({ taskId, studentId, isChecked }) => {
+      await queryClient.cancelQueries(["doneTasks", studentId]);
+
+      const previousDoneTasks = queryClient.getQueryData([
+        "doneTasks",
+        studentId,
+      ]);
+
+      // ✅ التحديث المحلي (optimistic)
+      queryClient.setQueryData(["doneTasks", studentId], (old = []) => {
+        if (isChecked) {
+          return [...old, { task_id: taskId }];
+        } else {
+          return old.filter((task) => task.task_id !== taskId);
+        }
+      });
+
+      // 🛑 في حالة الخطأ، نحتاج rollback
+      return { previousDoneTasks };
+    },
+
+    // ❌ التراجع لو حصل خطأ
+    onError: (err, variables, context) => {
+      toast.dismiss();
+      toast.error("حدث خطأ، أعد المحاولة");
+
+      if (context?.previousDoneTasks) {
+        queryClient.setQueryData(
+          ["doneTasks", variables.studentId],
+          context.previousDoneTasks
+        );
+      }
+    },
+
+    // ✅ إعادة التحميل بعد النجاح
+    onSettled: (_data, _error, variables) => {
+      queryClient.invalidateQueries(["doneTasks", variables.studentId]);
+    },
+  });
+};
+
 
 export const useInsertQuestionMutation = (
   setQuestionText,
