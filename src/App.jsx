@@ -139,7 +139,7 @@ export default function App() {
       icon: <FontAwesomeIcon icon={faTasks} className="pr-1" />,
       text: "المهام",
       user: "both",
-      number: tasks?.length || null,
+      number: currentUser?.type === "teacher" ? tasks?.length || null : null,
     },
     {
       path: "/studentTeachers",
@@ -262,9 +262,9 @@ export default function App() {
   if (!currentUser) return <Loader message="جري تحميل الامتحانات" />;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col font-[Noto_Sans_Arabic]">
       {/* Header */}
-      <header className="bg-white shadow-md">
+      <header className="bg-gray-50 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -333,7 +333,7 @@ export default function App() {
       <div
         className={`fixed inset-y-0 left-0 transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } w-64 bg-white shadow-lg z-20 transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:w-auto md:h-auto md:shadow-none`}
+        } w-64 bg-gray-50 shadow-lg z-20 transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:w-auto md:h-auto md:shadow-none`}
       >
         <div className="flex flex-col h-full">
           <div className="p-4 border-b flex justify-between items-center md:hidden">

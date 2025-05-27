@@ -101,30 +101,39 @@ export default function StudentTasks() {
   }
 
   return (
-    <div dir="rtl">
-      <h1 className="text-3xl font-bold text-center pb-4">قائمة مهامي</h1>
+    <div
+      dir="rtl"
+      className="min-h-screen"
+    >
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-slate-800 mb-2">
+            قائمة مهامي
+          </h1>
+          <div className="w-20 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 mx-auto rounded-full"></div>
+        </div>
 
-      <AddNewTaskForm />
+        <AddNewTaskForm />
 
-      <div className="space-y-3">
-        {myTasks?.map((task) => {
-          const teacher = teachersData?.find(
-            (teacher) => teacher.id === task.user_id
-          );
-          const isDone = doneTasks?.some(
-            (doneTask) => doneTask.task_id === task.id
-          );
-          // const stage = stagesData?.find((stage) => stage.id === task.stage_id);
-          return (
-            <StudentTask
-              key={task.id}
-              task={task}
-              teacher={teacher}
-              usersIds={usersIds}
-              isDone={isDone}
-            />
-          );
-        })}
+        <div className="space-y-4">
+          {myTasks?.map((task) => {
+            const teacher = teachersData?.find(
+              (teacher) => teacher.id === task.user_id
+            );
+            const isDone = doneTasks?.some(
+              (doneTask) => doneTask.task_id === task.id
+            );
+            return (
+              <StudentTask
+                key={task.id}
+                task={task}
+                teacher={teacher}
+                usersIds={usersIds}
+                isDone={isDone}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -132,39 +141,46 @@ export default function StudentTasks() {
 
 function AddNewTaskForm() {
   const { currentUser } = useCurrentUser();
-
   const { mutate: addNewTask } = useAddNewTaskMutation();
-  const handleAddNewTask = (e) => {
-    // TODO: add new task
-    e.preventDefault();
-    addNewTask({
-      stage_id: null,
-      user_id: currentUser?.id,
-      task: e.target.task.value,
-      isTeacher: false,
-    });
+
+  const handleAddNewTask = () => {
+    const taskInput = document.getElementById("task");
+    if (taskInput && taskInput.value.trim()) {
+      addNewTask({
+        stage_id: null,
+        user_id: currentUser?.id,
+        task: taskInput.value,
+        isTeacher: false,
+      });
+      taskInput.value = "";
+    }
   };
+
   return (
-    <form
-      className="flex flex-col gap-2 mb-5 border border-gray-300 bg-blue-50 w-full p-4 rounded-xl"
-      dir="rtl"
-      onSubmit={handleAddNewTask}
-    >
-      <div className="space-y-2">
-        <label htmlFor="task" className="block">
-          عنوان المهمة:
-        </label>
-        <input
-          type="text"
-          id="task"
-          placeholder="أضف مهمة جديدة"
-          className="border border-gray-300 rounded-md px-3 py-2 w-full bg-white focus:ring-2 focus:border-transparent focus:ring-blue-400 outline-none"
-        />
+    <div className="mb-8">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow duration-300">
+        <div className="space-y-4">
+          <label
+            htmlFor="task"
+            className="block text-sm font-medium text-slate-700"
+          >
+            إضافة مهمة جديدة
+          </label>
+          <input
+            type="text"
+            id="task"
+            placeholder="اكتب مهمتك هنا..."
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 placeholder-slate-400"
+          />
+          <button
+            onClick={handleAddNewTask}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 active:scale-[0.98]"
+          >
+            إضافة المهمة
+          </button>
+        </div>
       </div>
-      <button className="bg-blue-500 text-white rounded-md px-3 py-2 mt-2 cursor-pointer hover:bg-blue-600 transition-all shadow-sm focus:outline-none active:bg-blue-500">
-        إضافة
-      </button>
-    </form>
+    </div>
   );
 }
 
@@ -178,7 +194,7 @@ function StudentTask({ task, teacher, usersIds, isDone }) {
 
   const { mutate: checkTaskMutation } = useCheckTaskMutation();
   const handleCheckTask = (newChecked) => {
-    setIsChecked(newChecked); // لحظي للواجهة
+    setIsChecked(newChecked);
 
     checkTaskMutation({
       isChecked: newChecked,
@@ -188,70 +204,109 @@ function StudentTask({ task, teacher, usersIds, isDone }) {
     });
   };
 
-
   return (
     <div
       className={clsx(
-        "border p-3 rounded-lg",
+        "bg-white rounded-xl border transition-all duration-300 hover:shadow-md",
         isChecked
-          ? "bg-green-50 border-green-500 transition-colors"
-          : "bg-white border-gray-300"
+          ? "border-green-200 bg-green-50/50"
+          : "border-slate-200 hover:border-slate-300"
       )}
     >
-      <div className="flex gap-2 items-center">
-        {task.isTeacher ? (
-          <h4>
+      <div className="p-5">
+        <div className="flex items-start gap-3 mb-4">
+          {task.isTeacher ? (
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <div
+                  className={clsx(
+                    "w-2 h-2 rounded-full",
+                    isChecked ? "bg-green-500" : "bg-blue-500"
+                  )}
+                ></div>
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  {teacher?.gender === "male" ? "الأستاذ" : "الأستاذة"}
+                </span>
+              </div>
+              <h4
+                className={clsx(
+                  "font-medium transition-colors duration-200",
+                  isChecked ? "text-green-700" : "text-slate-700"
+                )}
+              >
+                {teacher?.name} - {teacher?.subject}
+              </h4>
+            </div>
+          ) : (
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <div
+                  className={clsx(
+                    "w-2 h-2 rounded-full",
+                    isChecked ? "bg-green-500" : "bg-indigo-500"
+                  )}
+                ></div>
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  مهمة شخصية
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-4">
+          <label
+            className="flex items-center gap-3 flex-1 cursor-pointer group"
+            htmlFor={`taskCheckBox-${task.id}`}
+          >
+            <div className="relative">
+              <input
+                type="checkbox"
+                id={`taskCheckBox-${task.id}`}
+                className="sr-only"
+                checked={isChecked}
+                onChange={(e) => handleCheckTask(e.target.checked)}
+              />
+              <div
+                className={clsx(
+                  "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                  isChecked
+                    ? "bg-green-500 border-green-500 text-white"
+                    : "border-slate-300 group-hover:border-slate-400"
+                )}
+              >
+                {isChecked && (
+                  <svg
+                    className="w-3 h-3"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
+              </div>
+            </div>
             <span
               className={clsx(
-                "font-bold transition-colors",
-                isChecked ? "text-green-600" : "text-gray-600"
+                "flex-1 transition-all duration-200",
+                isChecked
+                  ? "text-green-600 line-through opacity-75"
+                  : "text-slate-800 group-hover:text-slate-900"
               )}
             >
-              {teacher.gender === "male" ? "الأستاذ:" : "الأستاذة:"}{" "}
+              {task.task}
             </span>
-            <span>
-              {teacher?.name} - {teacher?.subject}
-            </span>
-          </h4>
-        ) : (
-          <h4
-            className={clsx(
-              "font-bold transition-colors",
-              isChecked ? "text-green-600" : "text-gray-600"
-            )}
-          >
-            مهمة شخصية
-          </h4>
-        )}
-        {/* -{!stage?.name && <h3 className="font-bold"> مهمة عامة</h3>} */}
+          </label>
+        </div>
       </div>
-      <hr
-        className={clsx(
-          "border-dashed my-2 transition-colors",
-          isChecked ? "border-green-500" : "border-gray-300"
-        )}
-      />
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          name="taskCheckBox"
-          id={`taskCheckBox-${task.id}`}
-          className="w-4 h-4 border border-gray-300 hidden"
-          checked={isChecked}
-          onChange={(e) => {
-            handleCheckTask(e.target.checked);
-          }}
-        />
-        <label
-          htmlFor={`taskCheckBox-${task.id}`}
-          className={clsx(
-            "cursor-pointer grow select-none",
-            (isChecked) && "line-through"
-          )}
-        >
-          {task.task}
-        </label>
-      </div>
+
+      {isChecked && (
+        <div className="h-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-b-xl"></div>
+      )}
     </div>
   );
 }

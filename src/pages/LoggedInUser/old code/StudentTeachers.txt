@@ -1,0 +1,130 @@
+import React from "react";
+import { useCurrentUser } from "../../store/useStore";
+import {
+  useTeachersFromTeachersStudents,
+  useUserDataByUsersIdsAndKey,
+} from "../../QueriesAndMutations/QueryHooks";
+import Loader from "../../components/Loader";
+import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
+import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
+import {
+  faChalkboardTeacher,
+  faChevronLeft,
+  faGlobe,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
+import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+export default function StudentTeachers() {
+  const { currentUser } = useCurrentUser();
+
+  const {
+    data: studentTeachers,
+    isLoading: isStudentTeachersLoading,
+    isError: isStudentTeachersError,
+  } = useTeachersFromTeachersStudents(currentUser?.id);
+
+  const teachersIds = studentTeachers?.map((teacher) => teacher.teacherId);
+
+  const {
+    data: teachers,
+    isLoading: isTeachersLoading,
+    isError: isTeachersError,
+  } = useUserDataByUsersIdsAndKey(teachersIds, "teachers_students", "teachers");
+
+  if (isStudentTeachersLoading || isTeachersLoading) {
+    return <Loader message="جاري تحميل الصفحة الرئيسية" />;
+  }
+
+  if (isStudentTeachersError || isTeachersError) {
+    return (
+      <ErrorPlaceHolder
+        message={"حدث خطأ أثناء تحميل الملف الشخصي، اعد المحاولة"}
+      />
+    );
+  }
+
+  if (
+    !studentTeachers ||
+    studentTeachers.length === 0 ||
+    !teachers ||
+    teachers.length === 0
+  ) {
+    return (
+      <div>
+        <NoDataPlaceHolder
+          message={"لا يوجد معلمين لديك، انضم الآن"}
+          icon={faUser}
+        />
+        <Link
+          to="/searchTeachers"
+          className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+        >
+          انضم الآن
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <h1 className="py-4 text-center bg-gradient-to-r from-green-500 to-emerald-600 font-bold text-white text-xl">
+          <FontAwesomeIcon icon={faChalkboardTeacher} className="mr-2" />
+          قائمة المعلمين
+        </h1>
+
+        <div className="p-4" dir="rtl">
+          {teachers.length === 0 ? (
+            <div className="py-8 text-center text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+              لا يوجد معلمين حاليًا
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {teachers.map((teacher) => (
+                <Link
+                  className="p-4 border border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all flex items-center gap-3 group"
+                  dir="rtl"
+                  to={teacher.id}
+                  key={teacher.id}
+                >
+                  {teacher.avatar ? (
+                    <img
+                      className="w-12 h-12 rounded-full object-cover shadow-md"
+                      src={teacher.avatar}
+                      alt={teacher.name}
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white shadow-sm">
+                      <FontAwesomeIcon icon={faUser} />
+                    </div>
+                  )}
+                  <div className="grow">
+                    <h3 className="font-medium text-gray-800 group-hover:text-green-700 transition-colors">
+                      {teacher.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {teacher.subject || "معلم"}
+                    </p>
+                  </div>
+                  <FontAwesomeIcon
+                    icon={faChevronLeft}
+                    className="text-gray-400 group-hover:text-green-500 transition-colors mr-2"
+                  />
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <Link
+        to="/searchTeachers"
+        className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow flex gap-2 w-fit items-center -mt-3"
+      >
+        <FontAwesomeIcon icon={faGlobe} />
+        <span>البحث عن معلمين آخرين</span>
+      </Link>
+    </div>
+  );
+}

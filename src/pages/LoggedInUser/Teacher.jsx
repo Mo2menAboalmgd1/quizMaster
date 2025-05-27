@@ -79,10 +79,10 @@ export default function Teacher() {
           📤 عرض الامتحانات
         </Link>
         <button className="bg-purple-600 text-white rounded-xl p-4 shadow hover:bg-purple-700 transition cursor-pointer">
-          📊 عرض تحليلات الطلاب
+          عرض قائمة المهام ✅
         </button>
         <button className="bg-yellow-500 text-white rounded-xl p-4 shadow hover:bg-yellow-600 transition cursor-pointer">
-          📚 إدارة الصفوف
+          المنشورات 📢
         </button>
       </div>
 

@@ -2,7 +2,6 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { useCurrentUser } from "../../store/useStore";
 import {
-  useAnswersByStudentIdAndExamId,
   useExamByItsId,
   useExamsResultsByStudentIdAndExamId,
   useQuestionsByExamId,
@@ -36,12 +35,6 @@ export default function Exam() {
   } = useQuestionsByExamId(examId);
 
   questions;
-
-  const {
-    data: studentAnswers,
-    isLoading: isStudentAnswersLoading,
-    error: studentAnswersError,
-  } = useAnswersByStudentIdAndExamId(currentUser?.id, examId);
 
   const {
     data: examResult,
@@ -94,18 +87,12 @@ export default function Exam() {
     isExamDataLoading ||
     !currentUser ||
     isQuestionsLoading ||
-    isExamResultLoading ||
-    isStudentAnswersLoading
+    isExamResultLoading
   ) {
     return <Loader message="جاري تحميل الامتحان" />;
   }
 
-  if (
-    examDataError ||
-    questionsError ||
-    examResultError ||
-    studentAnswersError
-  ) {
+  if (examDataError || questionsError || examResultError) {
     return <ErrorPlaceHolder message={"حدث خطأ، أعد المحاولة"} />;
   }
 
@@ -123,21 +110,33 @@ export default function Exam() {
   return (
     <div dir="rtl" className="max-w-5xl mx-auto px-4 py-6 space-y-6">
       {/* exam data card */}
-      <div className="p-5 border border-gray-300 bg-white shadow-md rounded-2xl space-y-2">
-        <p className="text-lg font-semibold text-gray-700">
-          المادة: <span className="text-gray-900">{examData.subject}</span>
-        </p>
-        <p className="text-lg font-semibold text-gray-700">
-          عنوان الامتحان:{" "}
-          <span className="text-gray-900">{examData.title}</span>
-        </p>
-        <p className="text-lg font-semibold text-gray-700">
-          اسم الطالب: <span className="text-gray-900">{currentUser.name}</span>
-        </p>
-        <p className="text-lg font-semibold text-gray-700">
-          عدد الأسألة:{" "}
-          <span className="text-gray-900">{questions.length} سؤال</span>
-        </p>
+      <div className="p-3 px-4 bg-white shadow-sm rounded-xl border border-gray-200 space-y-4">
+        <div className="grid grid-cols-1 gap-3">
+          <div className="flex gap-2 items-center py-2 border-b border-gray-100 last:border-b-0">
+            <span className="text-sm font-medium text-gray-600">المادة:</span>
+            <span className="text-sm text-gray-900">{examData.subject}</span>
+          </div>
+          <div className="flex gap-2 items-center py-2 border-b border-gray-100 last:border-b-0">
+            <span className="text-sm font-medium text-gray-600">
+              عنوان الامتحان:
+            </span>
+            <span className="text-sm text-gray-900">{examData.title}</span>
+          </div>
+          <div className="flex gap-2 items-center py-2 border-b border-gray-100 last:border-b-0">
+            <span className="text-sm font-medium text-gray-600">
+              اسم الطالب:
+            </span>
+            <span className="text-sm text-gray-900">{currentUser.name}</span>
+          </div>
+          <div className="flex gap-2 items-center py-2">
+            <span className="text-sm font-medium text-gray-600">
+              عدد الأسألة:
+            </span>
+            <span className="text-sm text-gray-900">
+              {questions.length} سؤال
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* questions */}
@@ -177,46 +176,53 @@ export default function Exam() {
 
       {/* exam result card */}
       {examResult && (
-        <div className="p-6 border-2 border-blue-400 bg-blue-50 rounded-2xl shadow-md mt-8 space-y-6">
-          <p className="font-bold text-blue-700 text-lg text-center">
-            نتيجتك هي:{" "}
-            <span className="text-black">
-              {examResult.correct} من {examResult.total}
-            </span>
-          </p>
+        <div className="p-8 bg-white rounded-2xl shadow-lg border border-gray-100 mt-8 space-y-8">
+          <div className="text-center">
+            <p className="text-xl font-semibold text-gray-700 mb-3">
+              نتيجتك هي:{" "}
+              <span className="text-gray-900 font-bold">
+                {examResult.correct} من {examResult.total}
+              </span>
+            </p>
+          </div>
 
           {/* result bar */}
-          <div className="flex gap-3 items-center w-full">
-            <div className="h-5 rounded-full w-full bg-blue-100 border border-blue-500 overflow-hidden">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">النسبة المئوية</span>
+              <span className="text-lg font-semibold text-gray-900">
+                {`${Math.round(
+                  (examResult.correct / examResult.total) * 100
+                )}%`}
+              </span>
+            </div>
+            <div className="h-2 rounded-full w-full bg-gray-100 overflow-hidden">
               <div
                 style={{
                   width: `${(examResult.correct / examResult.total) * 100}%`,
                 }}
-                className="bg-blue-500 h-full transition-all duration-500"
+                className="bg-gradient-to-l from-gray-500 to-gray-900 h-full transition-all duration-700 ease-out"
               ></div>
             </div>
-            <p className="min-w-max font-medium text-blue-700">
-              {`${Math.round((examResult.correct / examResult.total) * 100)}%`}
-            </p>
           </div>
 
           {/* result summary boxes */}
-          <div className="flex justify-center gap-6 text-center">
-            <div className="bg-green-100 border border-green-500 rounded-xl p-4 w-32 shadow">
-              <p className="text-green-700 font-bold text-sm">الصحيحة</p>
-              <p className="text-green-900 text-2xl font-extrabold">
+          <div className="grid grid-cols-3 gap-6">
+            <div className="text-center space-y-2">
+              <p className="text-sm font-medium text-gray-600">الصحيحة</p>
+              <p className="text-2xl font-bold text-emerald-600">
                 {examResult.correct}
               </p>
             </div>
-            <div className="bg-red-100 border border-red-500 rounded-xl p-4 w-32 shadow">
-              <p className="text-red-700 font-bold text-sm">الخاطئة</p>
-              <p className="text-red-900 text-2xl font-extrabold">
+            <div className="text-center space-y-2">
+              <p className="text-sm font-medium text-gray-600">الخاطئة</p>
+              <p className="text-2xl font-bold text-red-500">
                 {examResult.wrong}
               </p>
             </div>
-            <div className="bg-yellow-100 border border-yellow-500 rounded-xl p-4 w-32 shadow">
-              <p className="text-yellow-700 font-bold text-sm">لم تُجب</p>
-              <p className="text-yellow-900 text-2xl font-extrabold">
+            <div className="text-center space-y-2">
+              <p className="text-sm font-medium text-gray-600">لم تُجب</p>
+              <p className="text-2xl font-bold text-amber-500">
                 {examResult.notAnswered}
               </p>
             </div>
