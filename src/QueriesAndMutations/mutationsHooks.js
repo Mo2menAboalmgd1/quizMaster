@@ -295,14 +295,15 @@ export const useReactToPost = () => {
 };
 
 export const useCreateNewPostMutation = () => {
+  
   return useMutation({
-    mutationFn: async ({ text, images, stageId, teacherId }) => {
+    mutationFn: async ({action, update}) => {
       // upload question images and get their urls back
       let uploadedQuestionImageUrls = [];
-      if (images?.length > 0) {
+      if (update.images?.length > 0) {
         uploadedQuestionImageUrls = await UploadImages(
-          images,
-          teacherId,
+          update.images,
+          update.teacherId,
           "postsimages"
         );
         if (uploadedQuestionImageUrls.length === 0) {
@@ -312,13 +313,19 @@ export const useCreateNewPostMutation = () => {
 
       // upload post
       await insertPost({
-        text,
+        text: update.text,
         images: uploadedQuestionImageUrls,
-        stage_id: stageId,
-        teacherId,
+        stage_id: update.stageId,
+        teacherId: update.teacherId,
       });
 
-      return teacherId;
+      return action;
+    },
+    onSuccess: (action) => {
+      saveAction({
+        userId: action.teacherId,
+        action: `تم نشر منشور جديد - ${action.stage}`,
+      });
     },
   });
 };

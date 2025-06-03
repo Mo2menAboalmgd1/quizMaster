@@ -3,23 +3,21 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import DisplayFile from "./DisplayFile";
 import { Link } from "react-router-dom";
 import { useReactToPost } from "../QueriesAndMutations/mutationsHooks";
-import {
-  useReactionsByPostId,
-  useUserDataByUserId,
-} from "../QueriesAndMutations/QueryHooks";
+import { useUserDataByUserId } from "../QueriesAndMutations/QueryHooks";
 import { useState } from "react";
-import { useCurrentUser, useDarkMode } from "../store/useStore";
-import { formatTime } from "../utils/getDate";
+import { useCurrentUser } from "../store/useStore";
+import { formatTime } from "../utils/getData";
 import { isToday } from "../utils/isToday";
-import clsx from "clsx";
-import Loader from "./Loader";
 
-export function PostInStudentPosts({ post, isAllPosts }) {
+export function PostInStudentPosts({ post, reactions }) {
   const { currentUser } = useCurrentUser();
-  const { isDarkMode } = useDarkMode();
 
   const [expanded, setExpanded] = useState(false);
   const [fileDisplayed, setFileDisplayed] = useState(null);
+
+  const isLiked = reactions?.some((reaction) => {
+    return reaction.user_id === currentUser?.id;
+  });
 
   const MAX_TEXT_LENGTH = 130;
 
@@ -32,18 +30,6 @@ export function PostInStudentPosts({ post, isAllPosts }) {
     post.teacherId,
     "teachers"
   );
-
-  const {
-    data: reactions,
-    isLoading: isReactionsLoading,
-    error: reactionsError,
-  } = useReactionsByPostId(post.id);
-
-  console.log(reactions);
-
-  const isLiked = reactions?.some((reaction) => {
-    return reaction.user_id === currentUser?.id;
-  });
 
   const { mutate: reactToPost } = useReactToPost();
 
@@ -58,10 +44,6 @@ export function PostInStudentPosts({ post, isAllPosts }) {
     });
   }
 
-  if (isReactionsLoading) {
-    return ;
-  }
-
   if (teacherError) {
     return (
       <ErrorPlaceHolder
@@ -72,65 +54,31 @@ export function PostInStudentPosts({ post, isAllPosts }) {
 
   return (
     <div
-      className={clsx(
-        "w-full border rounded-lg transition-colors duration-300 p-3",
-        isToday(post.created_at)
-          ? isDarkMode
-            ? "border-blue-500/50 bg-slate-900 rounded-lg"
-            : "border-blue-300 bg-blue-50 rounded-xl"
-          : isDarkMode
-          ? "border-slate-700"
-          : "border-gray-300"
-      )}
+      className={`p-5 rounded-3xl shadow-lg w-full space-y-3 border transition-colors duration-300 ${
+        isToday(post.created_at) ? "border-blue-300" : "border-gray-200"
+      }`}
     >
-      {isAllPosts && (
-        <div className="flex gap-3 items-center">
-          <img
-            src={
-              teacher?.avatar ||
-              "https://i.pinimg.com/736x/2f/15/f2/2f15f2e8c688b3120d3d26467b06330c.jpg"
-            }
-            alt="teacher"
-            className="w-12 h-12 rounded-full object-cover"
-          />
-          <div>
-            <Link
-              to={"/userProfile/" + teacher?.id}
-              className={clsx(
-                "font-semibold",
-                isDarkMode ? "text-blue-400" : "text-gray-600"
-              )}
-            >
-              {teacher?.name} ({teacher?.subject})
-            </Link>
-            <p
-              className={clsx(
-                "text-sm",
-                isDarkMode ? "text-blue-300/80" : "text-gray-500"
-              )}
-            >
-              {formatTime(post.created_at)}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {isAllPosts && (
-        <hr
-          className={clsx(
-            "my-3 border-dashed",
-            isDarkMode ? "border-slate-700" : "border-gray-300"
-          )}
+      <div className="flex gap-3 items-center">
+        <img
+          src={
+            teacher?.avatar ||
+            "https://i.pinimg.com/736x/2f/15/f2/2f15f2e8c688b3120d3d26467b06330c.jpg"
+          }
+          alt="teacher"
+          className="w-12 h-12 rounded-full object-cover"
         />
-      )}
-
+        <div>
+          <Link
+            to={"/userProfile/" + teacher?.id}
+            className="font-semibold text-gray-600"
+          >
+            {teacher?.name} ({teacher?.subject})
+          </Link>
+          <p className="text-sm text-gray-500">{formatTime(post.created_at)}</p>
+        </div>
+      </div>
       {post.text && (
-        <p
-          className={clsx(
-            "whitespace-pre-line mt-2",
-            isDarkMode ? "text-white" : "text-gray-800"
-          )}
-        >
+        <p className="whitespace-pre-line text-gray-800">
           {expanded ? post.text : truncatedText}
           {shouldTruncate && (
             <button
@@ -144,7 +92,7 @@ export function PostInStudentPosts({ post, isAllPosts }) {
       )}
       {post.images && (
         <div
-          className={`grid gap-3 items-stretch mt-2 ${
+          className={`grid gap-4 items-stretch ${
             post.images.length === 1
               ? "grid-cols-1"
               : post.images.length === 2
@@ -171,22 +119,12 @@ export function PostInStudentPosts({ post, isAllPosts }) {
                 src={image}
                 alt={`image-${index}`}
                 onClick={() => setFileDisplayed(image)}
-                className={`w-full ${imgHeight} rounded-lg object-cover cursor-pointer shadow-sm hover:shadow-lg transition-shadow duration-200`}
+                className={`w-full ${imgHeight} rounded-2xl object-cover cursor-pointer shadow-sm hover:shadow-lg transition-shadow duration-200`}
               />
             );
           })}
         </div>
       )}
-
-      {isAllPosts && (
-        <hr
-          className={clsx(
-            "my-3 border-dashed",
-            isDarkMode ? "border-slate-700" : "border-gray-300"
-          )}
-        />
-      )}
-
       <div>
         <input
           onChange={(e) => {
@@ -203,12 +141,12 @@ export function PostInStudentPosts({ post, isAllPosts }) {
         />
         <label
           htmlFor={`${post.id}-like`}
-          className="peer-checked:text-red-600
-          px-4 text-gray-500 mt-2
+          className="peer-checked:text-red-600 peer-checked:bg-red-100
+          px-4 py-2 text-gray-700
           rounded-md flex items-center gap-1 transition-colors md:py-1 cursor-pointer select-none w-fit"
         >
           <FontAwesomeIcon icon={faHeart} />
-          <span>{reactions?.length}</span>
+          <span >أعجبني ({reactions?.length})</span>
         </label>
       </div>
       {fileDisplayed && (

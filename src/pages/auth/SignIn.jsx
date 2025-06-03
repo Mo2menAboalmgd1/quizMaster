@@ -26,7 +26,7 @@ export default function SignIn() {
       onSubmit={handleSubmit}
       className="max-w-md mx-auto bg-white rounded-lg overflow-hidden"
     >
-      <div className="p-1 space-y-6" dir="rtl">
+      <div className="p-1 space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="email" className="block text-gray-700 font-medium">

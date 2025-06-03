@@ -34,17 +34,17 @@ export default function QuestionDisplayedInTheExam({
 
   const { mutate: saveAnswer } = useSaveAnswer();
 
-const handleSaveAnswer = (answer, questionId) => {
-  saveAnswer({
-    answerId: answer.id,
-    studentId: currentUser.id,
-    questionId,
-    examId,
-  });
-};
+  const handleSaveAnswer = (answer, questionId) => {
+    saveAnswer({
+      answerId: answer.id,
+      studentId: currentUser.id,
+      questionId,
+      examId,
+    });
+  };
 
   if (isQuesionAnswersLoading || isStudentAnswersLoading) {
-    return <Loader message="جاري تحميل الامتحان" />;
+    return <Loader message="جاري تحميل الاختبار" />;
   }
 
   if (quesionAnswersError || studentAnswersError) {

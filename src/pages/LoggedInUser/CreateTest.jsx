@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import Loader from "../../components/Loader";
 import { useParams } from "react-router-dom";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
+import PageWrapper from "../../components/PageWrapper";
 
 export default function CreateExam() {
   const { type } = useParams();
@@ -55,17 +56,15 @@ export default function CreateExam() {
   if (examDataError) toast.error(examDataError.message);
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <CreateExamForm
-          type={type}
-          examData={examData}
-          examId={examId}
-          setExamId={setExamId}
-          isCreate={true}
-          stages={stages}
-        />
-      </div>
+    <PageWrapper title={`إنشاء اختبار ${type === "time" ? "سرعة" : "تقليدي"}`}>
+      <CreateExamForm
+        type={type}
+        examData={examData}
+        examId={examId}
+        setExamId={setExamId}
+        isCreate={true}
+        stages={stages}
+      />
 
       {isExamDataLoading && <Loader message="جاري التحميل" />}
 
@@ -80,6 +79,6 @@ export default function CreateExam() {
           <DisplayAnswersInCreateExam examId={examId} />
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

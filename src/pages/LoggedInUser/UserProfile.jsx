@@ -14,6 +14,7 @@ import StudentTeachersInOwnProfile from "../../components/StudentTeachersInOwnPr
 import Loader from "../../components/Loader";
 import GradesChart from "../../components/StudentGradesChart";
 import StudentGradesOverview from "../../components/StudentGradesOverview";
+import PageWrapper from "../../components/PageWrapper";
 
 export default function UserProfile() {
   const { id: userId } = useParams();
@@ -79,9 +80,17 @@ export default function UserProfile() {
   const isCurrentUserStudentVeiwingOwnProfile =
     isCurrentUserStudent && user.id === currentUser.id;
 
+  // const isCurrentUserWatchingHisOwnProfile = currentUser.id === user.id;
+
   return (
-    <div className="w-full space-y-6 p-4">
-      <div dir="rtl">
+    <PageWrapper title={isViewedProfileStudent ? (
+        "حساب طالب"
+      ) : (
+        "حساب معلم"
+      )}>
+      
+
+      <div>
         <UserProfileDataComponent
           profile={profile}
           userTableName={userTableName}
@@ -98,17 +107,13 @@ export default function UserProfile() {
       )}
 
       {isCurrentUserStudentVeiwingOwnProfile && (
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-50 to-violet-50 p-4 border-b border-purple-100">
-            <h2 className="text-lg font-semibold text-purple-800">
-              My Teachers
-            </h2>
-          </div>
-          <div className="p-4">
-            <StudentTeachersInOwnProfile student={currentUser} />
-          </div>
+        <div className="bg-white rounded-xl overflow-hidden">
+          <h2 className="my-3 text-xl font-bold text-blue-500 py-4 text-center bg-blue-50">
+            معلميني
+          </h2>
+          <StudentTeachersInOwnProfile student={currentUser} />
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

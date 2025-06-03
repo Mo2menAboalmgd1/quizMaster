@@ -46,7 +46,6 @@ export default function Notifications() {
       {notifications?.map((notification) => (
         <div
           key={notification.id}
-          dir="rtl"
           className={clsx(
             "p-3 border rounded-lg flex justify-between items-center",
             notification.isRead

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useCurrentUser } from "../../store/useStore";
+import { publicStage, useCurrentUser } from "../../store/useStore";
 import {
   useStagesByTeacherId,
   useStudentsAndRequestsByTeacherIdAndTable,
@@ -21,6 +21,7 @@ import {
 } from "../../QueriesAndMutations/mutationsHooks";
 import AlertBox from "../../components/AlertBox";
 import clsx from "clsx";
+import PageWrapper from "../../components/PageWrapper";
 
 export default function Stages() {
   const { currentUser } = useCurrentUser();
@@ -41,8 +42,8 @@ export default function Stages() {
   } = useStudentsAndRequestsByTeacherIdAndTable(
     currentUser?.id,
     "teachers_students"
-    );
-  
+  );
+
   console.log("students", students);
 
   useEffect(() => {
@@ -50,7 +51,6 @@ export default function Stages() {
       setIsEdit(false);
     }
   }, [stages]);
-
 
   if (isStagesLoading || isStudentsLoading) {
     return <Loader message="جاري تحميل المراحل الدراسية" />;
@@ -62,8 +62,8 @@ export default function Stages() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-5" dir="rtl">
-      {stages?.length === 0 && (
+    <PageWrapper title={"المجموعات"}>
+      {stages?.length === 1 && (
         <div className="flex justify-center">
           <button
             onClick={() => setIsNewStage(true)}
@@ -77,26 +77,24 @@ export default function Stages() {
       {!isEdit && (
         <div>
           <div className="flex gap-3 flex-wrap justify-center">
-            {stages.map((stage, index) => {
-              const stageStudents = students?.filter(
-                (student) => student.stage_id === stage.id
-              );
+            {stages.map((stage) => {
+              if (stage.id === publicStage) return null;
               return (
-                <div className="relative" key={index}>
-                  <Folder path={stage.id} text={stage.name} />
-                  {stageStudents?.length > 0 && (
-                    <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute -left-2 -top-1">
-                      {stageStudents?.length || 0}
-                    </span>
-                  )}
-                </div>
+                <Folder key={stage.id} path={stage.id} text={stage.name} />
+                // <div className="relative" key={index}>
+                //   {stageStudents?.length > 0 && (
+                //     <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute -left-2 -top-1">
+                //       {stageStudents?.length || 0}
+                //     </span>
+                //   )}
+                // </div>
               );
             })}
           </div>
         </div>
       )}
-      {stages?.length > 0 && !isEdit && (
-        <div className="flex justify-center">
+      {stages?.length > 1 && !isEdit && (
+        <div className="flex justify-center mt-5">
           <button
             onClick={() => setIsEdit(true)}
             className="space-x-2 py-2 px-5 rounded-lg border-2 border-blue-600 text-blue-500 font-bold cursor-pointer hover:opacity-85 transition-opacity active:opacity-100"
@@ -114,7 +112,7 @@ export default function Stages() {
         />
       )}
       {isNewStage && <AddNewStage setIsNewStage={setIsNewStage} />}
-    </div>
+    </PageWrapper>
   );
 }
 
@@ -124,6 +122,8 @@ function AddNewStage({ setIsNewStage }) {
   const handleAddNewStage = (e) => {
     e.preventDefault();
     const stage = e.target.addNewStage.value;
+    if (!stage.trim()) return alert("من فضلك أدخل اسم المجموعة");
+    if (stage === "all") return alert("لا يمكن استخدام اسم المجموعة 'all'");
     addNewStageMutation(
       {
         stage,
@@ -147,7 +147,6 @@ function AddNewStage({ setIsNewStage }) {
         onSubmit={handleAddNewStage}
         onClick={(e) => e.stopPropagation()}
         className="p-3 rounded-xl bg-white flex flex-col items-center w-96 gap-3"
-        dir="rtl"
       >
         <div className="w-full space-y-2">
           <label htmlFor="addNewStage" className="block">
@@ -176,6 +175,7 @@ function EditStages({ stages, setIsNewStage, setIsEdit }) {
       <h1 className="text-center font-bold text-2xl mb-5">تعديل المجموعات</h1>
       <div className="flex gap-3 flex-wrap justify-center items-start mb-5">
         {stages.map((stage, index) => {
+          if (stage.id === publicStage) return null;
           return (
             <StageInEditStages
               stage={stage}
@@ -217,8 +217,9 @@ function StageInEditStages({ stage, setIsEditStage, isEditStage }) {
   const handleEditStageName = (e) => {
     e.preventDefault();
     const newStageName = e.target.newStageName.value;
-    newStageName;
     if (!newStageName.trim()) return alert("من فضلك أدخل اسم المجموعة");
+    if (newStageName === "all")
+      return alert("لا يمكن استخدام اسم المجموعة 'all'");
     updateStageMutation(
       {
         stageId: stage.id,
@@ -234,7 +235,11 @@ function StageInEditStages({ stage, setIsEditStage, isEditStage }) {
     // update stage name in database
   };
   return (
-    <div className="relative border border-gray-300 rounded-lg p-3 bg-white grow max-w-60">
+    <div
+      className={clsx(
+        "relative border border-gray-300 rounded-lg p-3 bg-white grow max-w-60"
+      )}
+    >
       <div className="flex gap-2">
         <button
           onClick={() => setIsDeleteStage(true)}
@@ -252,7 +257,9 @@ function StageInEditStages({ stage, setIsEditStage, isEditStage }) {
           <FontAwesomeIcon icon={isEditThisStage ? faClose : faEdit} />
         </button>
       </div>
-      {!isEditThisStage && <h3>{stage.name}</h3>}
+      {!isEditThisStage && (
+        <h3>{stage.name !== "all" ? stage.name : "مرحلة عامة"}</h3>
+      )}
       {isEditThisStage && (
         <form className="space-y-2" onSubmit={handleEditStageName}>
           <input
@@ -270,7 +277,7 @@ function StageInEditStages({ stage, setIsEditStage, isEditStage }) {
         <AlertBox
           title="حذف المجموعة"
           type="red"
-          message="سيؤدي حذف المجموعة إلى حذف كل شئ متعلق بها مثل الطلاب المشتركين والامتحانات الخاصة بها وهذه الخطوة لا يمكن التراجع عنها"
+          message="سيؤدي حذف المجموعة إلى حذف كل شئ متعلق بها مثل الطلاب المشتركين والاختبارات الخاصة بها وهذه الخطوة لا يمكن التراجع عنها"
           firstOptionText="تأكيد الحذف"
           firstOptionDescription="سيتم حذف المجموعة وجميع البيانات المتعلقة بها"
           firstOptionFunction={() => {

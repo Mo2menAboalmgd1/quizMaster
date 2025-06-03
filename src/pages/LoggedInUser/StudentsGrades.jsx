@@ -70,25 +70,27 @@ export default function StudentsGrades() {
       <div className="text-center mb-5 text-blue-500">
         <FontAwesomeIcon icon={faAngleDown} />
       </div>
-      <table dir="rtl" className="border w-full">
-        <thead>
-          <tr className="h-10">
-            <th className="border bg-green-300">الاسم</th>
-            <th className="border bg-red-300 max-sm:hidden">
-              الإجابات الخاطئة
-            </th>
-            <th className="border bg-yellow-300 max-sm:hidden">
-              الاسئلة المتروكة
-            </th>
-            <th className="border bg-blue-300">المجموع</th>
-          </tr>
-        </thead>
-        <tbody>
-          {resluts?.map((result) => (
-            <StudentGrade key={result.id} students={students} result={result} />
-          ))}
-        </tbody>
-      </table>
+      <div className="border border-gray-300 rounded-lg overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-300">
+            <tr className="h-10">
+              <th className="text-start px-3">الاسم</th>
+              <th className="max-sm:hidden">الإجابات الخاطئة</th>
+              <th className="max-sm:hidden">الاسئلة المتروكة</th>
+              <th className="">المجموع</th>
+            </tr>
+          </thead>
+          <tbody>
+            {resluts?.map((result) => (
+              <StudentGrade
+                key={result.id}
+                students={students}
+                result={result}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -63,7 +63,7 @@ export default function StudentGradesOverview({ user, currentUser, stage }) {
             رسم بياني لأداء الطالب
           </h2>
         </div>
-        <div className="p-4">
+        <div className="p-4" dir="ltr">
           <GradesChart teacher={currentUser} student={user} />
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function StudentGradesOverview({ user, currentUser, stage }) {
       <div>
         <div className="bg-gradient-to-r from-red-200 to-emerald-50 p-4 border-b border-red-300">
           <h2 className="text-lg font-semibold text-red-800 text-center">
-            الامتحانات التي تخلف عنها الطالب
+            الاختبارات التي تخلف عنها الطالب
           </h2>
         </div>
         <div className="p-4">

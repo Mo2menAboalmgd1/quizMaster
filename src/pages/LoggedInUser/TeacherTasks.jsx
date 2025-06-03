@@ -1,5 +1,5 @@
 import React from "react";
-import { useCurrentUser } from "../../store/useStore";
+import { publicStage, useCurrentUser, useDarkMode } from "../../store/useStore";
 import {
   useStagesByTeacherId,
   useTasksByUserId,
@@ -7,16 +7,24 @@ import {
 import Loader from "../../components/Loader";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
-import { faTasks, faTrash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faAngleDown,
+  faTasks,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 import clsx from "clsx";
 import {
   useAddNewTaskMutation,
   useDeleteTaskMutation,
 } from "../../QueriesAndMutations/mutationsHooks";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { formatTime } from "../../utils/getDate";
+import { Link } from "react-router-dom";
+import PageWrapper from "../../components/PageWrapper";
 
 export default function TeacherTasks() {
   const { currentUser } = useCurrentUser();
+  const { isDarkMode } = useDarkMode();
 
   const {
     data: tasks,
@@ -48,49 +56,89 @@ export default function TeacherTasks() {
   }
 
   return (
-    <div>
-      <div className="text-center text-3xl font-bold mb-5 text-blue-500">
-        قائمة المهام
-      </div>
+    <PageWrapper title={"قائمة المهام"}>
       <AddNewTaskForm stages={stages} />
-      {tasks?.length === 0 && (
-        <NoDataPlaceHolder message={"لا يوجد مهام، اضف البعض"} icon={faTasks} />
-      )}
+
       {/* if there are tasks */}
-      {tasks?.map((task, index) => (
-        // TODO: add delete button
+      <h2 className="text-2xl font-bold py-3 pt-5 text-blue-500">
+        المهام المُضافة
+      </h2>
+      {tasks?.length === 0 ? (
+        <NoDataPlaceHolder message={"لا يوجد مهام، اضف البعض"} icon={faTasks} />
+      ) : (
         <div
-          key={index}
-          className="flex flex-col gap-2 mb-5 border border-gray-300 bg-blue-50 w-full p-4 rounded-xl relative"
-          dir="rtl"
+          className={clsx(
+            "border rounded-lg overflow-hidden",
+            isDarkMode ? "border-blue-500/50" : "border-gray-300"
+          )}
         >
-          <button
-            onClick={() => handleDeleteTask(task.id)}
-            className="h-8 w-8 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white rounded-lg absolute left-3 bottom-3 flex items-center justify-center cursor-pointer"
-          >
-            <FontAwesomeIcon icon={faTrash} />
-          </button>
-          <div className="flex justify-between items-center">
-            <p className="text-xl font-bold text-blue-500">
-              {stages.find((stage) => stage.id === task?.stage_id)?.name ||
-                "الكل"}
-            </p>
-            <p className="text-lg font-bold text-gray-500">
-              {task?.created_at?.split("T")[0]}
-            </p>
-          </div>
-          <p className="text-lg font-bold text-gray-500 w-11/12">
-            {task?.task}
-          </p>
+          <table className="w-full">
+            <thead
+              className={clsx(
+                isDarkMode
+                  ? "text-blue-500 bg-blue-500/15"
+                  : "text-slate-800 bg-gray-300"
+              )}
+            >
+              <tr>
+                <th className="text-start py-2 px-3">عنوان المهمة</th>
+                <th>المجموعة</th>
+                <th className="max-md:hidden">التاريخ</th>
+                <th className="px-3 max-sm:text-transparent">ازرار التحكم</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.map((task) => {
+                const stage = stages?.find(
+                  (stage) => stage.id === task.stage_id
+                );
+                return (
+                  <tr
+                    key={task.id}
+                    className={clsx(
+                      "border-t",
+                      isDarkMode
+                        ? "text-white/70 font-light border-blue-500/50 bg-slate-900"
+                        : "text-gray-700 border-gray-300"
+                    )}
+                  >
+                    <td
+                      className={clsx(
+                        "py-2 px-3",
+                        isDarkMode ? "text-white font-normal" : "text-black"
+                      )}
+                    >
+                      {task.task}
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      {stage.id !== publicStage ? stage.name : "مهمة عامة"}
+                    </td>
+                    <td className="text-center py-2 max-md:hidden">
+                      {formatTime(task.created_at)}
+                    </td>
+                    <td className="flex justify-center items-center py-2">
+                      <button
+                        onClick={() => handleDeleteTask(task.id)}
+                        className="h-7 w-7 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white rounded-md flex items-center justify-center cursor-pointer"
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      ))}
-    </div>
+      )}
+    </PageWrapper>
   );
 }
 
 function AddNewTaskForm({ stages }) {
   const [selectedStage, setSelectedStage] = React.useState("");
   const { currentUser } = useCurrentUser();
+  const { isDarkMode } = useDarkMode();
 
   React.useEffect(() => {
     setSelectedStage(stages?.[0]?.id);
@@ -100,40 +148,63 @@ function AddNewTaskForm({ stages }) {
   const handleAddNewTask = (e) => {
     // TODO: add new task
     e.preventDefault();
-    addNewTask({
-      stage_id: selectedStage || null,
-      user_id: currentUser?.id,
-      task: e.target.task.value,
-      isTeacher: true,
-    });
+    addNewTask(
+      {
+        stage_id: selectedStage,
+        user_id: currentUser?.id,
+        task: e.target.task.value,
+        isTeacher: true,
+      },
+      {
+        onSuccess: () => {
+          e.target.reset();
+          setSelectedStage(stages?.[0]?.id);
+        },
+      }
+    );
   };
 
   return (
     <form
-      className="flex flex-col gap-2 mb-5 border border-gray-300 bg-blue-50 w-full p-4 rounded-xl"
-      dir="rtl"
+      className={clsx(
+        "p-3 border rounded-lg w-full space-y-3",
+        isDarkMode
+          ? "border-blue-500/50 bg-blue-500/10"
+          : "border-gray-300 bg-gray-50"
+      )}
       onSubmit={handleAddNewTask}
     >
       <div className="space-y-2">
         <label htmlFor="stage" className="block">
           اختر المرحلة الدراسية:
         </label>
-        <select
-          name="stage"
-          id="stage"
-          value={selectedStage}
-          onChange={(e) => setSelectedStage(e.target.value)}
-          className={clsx(
-            "text-center py-2 px-3 border border-gray-300 bg-white w-full rounded-lg focus:outline-none focus:ring-2 focus:border-transparent focus:ring-blue-400 transition-all shadow-sm appearance-none"
-          )}
-        >
-          {stages?.map((stage, index) => (
-            <option key={index} value={stage.id}>
-              {stage.name}
-            </option>
-          ))}
-          <option value="">جميع الصفوف</option>
-        </select>
+        <div className="relative">
+          <div className="text-gray-500 absolute inset-2.5 z-10 pointer-events-none">
+            <FontAwesomeIcon icon={faAngleDown} />
+          </div>
+          <select
+            name="stage"
+            id="stage"
+            value={selectedStage}
+            onChange={(e) => setSelectedStage(e.target.value)}
+            className={clsx(
+              "py-2 rounded-lg appearance-none w-full text-center outline-none",
+              isDarkMode
+                ? "bg-slate-900 border border-blue-500/30 focus:border-blue-500"
+                : "bg-gray-200 focus:ring-blue-300 focus:ring"
+            )}
+          >
+            {stages?.map((stage, index) => {
+              if (stage.id === publicStage) return null;
+              return (
+                <option key={index} value={stage.id}>
+                  {stage.name}
+                </option>
+              );
+            })}
+            <option value={publicStage}>مهمة عامة</option>
+          </select>
+        </div>
       </div>
       <div className="space-y-2">
         <label htmlFor="task" className="block">
@@ -143,10 +214,15 @@ function AddNewTaskForm({ stages }) {
           type="text"
           id="task"
           placeholder="أضف مهمة جديدة"
-          className="border border-gray-300 rounded-md px-3 py-2 w-full bg-white focus:ring-2 focus:border-transparent focus:ring-blue-400 outline-none"
+          className={clsx(
+            "py-2 px-3 rounded-lg w-full outline-none",
+            isDarkMode
+              ? "bg-slate-900 border border-blue-500/30 focus:border-blue-500"
+              : "bg-gray-200 focus:ring-2 focus:ring-blue-300"
+          )}
         />
       </div>
-      <button className="bg-blue-500 text-white rounded-md px-3 py-2 mt-2 cursor-pointer hover:bg-blue-600 transition-all shadow-sm focus:outline-none active:bg-blue-500">
+      <button className="rounded-lg w-full text-white bg-blue-600 py-2 ">
         إضافة
       </button>
     </form>

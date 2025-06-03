@@ -80,13 +80,10 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="pt-16 pb-24 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
         <div className="text-center max-w-4xl mx-auto">
-          <h1
-            className="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl"
-            dir="rtl"
-          >
+          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
             منصة الاختبارات الأكثر تقدماً للمعلمين والطلاب
           </h1>
-          <p className="mt-6 text-xl text-gray-600 max-w-3xl mx-auto" dir="rtl">
+          <p className="mt-6 text-xl text-gray-600 max-w-3xl mx-auto">
             منصة Quiz Master تسهل على المعلمين إنشاء الاختبارات، متابعة تقدم
             الطلاب، والتواصل مع أولياء الأمور لتحسين العملية التعليمية.
           </p>
@@ -121,13 +118,10 @@ const Landing = () => {
       <section id="features" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900" dir="rtl">
+            <h2 className="text-3xl font-bold text-gray-900">
               ميزات تحول تجربة التعليم
             </h2>
-            <p
-              className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto"
-              dir="rtl"
-            >
+            <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
               تم تصميم منصة Quiz Master لتلبية احتياجات المعلمين والطلاب وأولياء
               الأمور، مما يجعل عملية التعليم أكثر كفاءة وفعالية.
             </p>
@@ -135,10 +129,7 @@ const Landing = () => {
 
           <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {/* Feature 1 */}
-            <div
-              className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-8 shadow-md transition-transform hover:scale-105"
-              dir="rtl"
-            >
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-8 shadow-md transition-transform hover:scale-105">
               <div className="h-12 w-12 rounded-md bg-gradient-to-r from-green-600 to-emerald-500 text-white flex items-center justify-center mb-5">
                 <svg
                   className="h-6 w-6"
@@ -165,10 +156,7 @@ const Landing = () => {
             </div>
 
             {/* Feature 2 */}
-            <div
-              className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-8 shadow-md transition-transform hover:scale-105"
-              dir="rtl"
-            >
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-8 shadow-md transition-transform hover:scale-105">
               <div className="h-12 w-12 rounded-md bg-gradient-to-r from-green-600 to-emerald-500 text-white flex items-center justify-center mb-5">
                 <svg
                   className="h-6 w-6"
@@ -201,10 +189,7 @@ const Landing = () => {
             </div>
 
             {/* Feature 3 */}
-            <div
-              className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-8 shadow-md transition-transform hover:scale-105"
-              dir="rtl"
-            >
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-8 shadow-md transition-transform hover:scale-105">
               <div className="h-12 w-12 rounded-md bg-gradient-to-r from-green-600 to-emerald-500 text-white flex items-center justify-center mb-5">
                 <svg
                   className="h-6 w-6"
@@ -231,10 +216,7 @@ const Landing = () => {
             </div>
 
             {/* Feature 4 */}
-            <div
-              className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-8 shadow-md transition-transform hover:scale-105"
-              dir="rtl"
-            >
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-8 shadow-md transition-transform hover:scale-105">
               <div className="h-12 w-12 rounded-md bg-gradient-to-r from-green-600 to-emerald-500 text-white flex items-center justify-center mb-5">
                 <svg
                   className="h-6 w-6"
@@ -261,10 +243,7 @@ const Landing = () => {
             </div>
 
             {/* Feature 5 */}
-            <div
-              className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-8 shadow-md transition-transform hover:scale-105"
-              dir="rtl"
-            >
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-8 shadow-md transition-transform hover:scale-105">
               <div className="h-12 w-12 rounded-md bg-gradient-to-r from-green-600 to-emerald-500 text-white flex items-center justify-center mb-5">
                 <svg
                   className="h-6 w-6"
@@ -291,10 +270,7 @@ const Landing = () => {
             </div>
 
             {/* Feature 6 */}
-            <div
-              className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-8 shadow-md transition-transform hover:scale-105"
-              dir="rtl"
-            >
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-8 shadow-md transition-transform hover:scale-105">
               <div className="h-12 w-12 rounded-md bg-gradient-to-r from-green-600 to-emerald-500 text-white flex items-center justify-center mb-5">
                 <svg
                   className="h-6 w-6"
@@ -330,13 +306,10 @@ const Landing = () => {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900" dir="rtl">
+            <h2 className="text-3xl font-bold text-gray-900">
               كيف تعمل منصة Quiz Master
             </h2>
-            <p
-              className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto"
-              dir="rtl"
-            >
+            <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
               عملية سهلة وبسيطة تتيح لك البدء في استخدام المنصة والاستفادة من
               جميع مميزاتها.
             </p>
@@ -353,10 +326,10 @@ const Landing = () => {
                 1
               </div>
               <div className="md:w-1/2 md:pl-8 bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-xl font-bold text-gray-900 mb-2" dir="rtl">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
                   أنشئ حساباً كمعلم
                 </h3>
-                <p className="text-gray-600" dir="rtl">
+                <p className="text-gray-600">
                   قم بالتسجيل كمعلم وأدخل معلوماتك الأساسية والمواد التي تدرسها
                   والمراحل الدراسية.
                 </p>
@@ -366,10 +339,10 @@ const Landing = () => {
             {/* Step 2 */}
             <div className="relative md:flex items-center mb-12">
               <div className="md:w-1/2 pr-8 md:text-right bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-xl font-bold text-gray-900 mb-2" dir="rtl">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
                   أضف المراحل الدراسية والطلاب
                 </h3>
-                <p className="text-gray-600" dir="rtl">
+                <p className="text-gray-600">
                   قم بإنشاء الفصول الدراسية وإضافة الطلاب إليها أو قبول طلبات
                   الانضمام من الطلاب.
                 </p>
@@ -387,10 +360,10 @@ const Landing = () => {
                 3
               </div>
               <div className="md:w-1/2 md:pl-8 bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-xl font-bold text-gray-900 mb-2" dir="rtl">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
                   إنشاء الاختبارات
                 </h3>
-                <p className="text-gray-600" dir="rtl">
+                <p className="text-gray-600">
                   قم بإنشاء اختبارات متنوعة باستخدام أدوات سهلة الاستخدام
                   وتخصيصها للمراحل الدراسية المختلفة.
                 </p>
@@ -400,10 +373,10 @@ const Landing = () => {
             {/* Step 4 */}
             <div className="relative md:flex items-center">
               <div className="md:w-1/2 pr-8 md:text-right bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-xl font-bold text-gray-900 mb-2" dir="rtl">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
                   متابعة التقدم وتحليل النتائج
                 </h3>
-                <p className="text-gray-600" dir="rtl">
+                <p className="text-gray-600">
                   اطلع على نتائج الطلاب، تتبع تقدمهم، وشارك التقارير مع أولياء
                   الأمور لتحسين العملية التعليمية.
                 </p>
@@ -421,23 +394,17 @@ const Landing = () => {
       <section id="testimonials" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900" dir="rtl">
+            <h2 className="text-3xl font-bold text-gray-900">
               ما يقوله مستخدمونا
             </h2>
-            <p
-              className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto"
-              dir="rtl"
-            >
+            <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
               آراء المعلمين والطلاب وأولياء الأمور الذين يستخدمون منصتنا يومياً.
             </p>
           </div>
 
           <div className="mt-16 grid gap-8 md:grid-cols-3">
             {/* Testimonial 1 */}
-            <div
-              className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 shadow-md"
-              dir="rtl"
-            >
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 shadow-md">
               <div className="flex items-center mb-4">
                 <div className="h-12 w-12 rounded-full bg-gradient-to-r from-green-600 to-emerald-500 text-white flex items-center justify-center font-bold">
                   أ
@@ -457,10 +424,7 @@ const Landing = () => {
             </div>
 
             {/* Testimonial 2 */}
-            <div
-              className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 shadow-md"
-              dir="rtl"
-            >
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 shadow-md">
               <div className="flex items-center mb-4">
                 <div className="h-12 w-12 rounded-full bg-gradient-to-r from-green-600 to-emerald-500 text-white flex items-center justify-center font-bold">
                   س
@@ -480,10 +444,7 @@ const Landing = () => {
             </div>
 
             {/* Testimonial 3 */}
-            <div
-              className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 shadow-md"
-              dir="rtl"
-            >
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 shadow-md">
               <div className="flex items-center mb-4">
                 <div className="h-12 w-12 rounded-full bg-gradient-to-r from-green-600 to-emerald-500 text-white flex items-center justify-center font-bold">
                   م
@@ -508,13 +469,10 @@ const Landing = () => {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-green-600 to-emerald-500">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2
-            className="text-3xl font-extrabold text-white sm:text-4xl"
-            dir="rtl"
-          >
+          <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
             ابدأ اليوم مجاناً
           </h2>
-          <p className="mt-4 text-xl text-green-100" dir="rtl">
+          <p className="mt-4 text-xl text-green-100">
             انضم إلى آلاف المعلمين والطلاب الذين يستخدمون منصة Quiz Master
             لتحسين تجربة التعليم.
           </p>
@@ -538,10 +496,7 @@ const Landing = () => {
       {/* Footer */}
       <footer className="bg-gray-900 py-12 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-right"
-            dir="rtl"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-right">
             <div>
               <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
                 <div className="bg-white p-2 rounded-lg">

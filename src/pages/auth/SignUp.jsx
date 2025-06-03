@@ -50,7 +50,7 @@ export default function SignUp({ initialType = "student" }) {
       onSubmit={handleSubmit}
       className="bg-white rounded-lg overflow-hidden"
     >
-      <div className="space-y-2 p-1" dir="rtl">
+      <div className="space-y-2 p-1">
         <div className="flex justify-center gap-6 mb-2">
           <div className="flex items-center gap-2">
             <input
@@ -86,7 +86,6 @@ export default function SignUp({ initialType = "student" }) {
             الاسم:
           </label>
           <input
-            dir="rtl"
             type="text"
             id="name"
             name="name"
@@ -145,7 +144,6 @@ export default function SignUp({ initialType = "student" }) {
               المادة الدراسية:
             </label>
             <input
-              dir="rtl"
               type="text"
               id="subject"
               name="subject"

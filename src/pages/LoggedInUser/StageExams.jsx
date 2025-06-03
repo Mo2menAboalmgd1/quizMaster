@@ -66,7 +66,7 @@ export default function StageExams() {
   }
 
   if (!exams) {
-    return <NoDataPlaceHolder message={"لا يوجد امتحانات"} icon={faFileAlt} />;
+    return <NoDataPlaceHolder message={"لا يوجد اختبارات"} icon={faFileAlt} />;
   }
 
   const publishedExams = exams.filter((exam) => exam.isPublished);

@@ -94,20 +94,18 @@ export default function DidNotTakeExam() {
         <div className="text-center mb-5 text-blue-500">
           <FontAwesomeIcon icon={faAngleDown} />
         </div>
-        <div>
-          <table dir="rtl" className="border w-full rounded-xl">
+        <div className="rounded-lg overflow-hidden border border-gray-300">
+          <table className="w-full">
             <thead>
               <tr>
-                <th className="border bg-red-300 h-10 col-span-2">
-                  اسم الطالب
-                </th>
+                <th className="bg-gray-300 h-10 col-span-2">اسم الطالب</th>
               </tr>
             </thead>
             <tbody>
               {studentsDidNotTakeExamData?.map((student) => {
                 return (
-                  <tr key={student.id} className="border">
-                    <td className="px-2 pt-0.5">{student.name}</td>
+                  <tr key={student.id} className="border-t border-gray-300">
+                    <td className="px-2 py-1">{student.name}</td>
                   </tr>
                 );
               })}

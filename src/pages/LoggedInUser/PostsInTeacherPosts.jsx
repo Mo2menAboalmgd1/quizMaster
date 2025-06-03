@@ -9,6 +9,8 @@ import {
 import Loader from "../../components/Loader";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import { PostInTeachersProfile } from "../../components/PostInTeachersProfile";
+import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
+import { faNewspaper } from "@fortawesome/free-solid-svg-icons";
 
 export default function PostsInTeacherPosts() {
   const { stageId } = useParams();
@@ -48,6 +50,12 @@ export default function PostsInTeacherPosts() {
   const stagePosts = posts.filter((post) => {
     return post.stage_id === newStage;
   });
+
+  if (stagePosts.length === 0) {
+    return (
+      <NoDataPlaceHolder message={"لا يوجد منشورات لهذه المجموعة، انشأ واحداً"} icon={faNewspaper}/>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col items-center gap-5 max-w-2xl mt-8 mx-auto">

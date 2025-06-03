@@ -4,7 +4,7 @@ import {
   useExamsByTeacherId,
   useStagesByTeacherId,
 } from "../../QueriesAndMutations/QueryHooks";
-import { useCurrentUser } from "../../store/useStore";
+import { publicStage, useCurrentUser } from "../../store/useStore";
 import Loader from "../../components/Loader";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
@@ -51,38 +51,20 @@ export default function PublishedAndUnPublishedExams() {
   "publicExams", publicExams;
 
   return (
-    <div dir="rtl">
+    <div>
       <div className="text-center mb-3 text-blue-500">
         <FontAwesomeIcon icon={faAngleDown} />
       </div>
 
       <div className="flex gap-5 items-center justify-center flex-wrap">
-        <div className="relative">
-          <Folder path={"all"} text={"الامتحانات العامة"} isSmall />
-          {publicExams?.length > 0 && (
-            <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute -left-3 -top-2">
-              {publicExams?.length || 0}
-            </span>
-          )}
-        </div>
         {stages.map((stage) => {
-          const stageExams = exams?.filter(
-            (exam) =>
-              exam.stage_id === stage.id && exam.isPublished === isPublished
-          );
           return (
-            <div className="relative" key={stage.id || "all"}>
-              <Folder
-                path={stage.id || "all"}
-                text={stage.name || "الامتحانات العامة"}
-                isSmall
-              />
-              {stageExams?.length > 0 && (
-                <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute -left-3 -top-2">
-                  {stageExams?.length || 0}
-                </span>
-              )}
-            </div>
+            <Folder
+              key={stage.id}
+              path={stage.id}
+              text={stage.id !== publicStage ? stage.name : "اختبارات عامة"}
+              isSmall
+            />
           );
         })}
       </div>

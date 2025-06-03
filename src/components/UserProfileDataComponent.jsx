@@ -5,6 +5,7 @@ import {
   faCancel,
   faCopy,
   faEdit,
+  faPhone,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import clsx from "clsx";
@@ -21,16 +22,16 @@ export default function UserProfileDataComponent({ user }) {
   const isTeacher = user.type === "teacher";
 
   return (
-    <div className="p-4 relative bg-white border border-gray-200 rounded-3xl">
+    <div className="relative rounded-3xl flex items-center justify-between">
+      {!isEdit && <ShowUserData user={user} isTeacher={isTeacher} />}
       {isMyAccount && !isEdit && (
         <button
           onClick={() => setIsEdit(true)}
-          className="h-10 w-10 rounded-lg bg-blue-600 text-white flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors absolute top-4 right-4"
+          className="py-2 px-4 bg-gray-200 rounded-lg font-bold"
         >
-          <FontAwesomeIcon icon={faEdit} />
+          تعديل البيانات
         </button>
       )}
-      {!isEdit && <ShowUserData user={user} isTeacher={isTeacher} />}
       {isEdit && (
         <EditUserData user={user} isTeacher={isTeacher} setIsEdit={setIsEdit} />
       )}
@@ -54,24 +55,58 @@ function ShowUserData({ user, isTeacher }) {
   };
 
   return (
-    <div dir="rtl">
+    <div>
       {/* img and name and type and subject if teacher */}
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex items-center gap-5">
         {user.avatar ? (
           <img
             src={user.avatar}
             alt="user avatar image"
-            className="h-24 w-24 rounded-full object-cover"
+            className="h-36 w-36 rounded-full object-cover"
           />
         ) : (
-          <div className="h-24 w-24 rounded-full flex items-center justify-center bg-gradient-to-tl from-blue-600 to-cyan-400 text-white text-2xl">
+          <div className="h-36 w-36 rounded-full flex items-center justify-center bg-gradient-to-tl from-blue-600 to-cyan-400 text-white text-4xl">
             <FontAwesomeIcon icon={faUser} />
           </div>
         )}
-        <div className="flex flex-col items-center">
-          <h2 className="font-bold text-blue-500 text-xl">{user.name}</h2>
+        <div>
+          <h2 className="font-bold text-blue-500 text-2xl">{user.name}</h2>
           <div className="flex">
             <p>
+              <span className="text-gray-600 text-sm">@</span>
+              <span className="text-gray-600 text-sm">{user.userName}</span>
+            </p>
+            <button
+              disabled={isCopy === user.userName}
+              className={clsx(
+                "px-2 cursor-pointer text-sm",
+                isCopy === user.userName ? "text-blue-600" : "text-gray-400"
+              )}
+              onClick={() => handleCopy(user.userName)}
+            >
+              <FontAwesomeIcon icon={faCopy} />
+            </button>
+          </div>
+          <div className="flex mt-0.5">
+            <p className="flex items-center gap-1">
+              <span className="text-gray-500 text-xs">
+                <FontAwesomeIcon icon={faPhone} />
+              </span>
+              <span className="text-gray-600 text-sm">{user.phoneNumber}</span>
+            </p>
+            <button
+              disabled={isCopy === user.phoneNumber}
+              className={clsx(
+                "px-2 cursor-pointer text-sm",
+                isCopy === user.phoneNumber ? "text-blue-600" : "text-gray-400"
+              )}
+              onClick={() => handleCopy(user.phoneNumber)}
+            >
+              <FontAwesomeIcon icon={faCopy} />
+            </button>
+          </div>
+          {/* <div className="flex"> */}
+          {/* <p className="text-gray-600">
               {isTeacher
                 ? isMale
                   ? "معلم"
@@ -79,46 +114,18 @@ function ShowUserData({ user, isTeacher }) {
                 : isMale
                 ? "طالب"
                 : "طالبة"}
-            </p>
-            {isTeacher && <span>: {user.subject}</span>}
-          </div>
+            </p> */}
+          {/* {isTeacher && <span>: {user.subject}</span>} */}
+          {/* </div> */}
         </div>
       </div>
 
       {/* other data */}
       <div className="space-y-2 max-md:mt-3">
-        <p>
-          <span className="font-bold text-gray-700">اسم المستخدم: </span>
-          <span>{user.userName}</span>
-          <button
-            disabled={isCopy === user.userName}
-            className={clsx(
-              "px-2 cursor-pointer",
-              isCopy === user.userName ? "text-green-600" : "text-gray-400"
-            )}
-            onClick={() => handleCopy(user.userName)}
-          >
-            <FontAwesomeIcon icon={faCopy} />
-          </button>
-        </p>
         {/* <p>
           <span className="font-bold text-gray-700">النوع: </span>
           <span>{user.gender === "male" ? "ذكر" : "أنثى"}</span>
         </p> */}
-        <p>
-          <span className="font-bold text-gray-700">رقم الهاتف: </span>
-          <span>{user.phoneNumber}</span>
-          <button
-            disabled={isCopy === user.phoneNumber}
-            className={clsx(
-              "px-2 cursor-pointer",
-              isCopy === user.phoneNumber ? "text-green-600" : "text-gray-400"
-            )}
-            onClick={() => handleCopy(user.phoneNumber)}
-          >
-            <FontAwesomeIcon icon={faCopy} />
-          </button>
-        </p>
       </div>
     </div>
   );
@@ -159,9 +166,9 @@ function EditUserData({ user, isTeacher, setIsEdit }) {
     setIsSubmitEdit(false);
     setIsEdit(false);
   };
-  
+
   return (
-    <div dir="rtl">
+    <div>
       <h1 className="text-center text-blue-500 text-lg font-bold mb-3">
         تعديل البيانات الشخصية
       </h1>

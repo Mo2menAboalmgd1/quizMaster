@@ -6,6 +6,8 @@ import { useExamByItsId } from "../../QueriesAndMutations/QueryHooks";
 import AddQuestionForm from "../../components/AddQuestionForm";
 import CreateExamForm from "../../components/CreateExamForm";
 import toast from "react-hot-toast";
+import PageWrapper from "../../components/PageWrapper";
+import Loader from "../../components/Loader";
 
 export default function CreateExam() {
   const { id: examId } = useParams();
@@ -25,15 +27,19 @@ export default function CreateExam() {
   }
 
   return (
-    <div>
+    <PageWrapper
+      title={
+        examData?.isTime ? "استكمال اختبار السرعة" : "استكمال الاختبار التقليدي"
+      }
+    >
       <CreateExamForm examData={examData} examId={examId} isCreate={false} />
-      {isExamDataLoading && <div>Loading...</div>}
+      {isExamDataLoading && <Loader />}
       {examData && <AddQuestionForm examData={examData} examId={examId} />}
       {examId && (
         <div className="mt-5">
           <DisplayAnswersInCreateExam examId={examId} />
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

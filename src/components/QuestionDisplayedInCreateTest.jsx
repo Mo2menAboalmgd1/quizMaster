@@ -5,18 +5,20 @@ import Loader from "./Loader";
 import ErrorPlaceHolder from "./ErrorPlaceHolder";
 import NoDataPlaceHolder from "./NoDataPlaceHolder";
 import { faComment } from "@fortawesome/free-solid-svg-icons";
+import { useDarkMode } from "../store/useStore";
 
 export default function QuestionDisplayedInCreateTest({
   question,
   questionNumber,
   setFileDisplayed,
 }) {
+  const { isDarkMode } = useDarkMode();
   const {
     data: questionAnswers,
     isLoading: isQuestionAnswersLoading,
     error: questionAnswersError,
   } = useAnswersByQuestionId(question?.id, true);
-  
+
   if (isQuestionAnswersLoading) {
     return <Loader message="جاري تحميل الاجابات" />;
   }
@@ -28,15 +30,32 @@ export default function QuestionDisplayedInCreateTest({
   }
 
   return (
-    <div dir="rtl" className="space-y-3 border border-gray-300 rounded-2xl p-3">
+    <div
+      className={clsx(
+        "space-y-3 border rounded-lg p-3",
+        isDarkMode ? "border-blue-500/50 bg-slate-800/10" : "border-gray-300"
+      )}
+    >
       {/* question text and images */}
-      <div className="space-y-3">
-        <div className="flex gap-3">
-          <p className="rounded-lg bg-gray-800 font-bold text-white flex items-center justify-center h-10 min-w-10">
+      <div>
+        <div className="flex gap-3 mb-1">
+          <p
+            className={clsx(
+              "rounded-lg font-bold text-white flex items-center justify-center h-10 min-w-10",
+              isDarkMode ? "bg-blue-500" : "bg-slate-700"
+            )}
+          >
             {questionNumber}
           </p>
           {question.text && (
-            <p className="w-full flex items-center rounded-lg bg-blue-100 px-3">
+            <p
+              className={clsx(
+                "w-full flex items-center rounded-lg px-3",
+                isDarkMode
+                  ? "bg-blue-500/10 border border-blue-500/50"
+                  : "bg-blue-100"
+              )}
+            >
               {question.text}
             </p>
           )}
@@ -74,16 +93,24 @@ export default function QuestionDisplayedInCreateTest({
               <div
                 key={index}
                 className={clsx(
-                  "flex gap-3 items-center p-2 border border-gray-300 rounded-lg",
-                  isCorrect && "bg-green-100"
+                  "flex gap-3 items-center p-1.5 border rounded-lg",
+                  isCorrect
+                    ? isDarkMode
+                      ? "bg-green-500/10 border-green-500/50"
+                      : "bg-green-100 border-green-300"
+                    : isDarkMode
+                    ? "border-slate-800"
+                    : "border-gray-300"
                 )}
               >
                 <p
                   className={clsx(
-                    "min-h-10 min-w-10 flex items-center justify-center bg-gray-200 rounded-md border",
+                    "min-h-9 min-w-9 flex items-center justify-center rounded-md ",
                     isCorrect
-                      ? "bg-green-500 text-white border-green-500"
-                      : "border-gray-300"
+                      ? "bg-green-500 text-white"
+                      : isDarkMode
+                      ? "border border-slate-800 bg-slate-800/20"
+                      : "border border-gray-300 bg-gray-300/40"
                   )}
                 >
                   {index + 1}

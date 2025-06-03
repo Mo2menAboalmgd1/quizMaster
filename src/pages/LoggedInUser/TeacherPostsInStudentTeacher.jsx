@@ -1,10 +1,9 @@
 import React from "react";
 import {
-  useReactionsByPostId,
+  useStudentPostsByTeacherIdAnStage,
   useTeachersFromTeachersStudents,
-  useTeachersPosts,
 } from "../../QueriesAndMutations/QueryHooks";
-import { publicStage, useCurrentUser } from "../../store/useStore";
+import { useCurrentUser } from "../../store/useStore";
 import Loader from "../../components/Loader";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import { faNewspaper } from "@fortawesome/free-solid-svg-icons";
@@ -24,8 +23,9 @@ export default function StudentPosts() {
     error: mySubscriptionsError,
   } = useTeachersFromTeachersStudents(currentUser?.id);
 
-  const stagesIds = mySubscriptions?.map((sub) => sub.stage_id);
-  const teachersIds = mySubscriptions?.map((sub) => sub.teacherId);
+  const stageId = mySubscriptions?.find(
+    (sub) => sub.teacherId === teacherId
+  )?.stage_id;
 
   const {
     data: posts,
@@ -34,10 +34,9 @@ export default function StudentPosts() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useTeachersPosts(teachersIds, [...(stagesIds || []), publicStage]);
+  } = useStudentPostsByTeacherIdAnStage(teacherId, stageId);
 
   const teacherPosts = posts?.pages?.flatMap((page) => page.data) || [];
-  console.log(teacherPosts);
 
   // loader and errors
   if (imsMySubscriptionsLoading || isPostsLoading) {
@@ -52,19 +51,17 @@ export default function StudentPosts() {
 
   if (teacherPosts?.length === 0) {
     return (
-      <PageWrapper title={"المنشورات"}>
-        <NoDataPlaceHolder
-          message={"لا يوجد منشورات حالياً"}
-          icon={faNewspaper}
-        />
-      </PageWrapper>
+      <NoDataPlaceHolder
+        message={"لا يوجد منشورات حالياً"}
+        icon={faNewspaper}
+      />
     );
   }
 
   const reactionsByPostId = {};
 
   return (
-    <PageWrapper title={"المنشورات"}>
+    <div className="mt-3">
       <h1 className="font-bold text-3xl mb-3 text-blue-500">المنشورات</h1>
       <div>
         <div className="space-y-4">
@@ -91,6 +88,6 @@ export default function StudentPosts() {
           </div>
         )}
       </div>
-    </PageWrapper>
+    </div>
   );
 }

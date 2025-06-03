@@ -1,4 +1,5 @@
 import { supabase } from "../config/supabase";
+import { publicStage } from "../store/useStore";
 
 export const register = async (userData) => {
   const { error, data } = await supabase.auth.signUp({
@@ -40,6 +41,14 @@ export const handleCreateTeacher = async (data) => {
     email: data.email,
   });
   if (error) throw new Error(error.message);
+  const { error: publicStageError } = await supabase
+    .from("teachers_stages")
+    .insert({
+      id: publicStage,
+      teacherId: data.id,
+      name: "all",
+    });
+  if (publicStageError) throw new Error(error.message);
 };
 
 export const signIn = async (userData) => {
@@ -356,32 +365,121 @@ export const getProfile = async (userId) => {
   return data;
 };
 
-export const getExams = async (teacherId, isPublished) => {
-  if (isPublished === true || isPublished === false) {
-    const { error, data } = await supabase
-      .from("exams")
-      .select("*")
-      .eq("teacherId", teacherId)
-      .eq("isPublished", isPublished)
-      .eq("isDeleted", false)
-      .order("created_at", { ascending: false });
+export const getExams = async (
+  pageParam,
+  teacherId,
+  isPublished,
+  isTime,
+  stageId
+) => {
+  const pageSize = 5;
+  const from = (pageParam - 1) * pageSize;
+  const to = from + pageSize - 1;
 
-    if (error) throw new Error(error.message);
+  // 1. جيب البيانات
+  const { data, error, count } = await supabase
+    .from("exams")
+    .select("*")
+    .eq("teacherId", teacherId)
+    .eq("isPublished", isPublished)
+    .eq("isTime", isTime)
+    .eq("stage_id", stageId)
+    .eq("isDeleted", false)
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
-    return data;
-  } else if (isPublished === "all") {
-    const { error, data } = await supabase
-      .from("exams")
-      .select("*")
-      .eq("teacherId", teacherId)
-      .eq("isDeleted", false)
-      .order("created_at", { ascending: true });
+  if (error) throw new Error(error.message);
 
-    if (error) throw new Error(error.message);
+  // 2. احسب لو دي آخر صفحة بناءً على العدد الكلي
+  const isLastPage = to + 1 >= count;
 
-    return data;
-  }
+  return { data, nextPage: pageParam + 1, isLastPage };
 };
+
+export const getAllexams = async (teacherId) => {
+  const { error, data } = await supabase
+    .from("exams")
+    .select("*")
+    .eq("teacherId", teacherId);
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
+// query.table, query.filters
+// export const getData = async (table, filters = {}) => {
+//   let query = supabase.from(table).select("*");
+
+//   Object.entries(filters).forEach(([key, value]) => {
+//     if (value === null) {
+//       query = query.is(key, null);
+//     } else {
+//       query = query.eq(key, value);
+//     }
+//   });
+
+//   query = query.limit(1);
+
+//   console.log("query", query);
+
+//   const { data, error } = await query;
+//   if (error) throw new Error(error.message);
+
+//   return data;
+// };
+
+/*
+if (isPublished === true || isPublished === false) {
+  const { error, data } = await supabase
+    .from("exams")
+    .select("*")
+    .eq("teacherId", teacherId)
+    .eq("isPublished", isPublished)
+    .eq("isTime", isTime)
+    .eq("stage_id", stageId)
+    .eq("isDeleted", false)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return data;
+} else if (isPublished === "all") {
+  const { error, data } = await supabase
+    .from("exams")
+    .select("*")
+    .eq("teacherId", teacherId)
+    .eq("isDeleted", false)
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  return data;
+}
+*/
+
+/*
+  export const getPosts = async (pageParam, teacherId) => {
+    const pageSize = 5;
+    const from = (pageParam - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    // 1. جيب البيانات
+    const { data, error, count } = await supabase
+      .from("posts")
+      .select("*", { count: "exact" }) // مهم جدًا
+      .eq("teacherId", teacherId)
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (error) throw new Error(error.message);
+
+    // 2. احسب لو دي آخر صفحة بناءً على العدد الكلي
+    const isLastPage = to + 1 >= count;
+
+    return { data, nextPage: pageParam + 1, isLastPage };
+};
+*/
 
 export const getExamsDataFromIds = async (examsIds) => {
   const { error, data } = await supabase
@@ -406,16 +504,40 @@ export const getStudentsAndRequests = async (teacherId, table) => {
   return data;
 };
 
-export const getJoinCodes = async (teacherId) => {
-  const { error, data } = await supabase
+// export const getJoinCodes = async (teacherId) => {
+//   const { error, data } = await supabase
+//     .from("join_codes")
+//     .select("*")
+//     .eq("teacherId", teacherId)
+//     .order("created_at", { ascending: false });
+
+//   if (error) throw new Error(error.message);
+
+//   return data;
+// };
+
+export const getJoinCodes = async (pageParam, teacherId, isPublic) => {
+  console.log("isPublic", isPublic);
+
+  const pageSize = 5;
+  const from = (pageParam - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  // 1. جيب البيانات
+  const { data, error, count } = await supabase
     .from("join_codes")
-    .select("*")
+    .select("*", { count: "exact" }) // مهم جدًا
     .eq("teacherId", teacherId)
-    .order("created_at", { ascending: false });
+    .eq("isPublic", isPublic)
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (error) throw new Error(error.message);
 
-  return data;
+  // 2. احسب لو دي آخر صفحة بناءً على العدد الكلي
+  const isLastPage = to + 1 >= count;
+
+  return { data, nextPage: pageParam + 1, isLastPage };
 };
 
 export const generateJoinCode = async (joinCodeObject) => {
@@ -581,7 +703,6 @@ export const checkTask = async ({ usersIds, taskId, studentId, isChecked }) => {
   return usersIds;
 };
 
-
 export const getDoneTasks = async (studentId) => {
   const { error, data } = await supabase
     .from("students_done_tasks")
@@ -699,7 +820,6 @@ export const getResults = async (examId) => {
 };
 
 export const reactToPost = async (data) => {
-  // ("post_react_details: ", data)
   const { error } = await supabase
     .from("posts_reacts")
     .delete()
@@ -776,16 +896,59 @@ export const getReactionsOnPostByTeachersIds = async (teachersIds) => {
   return data;
 };
 
-export const getPosts = async (teacherId) => {
-  const { error, data } = await supabase
+// export const getPosts = async (teacherId) => {
+//   const { error, data } = await supabase
+//     .from("posts")
+//     .select("*")
+//     .eq("teacherId", teacherId)
+//     .order("created_at", { ascending: false });
+
+//   if (error) throw new Error(error.message);
+
+//   return data;
+// };
+
+export const getPosts = async (pageParam, teacherId) => {
+  const pageSize = 5;
+  const from = (pageParam - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  // 1. جيب البيانات
+  const { data, error, count } = await supabase
     .from("posts")
-    .select("*")
+    .select("*", { count: "exact" }) // مهم جدًا
     .eq("teacherId", teacherId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (error) throw new Error(error.message);
 
-  return data;
+  // 2. احسب لو دي آخر صفحة بناءً على العدد الكلي
+  const isLastPage = to + 1 >= count;
+
+  return { data, nextPage: pageParam + 1, isLastPage };
+};
+
+export const getStudentPosts = async (pageParam, teacherId, stageId) => {
+  const pageSize = 5;
+  const from = (pageParam - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  // 1. جيب البيانات
+  const { data, error, count } = await supabase
+    .from("posts")
+    .select("*", { count: "exact" }) // مهم جدًا
+    .eq("teacherId", teacherId)
+    .in("stage_id", [stageId, publicStage])
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (error) throw new Error(error.message);
+
+  // 2. احسب لو دي آخر صفحة بناءً على العدد الكلي
+  const isLastPage = to + 1 >= count;
+
+  return { data, nextPage: pageParam + 1, isLastPage };
 };
 
 export const getTasks = async (userId) => {
@@ -829,31 +992,60 @@ export const deleteTask = async (task) => {
 };
 
 export const getPostsDisplayedInStudentPosts = async (
+  pageParam,
   teachersIds,
   stagesIds
 ) => {
+  const pageSize = 5;
+  const from = (pageParam - 1) * pageSize;
+  const to = from + pageSize - 1;
   if (!teachersIds?.length) return [];
 
   let query = supabase
     .from("posts")
-    .select("*") // بدون join
+    .select("*", { count: "exact" })
     .in("teacherId", teachersIds)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (stagesIds?.length) {
     const stageFilter = `stage_id.in.(${stagesIds.join(",")}),stage_id.is.null`;
     query = query.or(stageFilter);
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query;
 
   if (error) {
     console.error("Supabase error:", error);
     throw new Error(error.message);
   }
 
-  return data;
+  // 2. احسب لو دي آخر صفحة بناءً على العدد الكلي
+  const isLastPage = to + 1 >= count;
+
+  return { data, nextPage: pageParam + 1, isLastPage };
 };
+
+// export const getPosts = async (pageParam, teacherId) => {
+//   const pageSize = 5;
+//   const from = (pageParam - 1) * pageSize;
+//   const to = from + pageSize - 1;
+
+//   // 1. جيب البيانات
+//   const { data, error, count } = await supabase
+//     .from("posts")
+//     .select("*", { count: "exact" }) // مهم جدًا
+//     .eq("teacherId", teacherId)
+//     .order("created_at", { ascending: false })
+//     .range(from, to);
+
+//   if (error) throw new Error(error.message);
+
+//   // 2. احسب لو دي آخر صفحة بناءً على العدد الكلي
+//   const isLastPage = to + 1 >= count;
+
+//   return { data, nextPage: pageParam + 1, isLastPage };
+// };
 
 export const getStudentsFromStudentsIds = async (studentsIds) => {
   const { error, data } = await supabase

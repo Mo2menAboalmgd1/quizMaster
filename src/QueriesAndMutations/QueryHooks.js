@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   getColumn,
   getExam,
@@ -34,6 +34,9 @@ import {
   getStudentStages,
   getStagesByStagesIds,
   getDoneTasks,
+  getAllexams,
+  getStudentPosts,
+  // getData,
 } from "../api/AllApiFunctions";
 
 // export const useCommonQuery = ({
@@ -161,11 +164,38 @@ export const useReslutsByExamId = (examId) => {
   });
 };
 
+// export const usePostsByTeacherId = (teacherId) => {
+//   return useQuery({
+//     queryKey: ["posts", teacherId],
+//     queryFn: () => getPosts(teacherId),
+//     enabled: !!teacherId,
+//   });
+// };
+
 export const usePostsByTeacherId = (teacherId) => {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ["posts", teacherId],
-    queryFn: () => getPosts(teacherId),
+    queryFn: ({ pageParam = 1 }) => getPosts(pageParam, teacherId),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.isLastPage) return undefined;
+      return lastPage.nextPage;
+    },
+    staleTime: Infinity,
     enabled: !!teacherId,
+  });
+};
+
+export const useStudentPostsByTeacherIdAnStage = (teacherId, stageId) => {
+  return useInfiniteQuery({
+    queryKey: ["studentPosts", teacherId, stageId],
+    queryFn: ({ pageParam = 1 }) =>
+      getStudentPosts(pageParam, teacherId, stageId),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.isLastPage) return undefined;
+      return lastPage.nextPage;
+    },
+    staleTime: Infinity,
+    enabled: !!teacherId && !!stageId,
   });
 };
 
@@ -217,23 +247,119 @@ export const useReactionsByTeachersIds = (teachersIds) => {
   });
 };
 
+// export const useTeachersPosts = (teachersIds, stagesIds) => {
+//   return useQuery({
+//     queryKey: ["posts", teachersIds, stagesIds],
+//     queryFn: () => getPostsDisplayedInStudentPosts(teachersIds, stagesIds),
+//     enabled: Array.isArray(teachersIds) && teachersIds.length > 0,
+//   });
+// };
+
 export const useTeachersPosts = (teachersIds, stagesIds) => {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ["posts", teachersIds, stagesIds],
-    queryFn: () => getPostsDisplayedInStudentPosts(teachersIds, stagesIds),
-    enabled: Array.isArray(teachersIds) && teachersIds.length > 0,
+    queryFn: ({ pageParam = 1 }) =>
+      getPostsDisplayedInStudentPosts(pageParam, teachersIds, stagesIds),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.isLastPage) return undefined;
+      return lastPage.nextPage;
+    },
+    staleTime: Infinity,
+    enabled: teachersIds?.length > 0 && stagesIds?.length > 0,
   });
 };
 
-export const useExamsByTeacherId = (teacherId, isPublished) => {
-  "isPublished", isPublished;
+// currentUser.id, isPublished, isTime, stageId
+// export const useExamsByTeacherId = (
+//   teacherId,
+//   isPublished,
+//   isTime,
+//   stageId
+// ) => {
+//   return useInfiniteQuery({
+//     queryKey: ["exams", teacherId, isPublished, isTime, stageId],
+//     queryFn: ({ pageParam = 1 }) => {
+//       getExams(teacherId, isPublished, isTime, stageId, pageParam);
+//     },
+//     getNextPageParam: (lastPage) => {
+//       if (lastPage.isLastPage) return undefined;
+//       return lastPage.nextPage;
+//     },
+//     staleTime: Infinity,
+//     enabled:
+//       !!teacherId &&
+//       typeof isPublished === "boolean" &&
+//       typeof isTime === "boolean" &&
+//       !!stageId,
+//   });
+// };
+// currentUser.id, isPublished, isTime, stageId
+export const useExamsByTeacherId = (
+  teacherId,
+  isPublished,
+  isTime,
+  stageId
+) => {
+  console.log({
+    teacherId,
+    isPublished,
+    isTime,
+    stageId,
+  });
+  return useInfiniteQuery({
+    queryKey: ["exams", teacherId, isPublished, isTime, stageId],
+    queryFn: ({ pageParam = 1 }) =>
+      getExams(pageParam, teacherId, isPublished, isTime, stageId),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.isLastPage) return undefined;
+      return lastPage.nextPage;
+    },
+    staleTime: Infinity,
+    enabled:
+      !!teacherId &&
+      typeof isPublished === "boolean" &&
+      typeof isTime === "boolean" &&
+      !!stageId,
+  });
+};
+
+export const useAllTeacherExams = (teacherId) => {
   return useQuery({
-    queryKey: ["exams", teacherId, isPublished],
-    queryFn: () => getExams(teacherId, isPublished),
+    queryKey: ["allExams", teacherId],
+    queryFn: () => getAllexams(teacherId),
     staleTime: 5 * 60 * 1000,
     enabled: !!teacherId,
   });
 };
+
+// {
+// key: [folder.path, currentUser?.id, true],
+// table: "exams",
+// filters: {
+//   teacherId: currentUser?.id,
+//   isPublished: folder.isPublished,
+// },
+// enabled:
+//   !!currentUser?.id && typeof folder.isPublished === "boolean",
+// }
+
+// export const useFolderHasData = (query) => {
+//   return useQuery({
+//     queryKey: query.key,
+//     queryFn: () => getData(query.table, query.filters),
+//     staleTime: 5 * 60 * 1000,
+//     enabled: query.enabled,
+//   });
+// };
+
+/*
+useFolderHasData(
+    ["exam", currentUser?.id, true],
+    () =>
+      getData("exmas", "*", "teacherId", currentUser?.id, "isPublished", true),
+    [!!currentUser?.id, typeof true === "boolean"]
+  );
+*/
 
 export const useExamsDataByExamsIds = (examsIds) => {
   return useQuery({
@@ -287,12 +413,26 @@ export const useStudentsFromStudentsIds = (studentsIds) => {
   });
 };
 
-export const useJoinCodes = (teacherId) => {
-  return useQuery({
-    queryKey: ["joinCodes", teacherId],
-    queryFn: () => getJoinCodes(teacherId),
-    staleTime: 5 * 60 * 1000,
-    enabled: !!teacherId,
+// export const useJoinCodes = (teacherId) => {
+//   return useQuery({
+//     queryKey: ["joinCodes", teacherId],
+//     queryFn: () => getJoinCodes(teacherId),
+//     staleTime: 5 * 60 * 1000,
+//     enabled: !!teacherId,
+//   });
+// };
+
+export const useJoinCodes = (teacherId, isPublic) => {
+  return useInfiniteQuery({
+    queryKey: ["joinCodes", teacherId, isPublic],
+    queryFn: ({ pageParam = 1 }) =>
+      getJoinCodes(pageParam, teacherId, isPublic),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.isLastPage) return undefined;
+      return lastPage.nextPage;
+    },
+    staleTime: Infinity,
+    enabled: !!teacherId && typeof isPublic === "boolean",
   });
 };
 

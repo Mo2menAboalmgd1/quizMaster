@@ -8,7 +8,8 @@ import Request from "../../components/Request";
 import Loader from "../../components/Loader";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
-import { faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { faUserSlash } from "@fortawesome/free-solid-svg-icons";
+import PageWrapper from "../../components/PageWrapper";
 
 export default function Requests() {
   const { currentUser } = useCurrentUser();
@@ -20,13 +21,13 @@ export default function Requests() {
   } = useStudentsAndRequestsByTeacherIdAndTable(
     currentUser?.id,
     "teachers_requests"
-    );
-  
+  );
+
   const {
     data: stages,
     isLoading: isStagesLoading,
     error: stagesError,
-  } = useStagesByTeacherId(currentUser?.id)
+  } = useStagesByTeacherId(currentUser?.id);
 
   if (isRequestsLoading || isStagesLoading) {
     return <Loader message="جاري تحميل طلبات الانضمام المتاحة" />;
@@ -40,14 +41,16 @@ export default function Requests() {
 
   if (!requests || requests?.length === 0) {
     return (
-      <NoDataPlaceHolder message={"لا يوجد طلبات حاليا"} icon={faUserPlus} />
+      <PageWrapper title={"طلبات الانضمام"}>
+        <NoDataPlaceHolder message={"لا يوجد طلبات حاليا"} icon={faUserSlash} />
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <PageWrapper title={"طلبات الانضمام"}>
       {requests.map((request) => {
-        const stage = stages.find(stage => stage.id === request.stage_id)
+        const stage = stages.find((stage) => stage.id === request.stage_id);
         return (
           <Request
             key={request.studentId}
@@ -56,6 +59,6 @@ export default function Requests() {
           />
         );
       })}
-    </div>
+    </PageWrapper>
   );
 }

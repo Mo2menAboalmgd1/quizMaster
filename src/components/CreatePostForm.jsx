@@ -4,7 +4,8 @@ import { useCreateNewPostMutation } from "../QueriesAndMutations/mutationsHooks"
 import { faClose, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import toast from "react-hot-toast";
-import { useCurrentUser } from "../store/useStore";
+import { publicStage, useCurrentUser, useDarkMode } from "../store/useStore";
+import clsx from "clsx";
 
 const MAX_IMAGE_SIZE_MB = 3;
 
@@ -15,6 +16,7 @@ export default function CreatePostForm({
   setSelectedStage,
 }) {
   const { currentUser } = useCurrentUser();
+  const { isDarkMode } = useDarkMode();
 
   const [postImages, setPostImages] = useState([]);
   const [postText, setPostText] = useState("");
@@ -38,12 +40,21 @@ export default function CreatePostForm({
     }
 
     setIsAddingNewPost(true);
+
     createNewPost(
       {
-        text: postText,
-        images: postImages,
-        stageId: selectedStage || null,
-        teacherId: currentUser?.id,
+        action: {
+          teacherId: currentUser?.id,
+          stage:
+            stages?.find((stage) => stage.id === selectedStage)?.name ||
+            "جميع الصفوف",
+        },
+        update: {
+          text: postText,
+          images: postImages,
+          stageId: selectedStage || null,
+          teacherId: currentUser?.id,
+        },
       },
       {
         onSuccess: () => {
@@ -68,12 +79,20 @@ export default function CreatePostForm({
   return (
     <form
       onSubmit={handlePublishPost}
-      className="space-y-5 p-6 rounded-3xl shadow-xl bg-white w-full max-w-2xl border border-gray-200 mx-auto"
+      className={clsx(
+        "rounded-lg border p-4 space-y-4",
+        isDarkMode
+          ? "border-blue-500/50 bg-blue-500/10"
+          : "border-gray-300 bg-gray-50"
+      )}
     >
       {/* select stage */}
       <label
         htmlFor="stage"
-        className="block text-lg font-semibold text-gray-700 mb-3"
+        className={clsx(
+          "block text-lg font-semibold mb-3",
+          isDarkMode ? "text-white" : "text-gray-700"
+        )}
       >
         اختر المرحلة الدراسية التي سترى المنشور:
       </label>
@@ -82,17 +101,33 @@ export default function CreatePostForm({
           name="stage"
           id="stage"
           value={selectedStage}
-          onChange={(e) => setSelectedStage(e.target.value)}
-          className="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:border-blue-500 shadow-sm transition-all duration-200 ease-in-out"
+          onChange={(e) => {
+            setSelectedStage(e.target.value);
+            console.log(e.target.value)
+          }}
+          className={clsx(
+            "appearance-none w-full border py-3 px-4 pr-8 rounded-xl leading-tight focus:outline-none shadow-sm transition-all duration-200 ease-in-out",
+            isDarkMode
+              ? "bg-slate-900 border-blue-500/50 text-white focus:border-blue-500"
+              : "bg-white border-gray-300 text-gray-700 focus:border-blue-500"
+          )}
         >
-          {stages?.map((stage, index) => (
-            <option key={index} value={stage.id}>
-              {stage.name}
-            </option>
-          ))}
-          <option value="">جميع الصفوف</option>
+          {stages?.map((stage, index) => {
+            if (stage.id === publicStage) return null;
+            return (
+              <option key={index} value={stage.id}>
+                {stage.name}
+              </option>
+            );
+          })}
+          <option value={publicStage}>جميع الصفوف</option>
         </select>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+        <div
+          className={clsx(
+            "pointer-events-none absolute inset-y-0 right-0 flex items-center px-2",
+            isDarkMode ? "text-white" : "text-gray-700"
+          )}
+        >
           <svg
             className="fill-current h-4 w-4"
             xmlns="http://www.w3.org/2000/svg"
@@ -108,7 +143,12 @@ export default function CreatePostForm({
         <div className="flex gap-4">
           <textarea
             name="postBody"
-            className="w-full min-h-32 max-h-56 field-sizing-content resize-none border border-gray-300 rounded-2xl p-4 focus:border-blue-500 focus:ring-0 outline-none shadow-sm text-gray-800"
+            className={clsx(
+              "w-full min-h-32 max-h-56 field-sizing-content resize-none border rounded-2xl p-4 focus:ring-0 outline-none shadow-sm ",
+              isDarkMode
+                ? "border-blue-500/40 bg-slate-900 text-white focus:border-blue-500"
+                : "border-gray-300 text-gray-800 focus:border-blue-500"
+            )}
             placeholder="اكتب شيئاً..."
             value={postText}
             onChange={(e) => setPostText(e.target.value)}
@@ -176,7 +216,12 @@ export default function CreatePostForm({
                 onClick={() => {
                   setPostImages((prev) => prev.filter((_, i) => i !== index));
                 }}
-                className="absolute top-1 right-1 bg-white border rounded-full w-6 h-6 text-xs flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md hover:bg-gray-100"
+                className={clsx(
+                  "absolute top-1 right-1  border rounded-full w-6 h-6 text-xs flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md ",
+                  isDarkMode
+                    ? "bg-slate-900 hover:bg-slate-900 border-red-500/50"
+                    : "bg-white hover:bg-gray-100"
+                )}
                 title="حذف الصورة"
               >
                 <FontAwesomeIcon icon={faClose} className="text-red-500" />
@@ -196,7 +241,7 @@ export default function CreatePostForm({
         </div>
       </div>
       <button
-        className="h-12 rounded-xl bg-blue-500 text-white w-full cursor-pointer hover:bg-blue-600 transition-colors duration-200 font-semibold shadow-md disabled:bg-blue-300 disabled:cursor-not-allowed"
+        className="h-12 rounded-xl bg-blue-600 text-white w-full cursor-pointer hover:bg-blue-600 transition-colors duration-200 font-semibold shadow-md disabled:bg-blue-300 disabled:cursor-not-allowed"
         disabled={isAddingNewPost}
       >
         {isAddingNewPost ? "جاري النشر..." : "نشر"}

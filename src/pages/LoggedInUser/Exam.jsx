@@ -89,7 +89,7 @@ export default function Exam() {
     isQuestionsLoading ||
     isExamResultLoading
   ) {
-    return <Loader message="جاري تحميل الامتحان" />;
+    return <Loader message="جاري تحميل الاختبار" />;
   }
 
   if (examDataError || questionsError || examResultError) {
@@ -99,7 +99,7 @@ export default function Exam() {
   if (!examData || !questions) {
     return (
       <NoDataPlaceHolder
-        message="لم يتم العثور على الامتحان"
+        message="لم يتم العثور على الاختبار"
         icon={faFileAlt}
       />
     );
@@ -108,7 +108,7 @@ export default function Exam() {
   examResult;
 
   return (
-    <div dir="rtl" className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
       {/* exam data card */}
       <div className="p-3 px-4 bg-white shadow-sm rounded-xl border border-gray-200 space-y-4">
         <div className="grid grid-cols-1 gap-3">
@@ -118,7 +118,7 @@ export default function Exam() {
           </div>
           <div className="flex gap-2 items-center py-2 border-b border-gray-100 last:border-b-0">
             <span className="text-sm font-medium text-gray-600">
-              عنوان الامتحان:
+              عنوان الاختبار:
             </span>
             <span className="text-sm text-gray-900">{examData.title}</span>
           </div>

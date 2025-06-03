@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useCurrentUser, useSession } from "./store/useStore";
+import { useCurrentUser, useDarkMode, useSession } from "./store/useStore";
 import { supabase } from "./config/supabase";
 import Auth from "./pages/auth/Auth";
 import Student from "./pages/LoggedInUser/Student";
@@ -9,7 +9,6 @@ import {
   Routes,
   Link,
   useLocation,
-  Navigate,
   useNavigate,
   NavLink,
 } from "react-router-dom";
@@ -20,12 +19,21 @@ import ResumeCreateTest from "./pages/LoggedInUser/ResumeCreateTest";
 import { Toaster } from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faBars,
-  faBell,
+  faAngleLeft,
   faChalkboardTeacher,
-  faPlus,
-  faSignOut,
+  faFileAlt,
+  faHome,
+  faLock,
+  faMoon,
+  faNewspaper,
+  faPlusCircle,
+  faSun,
+  // faSignOut,
   faTasks,
+  faUserEdit,
+  faUserPlus,
+  faUsers,
+  faWater,
 } from "@fortawesome/free-solid-svg-icons";
 import Loader from "./components/Loader";
 import Requests from "./pages/LoggedInUser/Requests";
@@ -39,7 +47,6 @@ import {
   useTasksByUserId,
   useTeachersFromTeachersStudents,
   useUserDataByUserId,
-  // useUserDataByUserId,
 } from "./QueriesAndMutations/QueryHooks";
 import Notifications from "./pages/LoggedInUser/Notifications";
 import Stages from "./pages/LoggedInUser/Stages";
@@ -49,20 +56,8 @@ import ErrorPlaceHolder from "./components/ErrorPlaceHolder";
 import Landing from "./pages/auth/Landing"; // Import the new Landing component
 import JoinCodes from "./pages/LoggedInUser/JoinCodes";
 import JoinCodesGroup from "./pages/LoggedInUser/JoinCodesGroup";
-import {
-  BookSVG,
-  CloseSideBarSVG,
-  FileSVG,
-  HomeSVG,
-  JoinCodesSVG,
-  PostsSVG,
-  RequestsSVG,
-  StagesSVG,
-} from "../public/SVGs";
 import Exams from "./pages/LoggedInUser/Exams";
 import PublishedAndUnPublishedExams from "./pages/LoggedInUser/PublishedAndUnPublishedExams";
-import StageExams from "./pages/LoggedInUser/StageExamsTypes";
-import Posts from "./pages/LoggedInUser/TeacherPosts";
 import TeacherPosts from "./pages/LoggedInUser/TeacherPosts";
 import StudentPosts from "./pages/LoggedInUser/StudentPosts";
 import PostsInTeacherPosts from "./pages/LoggedInUser/PostsInTeacherPosts";
@@ -77,6 +72,9 @@ import StageExamsTypes from "./pages/LoggedInUser/StageExamsTypes";
 import TypeStageExams from "./pages/LoggedInUser/TypeStageExams";
 import TeacherTasks from "./pages/LoggedInUser/TeacherTasks";
 import StudentTasks from "./pages/LoggedInUser/StudentTasks";
+import TeacherPostsInStudentTeacher from "./pages/LoggedInUser/TeacherPostsInStudentTeacher";
+import clsx from "clsx";
+import PageWrapper from "./components/PageWrapper";
 
 export default function App() {
   const { getSession, session } = useSession();
@@ -84,6 +82,14 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { isDarkMode, getMode } = useDarkMode();
+
+  useEffect(() => {
+    document.documentElement.setAttribute(
+      "data-theme",
+      isDarkMode ? "dark" : "light"
+    );
+  }, [isDarkMode]);
 
   // const {
   //   data: userData,
@@ -122,21 +128,21 @@ export default function App() {
   const navLinks = [
     {
       path: "/",
-      icon: <HomeSVG />,
+      icon: <FontAwesomeIcon icon={faHome} />,
       text: "الرئيسية",
       user: "both",
       number: null,
     },
     {
       path: "/posts",
-      icon: <PostsSVG />,
+      icon: <FontAwesomeIcon icon={faNewspaper} />,
       text: "المنشورات",
       user: "both",
       number: postsInTeacherPosts?.length || null,
     },
     {
       path: "/tasks",
-      icon: <FontAwesomeIcon icon={faTasks} className="pr-1" />,
+      icon: <FontAwesomeIcon icon={faTasks} />,
       text: "المهام",
       user: "both",
       number: currentUser?.type === "teacher" ? tasks?.length || null : null,
@@ -150,35 +156,35 @@ export default function App() {
     },
     {
       path: "/exams",
-      icon: <FileSVG />,
-      text: "الامتحانات",
+      icon: <FontAwesomeIcon icon={faFileAlt} />,
+      text: "الاختبارات",
       user: "teacher",
       number: exams?.length || null,
     },
     {
       path: "/createTest",
-      icon: <FontAwesomeIcon icon={faPlus} />,
-      text: "إنشاء امتحان",
+      icon: <FontAwesomeIcon icon={faPlusCircle} />,
+      text: "إنشاء اختبار",
       user: "teacher",
       number: null,
     },
     {
       path: "/requests",
-      icon: <RequestsSVG />,
+      icon: <FontAwesomeIcon icon={faUserPlus} />,
       text: "طلبات الانضمام",
       user: "teacher",
       number: requests?.length || null,
     },
     {
       path: "/stages",
-      icon: <StagesSVG />,
-      text: "الطلاب",
+      icon: <FontAwesomeIcon icon={faUsers} />,
+      text: "المجموعات",
       user: "teacher",
       number: students?.length || null,
     },
     {
       path: "/joinCodes",
-      icon: <JoinCodesSVG />,
+      icon: <FontAwesomeIcon icon={faLock} />,
       text: "اكواد الانضمام",
       user: "teacher",
       number: joinCodes?.length || null,
@@ -188,7 +194,10 @@ export default function App() {
   // Close sidebar when route changes
   useEffect(() => {
     setIsSidebarOpen(false);
+    // getMode(true);
   }, [location.pathname]);
+
+  console.log("isDarkMood", isDarkMode);
 
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
@@ -208,7 +217,7 @@ export default function App() {
     isError: profileError,
   } = useProfileByUserId(session?.user?.id);
 
-  let userTable = profile?.type === "student" ? "students" : "teachers";
+  const userTable = profile?.type === "student" ? "students" : "teachers";
 
   const {
     data: userData,
@@ -259,94 +268,41 @@ export default function App() {
     );
   }
 
-  if (!currentUser) return <Loader message="جري تحميل الامتحانات" />;
+  if (!currentUser) return <Loader message="جري تحميل الاختبارات" />;
 
   return (
-    <div className="min-h-screen flex flex-col font-[Noto_Sans_Arabic]">
-      {/* Header */}
-      <header className="bg-gray-50 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none md:hidden"
-              >
-                <FontAwesomeIcon icon={faBars} />
-              </button>
-              <Link to="/" className="ml-4 flex items-center">
-                <div className="flex items-center gap-2">
-                  <div className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white p-2 rounded-lg">
-                    <BookSVG />
-                  </div>
-                  <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">
-                    Quiz Master
-                  </span>
-                </div>
-              </Link>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="flex gap-5" dir="rtl">
-                  <Link
-                    to={"/userProfile/" + currentUser.id}
-                    className="text-gray-700 font-medium hidden md:block"
-                  >
-                    {currentUser?.name}
-                  </Link>
-                  {currentUser.type === "teacher" && (
-                    <span className="text-gray-700 font-medium hidden md:block">
-                      {currentUser?.subject}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="relative">
-                <Link
-                  to={"/notifications"}
-                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md shadow-sm text-orange-600 border-2 border-orange-600 focus:outline-none transition-all duration-150 h-10 w-10 cursor-pointer"
-                >
-                  <FontAwesomeIcon icon={faBell} />
-                </Link>
-                {unReadNotifications?.length > 0 && (
-                  <span className="h-6 rounded-full px-2 bg-red-500 flex items-center justify-center text-white text-sm absolute -left-2.5 -top-1">
-                    {unReadNotifications?.length || 0}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  navigate("/");
-                }}
-                className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 focus:outline-none transition-all duration-150 h-10 w-10 cursor-pointer"
-              >
-                <FontAwesomeIcon icon={faSignOut} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 transform ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } w-64 bg-gray-50 shadow-lg z-20 transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:w-auto md:h-auto md:shadow-none`}
+    <div
+      className={clsx(
+        "h-screen w-screen grid grid-cols-[350px_1fr] max-xl:grid-cols-[64px_1fr] max-md:grid-cols-1 max-md:grid-rows-[72px_1fr] max-sm:grid-rows-1 font-[Noto_Sans_Arabic] max-md:overflow-hidden",
+        isDarkMode
+          ? "bg-gradient-to-bl from-slate-900 to-slate-950 text-white"
+          : "bg-white text-black"
+      )}
+      dir="rtl"
+    >
+      <button
+        onClick={() => getMode(isDarkMode ? false : true)}
+        className="fixed left-3 top-3 z-50"
       >
-        <div className="flex flex-col h-full">
-          <div className="p-4 border-b flex justify-between items-center md:hidden">
-            <div className="font-semibold text-gray-800">القائمة</div>
-            <button
-              onClick={() => setIsSidebarOpen(false)}
-              className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
-            >
-              <CloseSideBarSVG />
-            </button>
+        <FontAwesomeIcon icon={isDarkMode ? faMoon : faSun} />
+      </button>
+      <header
+        className={clsx(
+          "border-e-2 overflow-hidden p-3 space-y-4 flex md:flex-col justify-between h-full max-md:px-10 max-md:space-y-0 max-md:border-b max-md:border-e-0 max-sm:hidden",
+          isDarkMode
+            ? "bg-slate-900 border-blue-500/40"
+            : "bg-gray-50 border-gray-300"
+        )}
+      >
+        {/* website name */}
+        <div className="max-md:flex max-md:w-full">
+          <div className="flex gap-2 items-center justify-center bg-blue-500/20 text-blue-500 py-3 text-lg rounded-2xl max-md:px-3">
+            <FontAwesomeIcon icon={faWater} />
+            <h1 className="font-bold max-xl:hidden">بحور</h1>
           </div>
 
-          <div className="py-4 flex flex-col md:flex-row md:justify-center md:items-center md:space-x-2 md:rtl:space-x-reverse md:px-4 max-md:p-3 max-md:space-y-2">
+          {/* nav links */}
+          <nav className="space-y-2 mt-4 max-md:flex max-md:mt-0 max-md:shrink-0 max-md:space-y-0 max-md:grow max-md:justify-center max-md:gap-1">
             {navLinks.map((link, index) => {
               if (currentUser.type === link.user || link.user === "both") {
                 return (
@@ -355,18 +311,51 @@ export default function App() {
                       to={link.path}
                       title={link.text}
                       className={({ isActive }) =>
-                        `px-4 py-2 rounded-md flex items-center gap-1 transition-colors md:py-1 
-                      text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 h-10 border border-indigo-300/20 max-md:border-none
-                        ${isActive ? "bg-indigo-100 text-indigo-700" : ""}`
+                        `px-2 max-md:p-1 flex items-center rounded-full ${
+                          isActive
+                            ? isDarkMode
+                              ? "bg-blue-500/20 text-blue-500"
+                              : "bg-gray-200 text-gray-900"
+                            : isDarkMode
+                            ? "text-gray-700 hover:bg-blue-500/10 transition-colors"
+                            : "text-gray-700 hover:bg-gray-100 transition-colors"
+                        } ${isDarkMode && "text-white"}`
                       }
                     >
-                      {link.icon}
-                      <p dir="rtl" className="max-lg:hidden max-md:block">
-                        {link.text}
-                      </p>
+                      {({ isActive }) => (
+                        <>
+                          <div
+                            className={`h-10 w-10 flex items-center justify-center ${
+                              isActive
+                                ? isDarkMode
+                                  ? "text-blue-400"
+                                  : "text-blue-500"
+                                : isDarkMode
+                                ? "text-white"
+                                : "text-gray-800"
+                            }`}
+                          >
+                            {link.icon}
+                          </div>
+                          <p
+                            className={clsx(
+                              "max-xl:hidden",
+                              isActive
+                                ? isDarkMode
+                                  ? "text-blue-400"
+                                  : "text-black"
+                                : isDarkMode
+                                ? "text-white"
+                                : "text-black"
+                            )}
+                          >
+                            {link.text}
+                          </p>
+                        </>
+                      )}
                     </NavLink>
                     {link.number && (
-                      <span className="h-6 rounded-full px-2 bg-blue-500 flex items-center justify-center text-white text-sm absolute -left-2 -top-1.5 max-lg:hidden">
+                      <span className="h-6 rounded-full px-2 bg-blue-500 text-white flex items-center justify-center text-sm absolute end-2 top-1/2 -translate-y-1/2 max-xl:hidden">
                         {link.number}
                       </span>
                     )}
@@ -374,13 +363,43 @@ export default function App() {
                 );
               }
             })}
-          </div>
+          </nav>
         </div>
-      </div>
+
+        <Link
+          to={"/userProfile/" + currentUser.id}
+          className={clsx(
+            "flex gap-2 items-center  p-3 rounded-full max-md:p-0 max-xl:p-0 max-xl:hover:ring-2 transition-all",
+            isDarkMode
+              ? "hover:bg-blue-500/10 max-xl:hover:ring-blue-400"
+              : "hover:bg-gray-200 max-xl:hover:ring-blue-500"
+          )}
+        >
+          <img
+            src={currentUser?.avatar}
+            alt="user profile image"
+            className="h-12 w-12 rounded-full object-cover max-xl:h-10 max-xl:w-10"
+          />
+          <div className="max-xl:hidden">
+            <p className="font-bold">{currentUser?.name}</p>
+            {currentUser.type === "teacher" && (
+              <span className="font-medium hidden md:block text-sm text-blue-500">
+                {currentUser?.subject}
+              </span>
+            )}
+          </div>
+        </Link>
+      </header>
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="sm:hidden fixed bottom-3 start-0 h-10 w-13 bg-blue-500 text-white rounded-e-full cursor-pointer z-50"
+      >
+        <FontAwesomeIcon icon={faAngleLeft} />
+      </button>
 
       {/* Main content */}
-      <main className="flex-grow py-6">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="flex-grow relative h-screen overflow-hidden">
+        <div className="h-full">
           <Routes>
             <Route
               path="/"
@@ -391,15 +410,15 @@ export default function App() {
             {currentUser.type === "student" ? (
               <Route path="/posts" element={<StudentPosts />} />
             ) : (
-              <Route path="/posts" element={<TeacherPosts />}>
-                <Route path=":stageId" element={<PostsInTeacherPosts />} />
-              </Route>
+              <Route path="/posts" element={<TeacherPosts />} />
+              //   <Route path=":stageId" element={<PostsInTeacherPosts />} />
+              // </Route>
             )}
             <Route path="/searchTeachers" element={<SearchTeachers />} />
             <Route path="/studentTeachers" element={<StudentTeachers />} />
             <Route path="/studentTeachers/:id" element={<StudentTeacher />}>
               <Route index element={<TeacherExams />} />
-              <Route path=":posts" element={<StudentPosts />} />
+              <Route path=":posts" element={<TeacherPostsInStudentTeacher />} />
             </Route>
             <Route path="/requests" element={<Requests />} />
             <Route path="/stages" element={<Stages />} />
@@ -447,12 +466,88 @@ export default function App() {
       </main>
 
       {/* Overlay */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/30 bg-opacity-50 z-10 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      <div
+        className={clsx(
+          "sm:hidden fixed top-0 bottom-0 h-full w-full bg-black/20 backdrop-blur-sm z-50 transition-all",
+          isSidebarOpen ? "start-0" : "-start-full"
+        )}
+        onClick={() => setIsSidebarOpen(false)}
+      >
+        <aside
+          onClick={(e) => e.stopPropagation()}
+          className="border-e border-gray-300 overflow-hidden p-3 space-y-4 bg-gray-50 flex md:flex-col max-sm:flex-col justify-between h-full max-sm:fixed max-sm:top-0 max-sm:bottom-0 max-sm:start-0 max-sm:z-40 max-sm:w-2/3 sm:hidden"
+        >
+          {/* website name */}
+          <div className="">
+            <div className="flex gap-2 items-center justify-center bg-blue-100 text-blue-600 py-3 text-lg rounded-2xl">
+              <FontAwesomeIcon icon={faWater} />
+              <h1 className="font-bold">بحور</h1>
+            </div>
+
+            {/* nav links */}
+            <nav className="space-y-2 mt-4">
+              {navLinks.map((link, index) => {
+                if (currentUser.type === link.user || link.user === "both") {
+                  return (
+                    <div className="relative" key={index}>
+                      <NavLink
+                        to={link.path}
+                        title={link.text}
+                        className={({ isActive }) =>
+                          `px-2 max-md:p-1 max-sm:px-2 max-sm:py-0.5 flex items-center rounded-full ${
+                            isActive
+                              ? "bg-gray-200 text-gray-900"
+                              : "text-gray-700 hover:bg-gray-100 transition-colors"
+                          }`
+                        }
+                      >
+                        {({ isActive }) => (
+                          <>
+                            <div
+                              className={`h-10 w-10 flex items-center justify-center ${
+                                isActive && "text-blue-500"
+                              }`}
+                            >
+                              {link.icon}
+                            </div>
+                            <p className="max-xl:hidden max-sm:block">
+                              {link.text}
+                            </p>
+                          </>
+                        )}
+                      </NavLink>
+                      {link.number && (
+                        <span className="h-6 rounded-full px-2 bg-blue-500 text-white flex items-center justify-center text-sm absolute end-2 top-1/2 -translate-y-1/2 max-xl:hidden max-sm:flex">
+                          {link.number}
+                        </span>
+                      )}
+                    </div>
+                  );
+                }
+              })}
+            </nav>
+          </div>
+
+          <Link
+            to={"/userProfile/" + currentUser.id}
+            className="flex gap-2 items-center hover:bg-gray-200 p-3 rounded-full max-md:p-0 max-sm:p-3"
+          >
+            <img
+              src={currentUser?.avatar}
+              alt="user profile image"
+              className="h-12 w-12 rounded-full object-cover"
+            />
+            <div className="max-xl:hidden max-sm:block">
+              <p className="font-bold">{currentUser?.name}</p>
+              {currentUser.type === "teacher" && (
+                <span className="font-medium hidden md:block text-sm text-blue-500 max-sm:inline">
+                  {currentUser?.subject}
+                </span>
+              )}
+            </div>
+          </Link>
+        </aside>
+      </div>
 
       <Toaster
         position="top-right"

@@ -43,28 +43,30 @@ export default function StudentTeachersInOwnProfile({ student }) {
   const selectedTeacher = teachersData.find((t) => t.id === selectedTeacherId);
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-4">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">My Teachers</h2>
-
+    <div className="bg-white rounded-xl shadow-md p-4" dir="ltr">
       {/* Teacher Navigation Tabs */}
-      <div className="flex flex-wrap gap-2 mb-2 pb-3 border-b border-gray-100">
-        {teachersData.map((teacher) => (
-          <button
-            key={teacher.id}
-            onClick={() => setSelectedTeacherId(teacher.id)}
-            className={`px-4 py-2 rounded-lg transition-all ${
-              selectedTeacherId === teacher.id
-                ? "bg-indigo-600 text-white shadow-md"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            {teacher.name}
-          </button>
-        ))}
+      <div className="border-b border-gray-200 mb-4">
+        {teachersData.map((teacher) => {
+          const teacherNameArray = teacher?.name?.split(" ");
+          return (
+            <button
+              key={teacher.id}
+              onClick={() => setSelectedTeacherId(teacher.id)}
+              className={`px-3 py-2 transition-all border-b-4 cursor-pointer ${
+                selectedTeacherId === teacher.id
+                  ? "border-black"
+                  : "border-transparent hover:border-gray-200"
+              }`}
+            >
+              {teacherNameArray[0]}{" "}
+              {teacherNameArray[teacherNameArray.length - 1]}
+            </button>
+          );
+        })}
       </div>
 
       {/* Selected Teacher Chart */}
-      <div className="p-2">
+      <div>
         {selectedTeacher ? (
           <GradesChart teacher={selectedTeacher} student={student} />
         ) : (

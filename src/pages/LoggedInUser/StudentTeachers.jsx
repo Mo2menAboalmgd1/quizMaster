@@ -1,5 +1,5 @@
 import React from "react";
-import { useCurrentUser } from "../../store/useStore";
+import { useCurrentUser, useDarkMode } from "../../store/useStore";
 import {
   useTeachersFromTeachersStudents,
   useUserDataByUsersIdsAndKey,
@@ -7,17 +7,15 @@ import {
 import Loader from "../../components/Loader";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
-import {
-  faChalkboardTeacher,
-  faChevronLeft,
-  faGlobe,
-  faUser,
-} from "@fortawesome/free-solid-svg-icons";
+import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import PageWrapper from "../../components/PageWrapper";
+import clsx from "clsx";
 
 export default function StudentTeachers() {
   const { currentUser } = useCurrentUser();
+  const { isDarkMode } = useDarkMode();
 
   const {
     data: studentTeachers,
@@ -52,79 +50,83 @@ export default function StudentTeachers() {
     teachers.length === 0
   ) {
     return (
-      <div>
+      <PageWrapper title={"معلميني"}>
         <NoDataPlaceHolder
           message={"لا يوجد معلمين لديك، انضم الآن"}
           icon={faUser}
         />
-        <Link
-          to="/searchTeachers"
-          className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-        >
-          انضم الآن
-        </Link>
-      </div>
+        <div className="mt-5 flex justify-end items-stretch h-fit">
+          <Link
+            to="/searchTeachers"
+            className="h-10 px-4 flex items-center justify-center rounded-lg bg-blue-500 text-white hover:bg-blue-600"
+          >
+            انضم الآن
+          </Link>
+        </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
-        <h1 className="py-4 text-center bg-gradient-to-r from-green-500 to-emerald-600 font-bold text-white text-xl">
-          <FontAwesomeIcon icon={faChalkboardTeacher} className="mr-2" />
-          قائمة المعلمين
-        </h1>
+    <PageWrapper title={"معلميني"}>
+      <div className="rounded-xl overflow-hidden">
+        <div className="flex justify-between">
+          <h1 className="text-3xl font-bold">قائمة المعلمين</h1>
+          <Link
+            to="/searchTeachers"
+            className={clsx(
+              "py-2 px-4 me-3 rounded-lg font-medium",
+              isDarkMode
+                ? "bg-blue-500/50 hover:bg-blue-500 transition-colors text-white"
+                : "bg-gray-200"
+            )}
+          >
+            <span>بحث</span>
+          </Link>
+        </div>
 
-        <div className="p-4" dir="rtl">
-          {teachers.length === 0 ? (
-            <div className="py-8 text-center text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-              لا يوجد معلمين حاليًا
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {teachers.map((teacher) => (
-                <Link
-                  className="p-4 border border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all flex items-center gap-3 group"
-                  dir="rtl"
-                  to={teacher.id}
-                  key={teacher.id}
-                >
-                  {teacher.avatar ? (
-                    <img
-                      className="w-12 h-12 rounded-full object-cover shadow-md"
-                      src={teacher.avatar}
-                      alt={teacher.name}
-                    />
-                  ) : (
-                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white shadow-sm">
-                      <FontAwesomeIcon icon={faUser} />
-                    </div>
-                  )}
-                  <div className="grow">
-                    <h3 className="font-medium text-gray-800 group-hover:text-green-700 transition-colors">
-                      {teacher.name}
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      {teacher.subject || "معلم"}
-                    </p>
-                  </div>
-                  <FontAwesomeIcon
-                    icon={faChevronLeft}
-                    className="text-gray-400 group-hover:text-green-500 transition-colors mr-2"
+        <div>
+          {/* <h1 className="text-xl mt-3 mb-4 font-medium text-gray-600">
+            معلميني
+          </h1> */}
+
+          <div className="space-y-3 mt-4">
+            {teachers.map((teacher) => (
+              <Link
+                className={clsx(
+                  "flex gap-3 items-center p-2 rounded-lg transition-colors",
+                  isDarkMode ? "bg-blue-500/5 hover:bg-blue-500/15" : "hover:bg-gray-200"
+                )}
+                to={teacher.id}
+                key={teacher.id}
+              >
+                {teacher.avatar ? (
+                  <img
+                    className="w-12 h-12 rounded-full object-cover shadow-md"
+                    src={teacher.avatar}
+                    alt={teacher.name}
                   />
-                </Link>
-              ))}
-            </div>
-          )}
+                ) : (
+                  <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center text-white shadow-sm">
+                    <FontAwesomeIcon icon={faUser} />
+                  </div>
+                )}
+                <div className="grow">
+                  <h3
+                    className={clsx(
+                      "font-medium group-hover:text-green-700 transition-colors",
+                      isDarkMode ? "text-white" : "text-gray-800"
+                    )}
+                  >
+                    {teacher.name}
+                  </h3>
+                  <p className="text-sm text-blue-500">{teacher.subject}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
-      <Link
-        to="/searchTeachers"
-        className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow flex gap-2 w-fit items-center -mt-3"
-      >
-        <FontAwesomeIcon icon={faGlobe} />
-        <span>البحث عن معلمين آخرين</span>
-      </Link>
-    </div>
+    </PageWrapper>
   );
 }

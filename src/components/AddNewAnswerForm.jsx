@@ -8,6 +8,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import { useRef, useState } from "react";
+import { useDarkMode } from "../store/useStore";
 
 const MAX_IMAGE_SIZE_MB = 3;
 
@@ -20,6 +21,7 @@ export default function AddNewAnswerForm({
   isAdding = false,
   index = null,
 }) {
+  const { isDarkMode } = useDarkMode();
   const [newAns, setNewAns] = useState({ ans: "", image: null });
   const fileInputRef = useRef(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
@@ -71,9 +73,10 @@ export default function AddNewAnswerForm({
       className={clsx(
         "w-full select-none pr-12 flex flex-col gap-2",
         isDraggingOver &&
-          "border-2 border-dashed border-blue-400 bg-blue-50 p-2 rounded-lg"
+          (isDarkMode
+            ? "border-2 border-dashed border-blue-400 bg-blue-500/10 p-2 rounded-lg"
+            : "border-2 border-dashed border-blue-400 bg-blue-50 p-2 rounded-lg")
       )}
-      dir="rtl"
       onDrop={(e) => {
         e.preventDefault();
         setIsDraggingOver(false);
@@ -133,10 +136,15 @@ export default function AddNewAnswerForm({
             }}
             value={isAdding ? newAns.ans : answer?.ans || ""}
             className={clsx(
-              "border resize-none field-sizing-content min-h-10 grow py-1.5 px-2 rounded-lg outline-none peer-checked:border-green-600 peer-checked:bg-green-100 peer-checked:text-green-900 peer-checked:font-bold",
+              "border resize-none field-sizing-content min-h-10 grow pt-2 px-2 rounded-lg outline-none peer-checked:border-green-600 peer-checked:bg-green-500/10",
+              isDarkMode
+                ? "peer-checked:text-green-500"
+                : "peer-checked:text-green-700",
               isAdding
                 ? " border-gray-400 bg-gray-500/10"
-                : "border-red-400 bg-red-500/10"
+                : isDarkMode
+                ? "border-red-400 bg-red-500/10 text-red-500"
+                : "border-red-400 bg-red-500/10 text-red-600"
             )}
             name="answerText"
             placeholder={

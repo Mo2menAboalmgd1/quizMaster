@@ -1,21 +1,23 @@
-import {
-  faClipboardList,
-  faLayerGroup,
-  faQuestionCircle,
-} from "@fortawesome/free-solid-svg-icons";
 import React from "react";
 import { useQuestionsByExamId } from "../QueriesAndMutations/QueryHooks";
 import toast from "react-hot-toast";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
-import clsx from "clsx";
 import Loader from "./Loader";
+import { formatTime } from "../utils/getDate";
+import clsx from "clsx";
 
-export default function ExamItemInTeacherProfile({ exam, isExamTaken }) {
-  const {
-    data: questions,
-    error: questionsError,
-  } = useQuestionsByExamId(exam.id, "length");
+export default function ExamItemInTeacherProfile({
+  exam,
+  isExamTaken,
+  stages,
+}) {
+  const { data: questions, error: questionsError } = useQuestionsByExamId(
+    exam.id,
+    "length"
+  );
+
+  const stage = stages?.find((stage) => stage.id === exam.stage_id);
+  console.log(stage);
 
   if (questionsError) {
     toast.error(questionsError.message);
@@ -23,58 +25,43 @@ export default function ExamItemInTeacherProfile({ exam, isExamTaken }) {
   }
 
   return (
-    <Link
-      className={clsx(
-        "p-3 border rounded-lg transition-all flex items-center gap-3 group",
-        isExamTaken
-          ? "bg-blue-50 border-blue-300 hover:bg-blue-100"
-          : "bg-green-50 border-green-300 hover:bg-green-100"
-      )}
-      dir="rtl"
-      to={"/exam/" + exam.id}
+    <tr
       key={exam.id}
+      className={clsx(
+        "text-gray-700 border-t border-gray-300",
+        isExamTaken ? "bg-green-50" : "bg-red-50"
+      )}
     >
-      <div
-        className={clsx(
-          "w-10 h-10 bg-gradient-to-r rounded-lg flex items-center justify-center text-white shadow-sm",
-          isExamTaken
-            ? "from-blue-500 to-blue-600"
-            : "from-green-500 to-green-600"
-        )}
-      >
-        <FontAwesomeIcon icon={faClipboardList} />
-      </div>
-      <div className="grow">
-        <h3
-          className={clsx(
-            "font-medium transition-colors",
-            isExamTaken ? "text-blue-600" : "text-green-600"
-          )}
-        >
+      <td className="text-blue-600">
+        <Link className="w-full h-full block px-3 py-2" to={"/exam/" + exam.id}>
           {exam.title}
-        </h3>
-        <div className="flex gap-4 mt-1 text-sm">
-          <span className="text-gray-500 flex items-center gap-1">
-            <FontAwesomeIcon icon={faLayerGroup} className="text-gray-400" />
-            {exam.stage ? exam.stage : "جميع الصفوف"}
-          </span>
-          <span className="text-gray-500 flex items-center gap-1">
-            <FontAwesomeIcon
-              icon={faQuestionCircle}
-              className="text-gray-400"
-            />
-            {questions} سؤال
-          </span>
-        </div>
-      </div>
-      <div
-        className={clsx(
-          " max-sm:hidden px-3 py-1 rounded-full text-sm font-medium",
-          isExamTaken ? "bg-blue-500 text-white" : "bg-green-500 text-white"
-        )}
-      >
-        {isExamTaken ? "مكتمل" : "ابدأ الآن"}
-      </div>
-    </Link>
+        </Link>
+      </td>
+      <td className="text-center">{formatTime(exam.created_at)}</td>
+      <td className="text-center">
+        {questions === 1
+          ? "سؤال واحد"
+          : questions === 2
+          ? "سؤالين"
+          : questions < 11
+          ? `${questions} أسئلة`
+          : questions + "سؤال"}
+      </td>
+
+      {isExamTaken ? (
+        <td className="text-center">
+          <span className="text-green-600">تم الحل</span>
+        </td>
+      ) : (
+        <td className="bg-blue-100">
+          <Link
+            className="text-blue-600 h-full w-full flex items-center justify-center"
+            to={"/exam/" + exam.id}
+          >
+            ابدأ الآن
+          </Link>
+        </td>
+      )}
+    </tr>
   );
 }

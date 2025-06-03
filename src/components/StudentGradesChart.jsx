@@ -9,6 +9,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  BarChart,
+  Bar,
 } from "recharts";
 import { useExamsResultsByTeacherId } from "../QueriesAndMutations/QueryHooks";
 import Loader from "../components/Loader";
@@ -110,7 +112,7 @@ export default function GradesChart({ teacher, student }) {
       }
 
       if (!examsTakenByStudent || examsTakenByStudent.length === 0) {
-        setChartData([]); // مفيش امتحانات
+        setChartData([]); // مفيش اختبارات
         setIsLoadingNames(false);
         return;
       }
@@ -210,22 +212,22 @@ export default function GradesChart({ teacher, student }) {
 
   if (exmasResultsError) {
     return (
-      <ErrorPlaceHolder message="حدث خطأ أثناء جلب الامتحانات الخاصة بهذا الطالب" />
+      <ErrorPlaceHolder message="حدث خطأ أثناء جلب الاختبارات الخاصة بهذا الطالب" />
     );
   }
 
   if (!chartData.length) {
     return (
       <NoDataPlaceHolder
-        message="لم يتم العثور على امتحانات سابقة"
+        message="لم يتم العثور على اختبارات سابقة"
         icon={faFileAlt}
       />
     );
   }
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden p-4">
-      <div className="flex justify-between items-center mb-4" dir="rtl">
+    <div className="bg-white rounded-xl overflow-hidden border border-gray-300">
+      <div className="flex justify-between items-center">
         {student.id !== currentUser.id && (
           <button
             onClick={handlePrintChart}
@@ -239,20 +241,14 @@ export default function GradesChart({ teacher, student }) {
 
       <div
         ref={chartRef}
-        className="border border-gray-300 rounded-lg bg-gray-50 p-4"
-        style={{ height: "300px", maxHeight: "300px" }}
+        className="bg-gray-50 p-4"
+        // style={{ height: "300px", maxHeight: "300px" }}
       >
-        <ResponsiveContainer height={250}>
-          <AreaChart
+        <ResponsiveContainer height={250} className="mt-3">
+          <BarChart
             data={chartData}
             margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
           >
-            <defs>
-              <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#4ade80" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#4ade80" stopOpacity={0.1} />
-              </linearGradient>
-            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="examName" stroke="#666" tick={{ fontSize: 12 }} />
             <YAxis
@@ -263,17 +259,13 @@ export default function GradesChart({ teacher, student }) {
               width={35}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Area
-              type="monotone"
+            <Bar
               dataKey="percentage"
-              stroke="#22c55e"
-              strokeWidth={2}
-              fillOpacity={1}
-              fill="url(#colorScore)"
-              dot={{ r: 5, strokeWidth: 2, fill: "#fff", stroke: "#22c55e" }}
-              activeDot={{ r: 8, stroke: "#22c55e", strokeWidth: 2 }}
+              fill="#4ade80"
+              radius={[4, 4, 0, 0]}
+              barSize={40}
             />
-          </AreaChart>
+          </BarChart>
         </ResponsiveContainer>
       </div>
     </div>

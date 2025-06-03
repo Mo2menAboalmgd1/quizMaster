@@ -2,13 +2,17 @@ import { faHeart } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useState } from "react";
 import DisplayFile from "./DisplayFile";
-import { formatTime } from "../utils/getData";
+import { formatTime } from "../utils/getDate";
 import { isToday } from "../utils/isToday";
+import clsx from "clsx";
+import { publicStage, useDarkMode } from "../store/useStore";
+import { useReactionsByPostId } from "../QueriesAndMutations/QueryHooks";
 
-export function PostInTeachersProfile({ post, reactions, stage }) {
+export function PostInTeachersProfile({ post /* reactions*/, stage }) {
   const [expanded, setExpanded] = useState(false);
   const [fileDisplayed, setFileDisplayed] = useState(null);
-  const stageName = stage?.name || "منشور عام";
+  const { isDarkMode } = useDarkMode();
+  const stageName = stage?.id !== publicStage ? stage.name : "منشور عام";
 
   const MAX_TEXT_LENGTH = 130; // Define max length before truncating
 
@@ -17,26 +21,60 @@ export function PostInTeachersProfile({ post, reactions, stage }) {
     ? post.text.substring(0, MAX_TEXT_LENGTH) + "..."
     : post.text;
 
-  const postReactions = reactions.filter(
-    (reaction) => reaction.post_id === post.id
-  );
+  const { data: reactions } = useReactionsByPostId(post.id);
+
+  console.log(reactions);
+
+  // const postReactions = reactions.filter(
+  //   (reaction) => reaction.post_id === post.id
+  // );
 
   return (
     <div
-      className={`p-5 rounded-3xl shadow-lg bg-white w-full space-y-3 border ${
-        isToday(post.created_at) ? "border-blue-300" : "border-gray-200"
-      }`}
+      className={clsx(
+        "p-4 rounded-lg w-full border",
+        isDarkMode ? "bg-slate-900" : "bg-white",
+        isToday(post.created_at)
+          ? isDarkMode
+            ? "border-blue-500/60"
+            : "border-blue-300"
+          : isDarkMode
+          ? "border-slate-800"
+          : "border-gray-300"
+      )}
     >
-      <h2 className="font-semibold text-gray-600">{stageName}</h2>
-      <p className="text-sm text-gray-500 -mt-3">
+      <h2
+        className={clsx(
+          "font-semibold",
+          isDarkMode ? "text-blue-400" : "text-gray-500"
+        )}
+      >
+        {stageName}
+      </h2>
+      <p
+        className={clsx(
+          "text-sm mb-2.5",
+          isDarkMode ? "text-white/60" : "text-gray-500"
+        )}
+      >
         {formatTime(post.created_at)}
       </p>
       {post.text && (
-        <p className="whitespace-pre-line text-gray-800">
+        <p
+          className={clsx(
+            "whitespace-pre-line",
+            isDarkMode ? "text-white" : "text-gray-800"
+          )}
+        >
           {expanded ? post.text : truncatedText}
           {shouldTruncate && (
             <button
-              className="text-blue-500 hover:text-blue-700 font-semibold ml-1"
+              className={clsx(
+                " font-semibold ml-1 cursor-pointer",
+                isDarkMode
+                  ? "text-blue-400 hover:text-blue-500"
+                  : "text-blue-500 hover:text-blue-700"
+              )}
               onClick={() => setExpanded(!expanded)}
             >
               {expanded ? "إخفاء" : "المزيد"}
@@ -44,9 +82,9 @@ export function PostInTeachersProfile({ post, reactions, stage }) {
           )}
         </p>
       )}
-      {post.images && (
+      {post.images.length > 0 && (
         <div
-          className={`grid gap-4 items-stretch ${
+          className={`grid gap-4 items-stretch mt-4 ${
             post.images.length === 1
               ? "grid-cols-1"
               : post.images.length === 2
@@ -72,18 +110,16 @@ export function PostInTeachersProfile({ post, reactions, stage }) {
                 src={image}
                 alt={`image-${index}`}
                 onClick={() => setFileDisplayed(image)}
-                className={`w-full ${imgHeight} rounded-2xl object-cover cursor-pointer shadow-sm hover:shadow-lg transition-shadow duration-200`}
+                className={`w-full ${imgHeight} rounded-md object-cover cursor-pointer shadow-sm hover:shadow-lg transition-shadow duration-200`}
               />
             );
           })}
         </div>
       )}
-      {postReactions && postReactions?.length > 0 && (
-        <div className="flex items-center gap-2 text-gray-600">
-          <FontAwesomeIcon icon={faHeart} />
-          <span>{postReactions?.length}</span>
-        </div>
-      )}
+      <div className="flex items-center gap-2 text-gray-600 mt-1">
+        <FontAwesomeIcon icon={faHeart} />
+        <span>{reactions?.length}</span>
+      </div>
       {fileDisplayed && (
         <DisplayFile file={fileDisplayed} setFileDisplayed={setFileDisplayed} />
       )}

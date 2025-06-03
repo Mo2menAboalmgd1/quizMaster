@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useCurrentUser } from "../../store/useStore";
+import { useCurrentUser, useDarkMode } from "../../store/useStore";
 import {
   useDoneTasksByStudentId,
   useStagesByStagesIds,
@@ -17,6 +17,7 @@ import {
   useAddNewTaskMutation,
   useCheckTaskMutation,
 } from "../../QueriesAndMutations/mutationsHooks";
+import PageWrapper from "../../components/PageWrapper";
 
 export default function StudentTasks() {
   const { currentUser } = useCurrentUser();
@@ -96,46 +97,45 @@ export default function StudentTasks() {
     return <ErrorPlaceHolder />;
   }
 
-  if (!allTasks) {
-    return <NoDataPlaceHolder message={"لا يوجد مهام حاليا"} icon={faTasks} />;
-  }
-
   return (
-    <div
-      dir="rtl"
-      className="min-h-screen"
-    >
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-800 mb-2">
-            قائمة مهامي
-          </h1>
-          <div className="w-20 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 mx-auto rounded-full"></div>
+    <PageWrapper title={"قائمة المهام"}>
+      <div>
+        <div className="mb-4">
+          <h1 className="text-3xl font-bold">إضافة مهمة جديدة</h1>
         </div>
 
         <AddNewTaskForm />
 
-        <div className="space-y-4">
-          {myTasks?.map((task) => {
-            const teacher = teachersData?.find(
-              (teacher) => teacher.id === task.user_id
-            );
-            const isDone = doneTasks?.some(
-              (doneTask) => doneTask.task_id === task.id
-            );
-            return (
-              <StudentTask
-                key={task.id}
-                task={task}
-                teacher={teacher}
-                usersIds={usersIds}
-                isDone={isDone}
-              />
-            );
-          })}
-        </div>
+        {allTasks.length === 0 ? (
+          <NoDataPlaceHolder message={"لا يوجد مهام حاليا"} icon={faTasks} />
+        ) : (
+          <>
+            <h2 className="text-2xl font-semibold text-blue-400 mb-3">
+              المهام المضافة
+            </h2>
+            <div className="space-y-2">
+              {myTasks?.map((task) => {
+                const teacher = teachersData?.find(
+                  (teacher) => teacher.id === task.user_id
+                );
+                const isDone = doneTasks?.some(
+                  (doneTask) => doneTask.task_id === task.id
+                );
+                return (
+                  <StudentTask
+                    key={task.id}
+                    task={task}
+                    teacher={teacher}
+                    usersIds={usersIds}
+                    isDone={isDone}
+                  />
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }
 
@@ -143,41 +143,49 @@ function AddNewTaskForm() {
   const { currentUser } = useCurrentUser();
   const { mutate: addNewTask } = useAddNewTaskMutation();
 
-  const handleAddNewTask = () => {
-    const taskInput = document.getElementById("task");
-    if (taskInput && taskInput.value.trim()) {
+  const handleAddNewTask = (e) => {
+    e.preventDefault();
+    const formdata = new FormData(e.target);
+    const taskInput = formdata.get("task");
+    console.log({
+      stage_id: null,
+      user_id: currentUser?.id,
+      task: formdata.value,
+      isTeacher: false,
+    });
+    if (taskInput.trim()) {
       addNewTask({
         stage_id: null,
         user_id: currentUser?.id,
-        task: taskInput.value,
+        task: taskInput,
         isTeacher: false,
       });
-      taskInput.value = "";
+      e.target.reset();
     }
   };
 
   return (
-    <div className="mb-8">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow duration-300">
+    <div className="mb-5">
+      <div>
         <div className="space-y-4">
-          <label
+          {/* <label
             htmlFor="task"
-            className="block text-sm font-medium text-slate-700"
+            className="block text-sm font-medium text-blue-500"
           >
             إضافة مهمة جديدة
-          </label>
-          <input
-            type="text"
-            id="task"
-            placeholder="اكتب مهمتك هنا..."
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 placeholder-slate-400"
-          />
-          <button
-            onClick={handleAddNewTask}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 active:scale-[0.98]"
-          >
-            إضافة المهمة
-          </button>
+          </label> */}
+          <form className="flex gap-3 min-h-12" onSubmit={handleAddNewTask}>
+            <input
+              type="text"
+              name="task"
+              // id="task"
+              placeholder="اكتب مهمتك هنا..."
+              className="w-full px-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 placeholder-slate-400"
+            />
+            <button className="w-max shrink-0 px-5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg duration-200 cursor-pointer transition-colors active:bg-blue-600">
+              إضافة المهمة
+            </button>
+          </form>
         </div>
       </div>
     </div>
@@ -186,6 +194,7 @@ function AddNewTaskForm() {
 
 function StudentTask({ task, teacher, usersIds, isDone }) {
   const [isChecked, setIsChecked] = React.useState(false);
+  const { isDarkMode } = useDarkMode();
   const { currentUser } = useCurrentUser();
 
   useEffect(() => {
@@ -207,106 +216,77 @@ function StudentTask({ task, teacher, usersIds, isDone }) {
   return (
     <div
       className={clsx(
-        "bg-white rounded-xl border transition-all duration-300 hover:shadow-md",
+        "p-3 rounded-xl border transition-all duration-300 relative",
         isChecked
-          ? "border-green-200 bg-green-50/50"
+          ? isDarkMode
+            ? "border-green-500/50  bg-green-500/10"
+            : "border-green-300  bg-green-50"
+          : isDarkMode
+          ? "border-slate-800 hover:border-slate-700 hover:bg-slate-900"
           : "border-slate-200 hover:border-slate-300"
       )}
     >
-      <div className="p-5">
-        <div className="flex items-start gap-3 mb-4">
-          {task.isTeacher ? (
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <div
-                  className={clsx(
-                    "w-2 h-2 rounded-full",
-                    isChecked ? "bg-green-500" : "bg-blue-500"
-                  )}
-                ></div>
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                  {teacher?.gender === "male" ? "الأستاذ" : "الأستاذة"}
-                </span>
-              </div>
-              <h4
-                className={clsx(
-                  "font-medium transition-colors duration-200",
-                  isChecked ? "text-green-700" : "text-slate-700"
-                )}
-              >
-                {teacher?.name} - {teacher?.subject}
-              </h4>
-            </div>
-          ) : (
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <div
-                  className={clsx(
-                    "w-2 h-2 rounded-full",
-                    isChecked ? "bg-green-500" : "bg-indigo-500"
-                  )}
-                ></div>
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                  مهمة شخصية
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-4">
-          <label
-            className="flex items-center gap-3 flex-1 cursor-pointer group"
-            htmlFor={`taskCheckBox-${task.id}`}
-          >
+      <label
+        htmlFor={`taskCheckBox-${task.id}`}
+        className="h-full w-full absolute left-0 top-0 cursor-pointer"
+      ></label>
+      <div className="flex justify-between items-center">
+        <div>
+          <div>
             <div className="relative">
               <input
                 type="checkbox"
                 id={`taskCheckBox-${task.id}`}
-                className="sr-only"
+                className="sr-only hidden"
                 checked={isChecked}
                 onChange={(e) => handleCheckTask(e.target.checked)}
               />
-              <div
-                className={clsx(
-                  "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                  isChecked
-                    ? "bg-green-500 border-green-500 text-white"
-                    : "border-slate-300 group-hover:border-slate-400"
-                )}
-              >
-                {isChecked && (
-                  <svg
-                    className="w-3 h-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                )}
-              </div>
             </div>
-            <span
-              className={clsx(
-                "flex-1 transition-all duration-200",
-                isChecked
-                  ? "text-green-600 line-through opacity-75"
-                  : "text-slate-800 group-hover:text-slate-900"
-              )}
-            >
+            <span className={clsx("font-bold", isChecked && "line-through")}>
               {task.task}
             </span>
-          </label>
+          </div>
+
+          {task.isTeacher ? (
+            <div className="mt-0.5 space-x-1">
+              <span className="text-sm text-blue-500">
+                بواسطة {teacher?.gender === "male" ? "الأستاذ" : "الأستاذة"}:
+              </span>
+              <span className="text-gray-500 text-sm">
+                {teacher?.name} - {teacher?.subject}
+              </span>
+            </div>
+          ) : (
+            <p
+              className={clsx(
+                "text-sm mt-1",
+                isChecked ? "text-green-500" : "text-blue-500"
+              )}
+            >
+              مهمة شخصية
+            </p>
+          )}
+        </div>
+
+        <div
+          className={clsx(
+            "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+            isChecked
+              ? "bg-green-500 border-green-500 text-white"
+              : "border-slate-300 group-hover:border-slate-400"
+          )}
+        >
+          {isChecked && (
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+          )}
         </div>
       </div>
-
-      {isChecked && (
-        <div className="h-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-b-xl"></div>
-      )}
     </div>
   );
 }

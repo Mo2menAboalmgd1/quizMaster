@@ -1,17 +1,24 @@
 import React from "react";
 import { useUserDataByUserId } from "../QueriesAndMutations/QueryHooks";
-import { useCurrentUser } from "../store/useStore";
+import { useCurrentUser, useDarkMode } from "../store/useStore";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faX } from "@fortawesome/free-solid-svg-icons";
+import {
+  // faCheck,
+  faCheckCircle,
+  // faX,
+  faXmarkCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   useAcceptRequestMutation,
   useRemoveRequestMutation,
 } from "../QueriesAndMutations/mutationsHooks";
 import toast from "react-hot-toast";
 import Loader from "./Loader";
+import clsx from "clsx";
 
 export default function Request({ requestId, stage }) {
   const { currentUser } = useCurrentUser();
+  const { isDarkMode } = useDarkMode();
 
   const {
     data: student,
@@ -47,50 +54,49 @@ export default function Request({ requestId, stage }) {
 
   return (
     <div
-      className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100"
-      dir="rtl"
+      className={clsx(
+        "p-3 flex justify-between items-center border border-b-4 rounded-xl max-sm:flex-col",
+        isDarkMode ? "border-blue-500/30" : "border-gray-200"
+      )}
     >
-      <div className="p-5">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <img
-              src={
-                student.image ||
-                "https://cdn-icons-png.freepik.com/512/8801/8801434.png"
-              }
-              alt="Student img"
-              className="w-16 h-16 rounded-full object-cover border-2 border-green-400 shadow-md"
-            />
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
-          </div>
-          <div className="flex-1">
-            <h3 className="font-bold text-xl text-green-600">
-              {student.name}
-            </h3>
-            <div className="flex items-center text-gray-600 mt-1">
-              <span className="font-bold">المرحلة المعنية:</span>
-              <span className="mr-1 bg-gray-100 px-2 py-0.5 rounded-full text-sm">
-                {stage.name}
-              </span>
-            </div>
+      <div className="flex items-center gap-3 grow w-full">
+        <div className="relative">
+          <img
+            src={
+              student.image ||
+              "https://i.pinimg.com/736x/2f/15/f2/2f15f2e8c688b3120d3d26467b06330c.jpg"
+            }
+            alt="Student img"
+            className="w-15 h-15 rounded-full object-cover"
+          />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-xl">{student.name}</h3>
+          <div className="flex items-center text-gray-600">
+            <span className="text-blue-500">{stage.name}</span>
           </div>
         </div>
-        <div className="mt-4 flex justify-end gap-3 w-full">
-          <button
-            onClick={() => handleAcceptRequest(student.id)}
-            className="p-2 px-6 flex gap-2 items-center justify-center bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg text-white cursor-pointer hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg"
-          >
-            <FontAwesomeIcon icon={faCheck} className="text-sm" />
-            <span>قبول</span>
-          </button>
-          <button
-            onClick={() => handleRejectRequest(student.id)}
-            className="p-2 px-6 flex gap-2 items-center justify-center bg-gradient-to-r from-red-500 to-rose-600 rounded-lg text-white cursor-pointer hover:from-red-600 hover:to-rose-700 transition-all duration-300 shadow-md hover:shadow-lg"
-          >
-            <FontAwesomeIcon icon={faX} className="text-sm" />
-            <span>رفض</span>
-          </button>
-        </div>
+      </div>
+      <div className="flex justify-end gap-3 w-full max-sm:mt-3">
+        <button
+          onClick={() => handleAcceptRequest(student.id)}
+          className="py-2 px-4 rounded-lg bg-blue-500 text-white flex gap-2 items-center cursor-pointer hover:bg-blue-600"
+        >
+          <FontAwesomeIcon icon={faCheckCircle} className="text-sm" />
+          <span>قبول</span>
+        </button>
+        <button
+          onClick={() => handleRejectRequest(student.id)}
+          className={clsx(
+            "py-2 px-4 rounded-lg flex gap-2 items-center cursor-pointer",
+            isDarkMode
+              ? "bg-gray-200/30 hover:bg-gray-200/20"
+              : "bg-gray-200 hover:bg-gray-300"
+          )}
+        >
+          <FontAwesomeIcon icon={faXmarkCircle} className="text-sm" />
+          <span>رفض</span>
+        </button>
       </div>
     </div>
   );

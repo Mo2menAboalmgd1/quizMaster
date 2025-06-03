@@ -5,17 +5,11 @@ export default function Join({ stages, teacher, student }) {
   const [selectedStage, setSelectedStage] = React.useState("");
   const [isJoin, setIsJoin] = React.useState(false);
 
-  useEffect(() => {
-    if (selectedStage === "") {
-      setSelectedStage(stages?.[0] || "");
-    }
-  }, [stages, selectedStage]);
-
   return (
     <>
       <div className="flex flex-col items-center justify-center text-center h-64">
         <p className="mt-4 text-lg font-medium text-red-600">
-          ليس لديك صلاحية قراءة الامتحانات الخاصة بهذا المعلم
+          ليس لديك صلاحية قراءة الاختبارات الخاصة بهذا المعلم
         </p>
         <button
           onClick={() => setIsJoin(true)}
