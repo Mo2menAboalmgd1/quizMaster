@@ -8,7 +8,7 @@ import { faComment } from "@fortawesome/free-solid-svg-icons";
 import NoDataPlaceHolder from "./NoDataPlaceHolder";
 import ErrorPlaceHolder from "./ErrorPlaceHolder";
 import Loader from "./Loader";
-import { useCurrentUser } from "../store/useStore";
+import { useCurrentUser, useDarkMode } from "../store/useStore";
 import { useSaveAnswer } from "../QueriesAndMutations/mutationsHooks";
 
 export default function QuestionDisplayedInTheExam({
@@ -19,6 +19,7 @@ export default function QuestionDisplayedInTheExam({
   setFileDisplayed,
 }) {
   const { currentUser } = useCurrentUser();
+  const { isDarkMode } = useDarkMode();
 
   const {
     data: quesionAnswers,
@@ -69,31 +70,54 @@ export default function QuestionDisplayedInTheExam({
   return (
     <div
       className={clsx(
-        "p-5 border rounded-2xl shadow-sm transition-all",
+        "p-3 border rounded-lg shadow-sm transition-all",
         highlightAsNotAnswered
-          ? "bg-yellow-50 border-yellow-400"
+          ? isDarkMode
+            ? "border-yellow-500 bg-blue-500/10"
+            : "bg-yellow-50 border-yellow-400"
+          : isDarkMode
+          ? "bg-blue-500/10 border-blue-500/50"
           : "bg-white border-gray-300"
       )}
     >
       {highlightAsNotAnswered && (
-        <p className="h-10 w-full rounded-lg border border-yellow-500 flex items-center justify-center font-bold text-yellow-700 bg-yellow-100 mb-3">
+        <p
+          className={clsx(
+            "h-10 w-full rounded-lg border flex items-center justify-center font-bold mb-3",
+            isDarkMode
+              ? "border-transparent text-white bg-yellow-600"
+              : "border-yellow-500 text-yellow-700 bg-yellow-100"
+          )}
+        >
           سؤال لم تتم الإجابة عليه
         </p>
       )}
 
       {/* question title and text */}
       <div className="flex gap-3 mb-2">
-        <p className="h-10 min-w-10 flex items-center justify-center bg-gray-700 text-white rounded-lg">
+        <p
+          className={clsx(
+            "h-10 min-w-10 flex items-center justify-center rounded-lg",
+            isDarkMode ? "bg-blue-600 text-white" : "bg-gray-700 text-white"
+          )}
+        >
           {questionNumber}
         </p>
-        <p className="min-h-10 flex items-center bg-gray-100 border border-gray-300 p-3 rounded-lg grow text-gray-800 font-medium">
+        <p
+          className={clsx(
+            "min-h-10 flex items-center p-3 rounded-lg grow font-medium",
+            isDarkMode
+              ? "bg-blue-500/10 border border-blue-500/50 text-white"
+              : "bg-gray-100 border border-gray-300 text-gray-800"
+          )}
+        >
           {question.text}
         </p>
       </div>
 
       {/* question images */}
       {question.images && question.images.length > 0 && (
-        <div className="flex gap-2 flex-wrap py-3 pr-4 border-b border-gray-200 mb-3">
+        <div className="flex gap-2 flex-wrap py-3 pr-4 border-b mb-3">
           {question.images.map((image, idx) => (
             <img
               key={idx}
@@ -126,10 +150,19 @@ export default function QuestionDisplayedInTheExam({
             <div
               key={i}
               className={clsx(
-                "min-h-10 w-full flex gap-3 items-center border bg-gray-50 border-gray-300 p-3 rounded-lg transition-all",
+                "min-h-10 w-full flex gap-3 items-center border p-3 rounded-lg transition-all",
+                isDarkMode
+                  ? "bg-blue-500/10 border-transparent"
+                  : "bg-gray-50 border-gray-300",
                 examResult ? "cursor-no-drop" : "cursor-pointer",
-                isCorrectAnswer && "bg-green-100 border-green-400",
-                isSelectedWrongAnswer && "bg-red-100 border-red-400"
+                isCorrectAnswer &&
+                  (isDarkMode
+                    ? "bg-green-500/10 border-green-500/50 text-green-500"
+                    : "bg-green-100 border-green-400 text-gray-800"),
+                isSelectedWrongAnswer &&
+                  (isDarkMode
+                    ? "bg-red-500/10 border-red-500/50 text-red-500"
+                    : "bg-red-100 border-red-400")
               )}
             >
               <input
@@ -147,7 +180,7 @@ export default function QuestionDisplayedInTheExam({
               <label
                 htmlFor={answerId}
                 className={clsx(
-                  "grow flex gap-3 items-center flex-wrap text-gray-800",
+                  "grow flex gap-3 items-center flex-wrap",
                   examResult ? "cursor-no-drop" : "cursor-pointer"
                 )}
               >

@@ -929,6 +929,28 @@ export const getPosts = async (pageParam, teacherId) => {
   return { data, nextPage: pageParam + 1, isLastPage };
 };
 
+export const getStudentExams = async (pageParam, teacherId, stagesIds) => {
+  const pageSize = 10;
+  const from = (pageParam - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  // 1. جيب البيانات
+  const { data, error, count } = await supabase
+    .from("exams")
+    .select("*", { count: "exact" }) // مهم جدًا
+    .eq("teacherId", teacherId)
+    .in("stage_id", stagesIds)
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (error) throw new Error(error.message);
+
+  // 2. احسب لو دي آخر صفحة بناءً على العدد الكلي
+  const isLastPage = to + 1 >= count;
+
+  return { data, nextPage: pageParam + 1, isLastPage };
+};
+
 export const getStudentPosts = async (pageParam, teacherId, stageId) => {
   const pageSize = 5;
   const from = (pageParam - 1) * pageSize;
@@ -1063,6 +1085,17 @@ export const getExam = async (examId) => {
     .from("exams")
     .select("*")
     .eq("id", examId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const getSingleExamResult = async (examId, studentId) => {
+  const { data, error } = await supabase
+    .from("examsResults")
+    .select("*")
+    .eq("examId", examId)
+    .eq("studentId", studentId)
     .maybeSingle();
   if (error) throw new Error(error.message);
   return data;

@@ -59,10 +59,10 @@ export function PostInStudentPosts({ post, isAllPosts }) {
   }
 
   if (isReactionsLoading) {
-    return ;
+    return;
   }
 
-  if (teacherError) {
+  if (teacherError || reactionsError) {
     return (
       <ErrorPlaceHolder
         message={"حدث خطأ أثناء جلب المراحل الدراسية، أعد المحاولة"}
@@ -83,8 +83,8 @@ export function PostInStudentPosts({ post, isAllPosts }) {
           : "border-gray-300"
       )}
     >
-      {isAllPosts && (
-        <div className="flex gap-3 items-center">
+      <div className="flex gap-3 items-center">
+        {isAllPosts && (
           <img
             src={
               teacher?.avatar ||
@@ -93,7 +93,9 @@ export function PostInStudentPosts({ post, isAllPosts }) {
             alt="teacher"
             className="w-12 h-12 rounded-full object-cover"
           />
-          <div>
+        )}
+        <div>
+          {isAllPosts && (
             <Link
               to={"/userProfile/" + teacher?.id}
               className={clsx(
@@ -103,17 +105,17 @@ export function PostInStudentPosts({ post, isAllPosts }) {
             >
               {teacher?.name} ({teacher?.subject})
             </Link>
-            <p
-              className={clsx(
-                "text-sm",
-                isDarkMode ? "text-blue-300/80" : "text-gray-500"
-              )}
-            >
-              {formatTime(post.created_at)}
-            </p>
-          </div>
+          )}
+          <p
+            className={clsx(
+              "text-sm",
+              isDarkMode ? "text-blue-300/80" : "text-gray-500"
+            )}
+          >
+            {formatTime(post.created_at)}
+          </p>
         </div>
-      )}
+      </div>
 
       {isAllPosts && (
         <hr

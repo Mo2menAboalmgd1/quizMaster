@@ -36,6 +36,8 @@ import {
   getDoneTasks,
   getAllexams,
   getStudentPosts,
+  getStudentExams,
+  getSingleExamResult,
   // getData,
 } from "../api/AllApiFunctions";
 
@@ -269,6 +271,23 @@ export const useTeachersPosts = (teachersIds, stagesIds) => {
   });
 };
 
+export const useStudentExamsByteacherIdAndStagesIds = (
+  teacherId,
+  stagesIds
+) => {
+  return useInfiniteQuery({
+    queryKey: ["studentExams", teacherId, stagesIds],
+    queryFn: ({ pageParam = 1 }) =>
+      getStudentExams(pageParam, teacherId, stagesIds),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.isLastPage) return undefined;
+      return lastPage.nextPage;
+    },
+    staleTime: Infinity,
+    enabled: !!teacherId && stagesIds?.length > 0,
+  });
+};
+
 // currentUser.id, isPublished, isTime, stageId
 // export const useExamsByTeacherId = (
 //   teacherId,
@@ -329,6 +348,15 @@ export const useAllTeacherExams = (teacherId) => {
     queryFn: () => getAllexams(teacherId),
     staleTime: 5 * 60 * 1000,
     enabled: !!teacherId,
+  });
+};
+
+export const useExamResultByStudentId = (examId, studentId) => {
+  return useQuery({
+    queryKey: ["singleExamResult", examId, studentId],
+    queryFn: () => getSingleExamResult(examId, studentId),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!studentId,
   });
 };
 

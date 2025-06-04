@@ -69,7 +69,7 @@ export default function CreateExam() {
       {isExamDataLoading && <Loader message="جاري التحميل" />}
 
       {examData && (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="my-5">
           <AddQuestionForm examData={examData} examId={examId} />
         </div>
       )}

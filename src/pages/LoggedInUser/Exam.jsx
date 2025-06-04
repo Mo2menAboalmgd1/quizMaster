@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import { useCurrentUser } from "../../store/useStore";
+import { useCurrentUser, useDarkMode } from "../../store/useStore";
 import {
   useExamByItsId,
   useExamsResultsByStudentIdAndExamId,
@@ -16,10 +16,13 @@ import DisplayFile from "../../components/DisplayFile";
 import toast from "react-hot-toast";
 import QuestionDisplayedInTheExam from "../../components/QuestionDisplayedInTheExam";
 import { supabase } from "../../config/supabase";
+import clsx from "clsx";
+import PageWrapper from "../../components/PageWrapper";
 
 export default function Exam() {
   const { id: examId } = useParams();
   const { currentUser } = useCurrentUser();
+  const { isDarkMode } = useDarkMode();
   const [fileDisplayed, setFileDisplayed] = React.useState(false);
 
   const {
@@ -105,43 +108,61 @@ export default function Exam() {
     );
   }
 
-  examResult;
+  const examDataTable = {
+    ["المادة"]: examData.subject,
+    ["العنوان"]: examData.title,
+    ["الطالب"]: currentUser.name,
+    ["عدد الأسئلة"]: questions.length,
+  };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+    <PageWrapper title={`امتحان ${examData.title}`}>
       {/* exam data card */}
-      <div className="p-3 px-4 bg-white shadow-sm rounded-xl border border-gray-200 space-y-4">
-        <div className="grid grid-cols-1 gap-3">
-          <div className="flex gap-2 items-center py-2 border-b border-gray-100 last:border-b-0">
-            <span className="text-sm font-medium text-gray-600">المادة:</span>
-            <span className="text-sm text-gray-900">{examData.subject}</span>
-          </div>
-          <div className="flex gap-2 items-center py-2 border-b border-gray-100 last:border-b-0">
-            <span className="text-sm font-medium text-gray-600">
-              عنوان الاختبار:
-            </span>
-            <span className="text-sm text-gray-900">{examData.title}</span>
-          </div>
-          <div className="flex gap-2 items-center py-2 border-b border-gray-100 last:border-b-0">
-            <span className="text-sm font-medium text-gray-600">
-              اسم الطالب:
-            </span>
-            <span className="text-sm text-gray-900">{currentUser.name}</span>
-          </div>
-          <div className="flex gap-2 items-center py-2">
-            <span className="text-sm font-medium text-gray-600">
-              عدد الأسألة:
-            </span>
-            <span className="text-sm text-gray-900">
-              {questions.length} سؤال
-            </span>
-          </div>
+      <div
+        className={clsx(
+          "shadow-sm rounded-xl border space-y-4",
+          isDarkMode ? "bg-blue-500/10 border-blue-500/50" : "border-gray-200"
+        )}
+      >
+        <div className="grid grid-cols-1">
+          {Object.entries(examDataTable).map(([key, value]) => (
+            <div
+              className={clsx(
+                "flex gap-2 items-center py-2 border-b last:border-b-0",
+                isDarkMode ? "border-blue-500/50" : "border-gray-100"
+              )}
+            >
+              <div className="py-1 px-3 space-x-2">
+                <span
+                  className={clsx(
+                    "text-sm font-medium",
+                    isDarkMode ? "text-blue-400" : "text-gray-600"
+                  )}
+                >
+                  {key}:
+                </span>
+                <span
+                  className={clsx(
+                    "text-sm",
+                    isDarkMode ? "text-white" : "text-gray-900"
+                  )}
+                >
+                  {value}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* questions */}
       {(!examResult || examData.isShowCorrection) && (
-        <h2 className="font-extrabold text-center text-3xl p-3 flex gap-2 items-center justify-center text-blue-700">
+        <h2
+          className={clsx(
+            "font-extrabold text-center text-3xl p-5 flex gap-2 items-center justify-center",
+            isDarkMode ? "text-blue-500" : "text-blue-700"
+          )}
+        >
           <span>الأسئلة</span>
           <FontAwesomeIcon icon={faQuestionCircle} />
         </h2>
@@ -176,11 +197,28 @@ export default function Exam() {
 
       {/* exam result card */}
       {examResult && (
-        <div className="p-8 bg-white rounded-2xl shadow-lg border border-gray-100 mt-8 space-y-8">
+        <div
+          className={clsx(
+            "p-8 rounded-lg border mt-8 space-y-8",
+            isDarkMode
+              ? "bg-slate-900 border-slate-700"
+              : "bg-gray-50 border-gray-300"
+          )}
+        >
           <div className="text-center">
-            <p className="text-xl font-semibold text-gray-700 mb-3">
+            <p
+              className={clsx(
+                "text-xl font-semibold mb-3",
+                isDarkMode ? "text-blue-400" : "text-gray-700"
+              )}
+            >
               نتيجتك هي:{" "}
-              <span className="text-gray-900 font-bold">
+              <span
+                className={clsx(
+                  "font-bold",
+                  isDarkMode ? "text-white" : "text-gray-900"
+                )}
+              >
                 {examResult.correct} من {examResult.total}
               </span>
             </p>
@@ -189,8 +227,20 @@ export default function Exam() {
           {/* result bar */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">النسبة المئوية</span>
-              <span className="text-lg font-semibold text-gray-900">
+              <span
+                className={clsx(
+                  "text-sm",
+                  isDarkMode ? "text-white" : "text-gray-600"
+                )}
+              >
+                النسبة المئوية
+              </span>
+              <span
+                className={clsx(
+                  "text-lg font-semibold",
+                  isDarkMode ? "text-white" : "text-gray-900"
+                )}
+              >
                 {`${Math.round(
                   (examResult.correct / examResult.total) * 100
                 )}%`}
@@ -201,27 +251,32 @@ export default function Exam() {
                 style={{
                   width: `${(examResult.correct / examResult.total) * 100}%`,
                 }}
-                className="bg-gradient-to-l from-gray-500 to-gray-900 h-full transition-all duration-700 ease-out"
+                className="bg-gradient-to-l from-blue-500 to-blue-700 h-full transition-all duration-700 ease-out"
               ></div>
             </div>
           </div>
 
           {/* result summary boxes */}
-          <div className="grid grid-cols-3 gap-6">
+          <div
+            className={clsx(
+              "grid grid-cols-3 gap-6",
+              isDarkMode ? "text-white" : "text-gray-600"
+            )}
+          >
             <div className="text-center space-y-2">
-              <p className="text-sm font-medium text-gray-600">الصحيحة</p>
+              <p className="text-sm font-medium">الصحيحة</p>
               <p className="text-2xl font-bold text-emerald-600">
                 {examResult.correct}
               </p>
             </div>
             <div className="text-center space-y-2">
-              <p className="text-sm font-medium text-gray-600">الخاطئة</p>
+              <p className="text-sm font-medium">الخاطئة</p>
               <p className="text-2xl font-bold text-red-500">
                 {examResult.wrong}
               </p>
             </div>
             <div className="text-center space-y-2">
-              <p className="text-sm font-medium text-gray-600">لم تُجب</p>
+              <p className="text-sm font-medium">لم تُجب</p>
               <p className="text-2xl font-bold text-amber-500">
                 {examResult.notAnswered}
               </p>
@@ -234,6 +289,6 @@ export default function Exam() {
       {fileDisplayed && (
         <DisplayFile file={fileDisplayed} setFileDisplayed={setFileDisplayed} />
       )}
-    </div>
+    </PageWrapper>
   );
 }

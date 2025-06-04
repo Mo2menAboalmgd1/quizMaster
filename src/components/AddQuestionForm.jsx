@@ -67,10 +67,10 @@ export default function AddQuestionForm({ examData, examId }) {
   };
 
   return (
-    <>
+    <div>
       <p
         className={clsx(
-          "py-2 px-4 text-white text-center font-bold rounded-lg shadow-sm mt-7 rounded-b-none",
+          "py-2 px-4 text-white text-center font-bold rounded-lg shadow-sm rounded-b-none",
           isDarkMode
             ? "bg-gradient-to-r from-blue-400 to-blue-500"
             : "bg-gray-700"
@@ -311,6 +311,6 @@ export default function AddQuestionForm({ examData, examId }) {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
