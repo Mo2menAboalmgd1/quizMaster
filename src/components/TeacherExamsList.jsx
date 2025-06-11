@@ -18,11 +18,14 @@ import NoDataPlaceHolder from "./NoDataPlaceHolder";
 import AlertBox from "./AlertBox";
 import { formatTime } from "../utils/getDate";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 
 export default function TeacherExamsList({ stages, list, isPublished }) {
   const { currentUser } = useCurrentUser();
   const { isDarkMode } = useDarkMode();
   const [isDelete, setIsDelete] = useState(false);
+  const [t] = useTranslation("global");
+  const publicExam = t("teacherExamsList.publicExam");
 
   const { mutate: deleteExamMutation } = useDeleteExamMutation();
 
@@ -30,7 +33,7 @@ export default function TeacherExamsList({ stages, list, isPublished }) {
     deleteExamMutation({
       id: examId,
       title,
-      actionStage: stage || "(اختبار عام)",
+      actionStage: stage || publicExam,
       teacherId: currentUser?.id,
       isDeleteWithResults: true,
     });
@@ -40,7 +43,7 @@ export default function TeacherExamsList({ stages, list, isPublished }) {
     deleteExamMutation({
       id: examId,
       title,
-      actionStage: stage || "(اختبار عام)",
+      actionStage: stage || publicExam,
       teacherId: currentUser?.id,
       isDeleteWithResults: false,
     });
@@ -55,7 +58,7 @@ export default function TeacherExamsList({ stages, list, isPublished }) {
         teacherId: currentUser?.id,
         title: title,
         stage:
-          stages?.find((stage) => stage.id === stageId)?.name || "(اختبار عام)",
+          stages?.find((stage) => stage.id === stageId)?.name || publicExam,
         isEdit: "unPublish",
         examId,
       },
@@ -70,7 +73,7 @@ export default function TeacherExamsList({ stages, list, isPublished }) {
       action: {
         teacherId: currentUser?.id,
         stage:
-          stages?.find((stage) => stage.id === stageId)?.name || "(اختبار عام)",
+          stages?.find((stage) => stage.id === stageId)?.name || publicExam,
         title,
         isEdit: value ? "showCorrection" : "hideCorrection",
         examId,
@@ -82,14 +85,16 @@ export default function TeacherExamsList({ stages, list, isPublished }) {
   };
 
   if (list?.length === 0) {
-    return <NoDataPlaceHolder message={"لا يوجد اختبارات"} icon={faFileAlt} />;
+    return (
+      <NoDataPlaceHolder
+        message={t("teacherExamsList.noData")}
+        icon={faFileAlt}
+      />
+    );
   }
 
   return (
     <div className="space-y-3">
-      {list?.length === 0 && (
-        <NoDataPlaceHolder message={"لا يوجد اختبارات"} icon={faFileAlt} />
-      )}
       <div
         className={clsx(
           "border rounded-lg overflow-hidden",
@@ -105,10 +110,18 @@ export default function TeacherExamsList({ stages, list, isPublished }) {
             )}
           >
             <tr>
-              <th className="text-start py-2 px-3">عنوان الاختبار</th>
-              <th className="max-sm:hidden">التاريخ</th>
-              <th className="">ازرار التحكم</th>
-              <th className="max-sm:hidden">معلومات</th>
+              <th className="text-start py-2 px-3">
+                {t("teacherExamsList.content.examTitle")}
+              </th>
+              <th className="max-sm:hidden">
+                {t("teacherExamsList.content.date")}
+              </th>
+              <th className="">
+                {t("teacherExamsList.content.controlButtons")}
+              </th>
+              <th className="max-sm:hidden">
+                {t("teacherExamsList.content.information")}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -144,7 +157,7 @@ export default function TeacherExamsList({ stages, list, isPublished }) {
                   <td className="flex gap-2 py-2 justify-center">
                     <button
                       onClick={() => setIsDelete(true)}
-                      title="حذف"
+                      title={t("teacherExamsList.content.delete")}
                       className="border border-red-600 text-red-600 hover:text-white hover:bg-red-600 h-7 w-7 rounded-md cursor-pointer"
                     >
                       <FontAwesomeIcon icon={faTrash} />
@@ -152,7 +165,9 @@ export default function TeacherExamsList({ stages, list, isPublished }) {
                     <div className="flex gap-2 max-md:h-8">
                       {isPublished && (
                         <>
-                          <div title="عرض الاجابات الصحيحة ليتمكن الطلاب من رؤيتها بعد تسليم الاختبار">
+                          <div
+                            title={t("teacherExamsList.content.showAnswers")}
+                          >
                             <input
                               onChange={(e) => {
                                 if (e.target.checked) {
@@ -196,7 +211,7 @@ export default function TeacherExamsList({ stages, list, isPublished }) {
                                 exam.title
                               )
                             }
-                            title="إلغاء النشر"
+                            title={t("teacherExamsList.content.undoPublish")}
                             className="h-7 w-7 border border-orange-600 text-orange-600 hover:text-white hover:bg-orange-600 text-sm rounded-md cursor-pointer"
                           >
                             <FontAwesomeIcon icon={faArrowLeft} />
@@ -217,22 +232,24 @@ export default function TeacherExamsList({ stages, list, isPublished }) {
                     </div>
                     {isDelete && (
                       <AlertBox
-                        title={"حذف"}
+                        title={t("teacherExamsList.content.alertBox.title")}
                         type={"red"}
-                        message={"هذه الخطوة لا يمكن التراجع عنها"}
+                        message={t("teacherExamsList.content.alertBox.message")}
                         firstOptionText={"حذف"}
-                        firstOptionDescription={
-                          "سيتم حذف هذا الاختبار مع الحفاظ على النتائج"
-                        }
+                        firstOptionDescription={t(
+                          "teacherExamsList.content.alertBox.firstOptionDesc"
+                        )}
                         firstOptionFunction={() =>
                           deleteExamOnly(exam.id, exam.title, exam.stage)
                         }
                         setOpen={setIsDelete}
                         isSecondOption={true}
-                        secondOptionText={"حذف شامل"}
-                        secondOptionDescription={
-                          "سيؤدي هذا الاختيار لحذف الاختبار وجميع النتائج المتعلقة به"
-                        }
+                        secondOptionText={t(
+                          "teacherExamsList.content.alertBox.secondOptionTitle"
+                        )}
+                        secondOptionDescription={t(
+                          "teacherExamsList.content.alertBox.secondOptionDesc"
+                        )}
                         secondOptionFunction={() =>
                           deleteExamWithResults(exam.id, exam.title, exam.stage)
                         }
@@ -253,17 +270,3 @@ export default function TeacherExamsList({ stages, list, isPublished }) {
     </div>
   );
 }
-
-/*
-  title,
-  type,
-  message,
-  firstOptionText,
-  firstOptionDescription,
-  firstOptionFunction,
-  isSecondOption,
-  secondOptionText,
-  secondOptionDescription,
-  secondOptionFunction,
-  setClose,
-*/

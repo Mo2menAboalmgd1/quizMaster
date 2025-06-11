@@ -11,10 +11,13 @@ import { useParams } from "react-router-dom";
 import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
 import { PostInStudentPosts } from "../../components/PostInStudentPosts";
 import PageWrapper from "../../components/PageWrapper";
+import { useTranslation } from "react-i18next";
+import clsx from "clsx";
 
 export default function StudentPosts() {
   const { currentUser } = useCurrentUser();
   const { id: teacherId } = useParams();
+  const [t] = useTranslation("global");
 
   // get my teachers
   const {
@@ -40,20 +43,18 @@ export default function StudentPosts() {
 
   // loader and errors
   if (imsMySubscriptionsLoading || isPostsLoading) {
-    return <Loader message="جاري التحميل" />;
+    return <Loader message={t("posts.student.studentPosts.loaders.mainLoader")} />;
   }
 
   if (mySubscriptionsError || postsError) {
-    return (
-      <ErrorPlaceHolder message={"حدث خطأ أثناء جلب المنشورات، أعد المحاولة"} />
-    );
+    return <ErrorPlaceHolder message={t("posts.student.studentPosts.error")} />;
   }
 
   if (teacherPosts?.length === 0) {
     return (
-      <PageWrapper title={"المنشورات"}>
+      <PageWrapper title={t("posts.student.studentPosts.contentTitle")}>
         <NoDataPlaceHolder
-          message={"لا يوجد منشورات حالياً"}
+          message={t("posts.student.studentPosts.noData")}
           icon={faNewspaper}
         />
       </PageWrapper>
@@ -63,8 +64,15 @@ export default function StudentPosts() {
   const reactionsByPostId = {};
 
   return (
-    <PageWrapper title={"المنشورات"}>
-      <h1 className="font-bold text-3xl mb-3 text-blue-500">المنشورات</h1>
+    <PageWrapper title={t("posts.student.studentPosts.contentTitle")}>
+      <h1
+        className={clsx(
+          "font-bold text-3xl mb-3 text-blue-500",
+          !teacherId && "hidden"
+        )}
+      >
+        {t("posts.student.studentPosts.contentTitle")}
+      </h1>
       <div>
         <div className="space-y-4">
           {teacherPosts?.map((post) => {
@@ -85,7 +93,9 @@ export default function StudentPosts() {
               disabled={isFetchingNextPage}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              {isFetchingNextPage ? "جاري التحميل..." : "تحميل المزيد"}
+              {isFetchingNextPage
+                ? t("posts.student.studentPosts.loaders.fetchingButtonLoading")
+                : t("posts.student.studentPosts.loaders.fetchingButton")}
             </button>
           </div>
         )}

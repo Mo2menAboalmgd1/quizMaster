@@ -12,9 +12,12 @@ export default function Auth() {
   const [isSignIn, setIsSignIn] = React.useState(mode !== "signup");
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-green-100 p-4">
+    <div
+      className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-white p-4 font-[Noto_Sans_Arabic]"
+      dir="rtl"
+    >
       <div className="w-full max-w-md">
-        <div className="bg-gradient-to-r from-green-500 to-green-400 rounded-t-lg shadow-md p-5 text-center">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-t-lg shadow-md p-5 text-center">
           <h1 className="text-2xl font-bold text-white">
             {isSignIn ? "تسجيل الدخول" : "إنشاء حساب جديد"}
           </h1>
@@ -30,10 +33,10 @@ export default function Auth() {
 
           <div className="mt-3 text-center">
             <button
-              className="text-green-600 hover:text-green-700 font-medium transition-colors"
+              className="text-blue-500 hover:text-blue-600 font-medium transition-colors"
               onClick={() => setIsSignIn(!isSignIn)}
             >
-              {isSignIn ? "إنشاء حساب جديد" : "عندي حساب بالفعل"}
+              {isSignIn ? "إنشاء حساب جديد" : "لدي حساب بالفعل"}
             </button>
           </div>
         </div>

@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useCurrentUser, useDarkMode, useSession } from "./store/useStore";
+import {
+  useCurrentUser,
+  useDarkMode,
+  useLanguage,
+  useSession,
+} from "./store/useStore";
 import { supabase } from "./config/supabase";
 import Auth from "./pages/auth/Auth";
 import Student from "./pages/LoggedInUser/Student";
@@ -9,7 +14,7 @@ import {
   Routes,
   Link,
   useLocation,
-  useNavigate,
+  // useNavigate,
   NavLink,
 } from "react-router-dom";
 import CreateTest from "./pages/LoggedInUser/CreateTest";
@@ -22,6 +27,7 @@ import {
   faAngleLeft,
   faChalkboardTeacher,
   faFileAlt,
+  faFolderTree,
   faHome,
   faLock,
   faMoon,
@@ -30,7 +36,6 @@ import {
   faSun,
   // faSignOut,
   faTasks,
-  faUserEdit,
   faUserPlus,
   faUsers,
   faWater,
@@ -38,14 +43,7 @@ import {
 import Loader from "./components/Loader";
 import Requests from "./pages/LoggedInUser/Requests";
 import {
-  useExamsByTeacherId,
-  useJoinCodes,
-  useNotificationsByUserId,
-  usePostsByTeacherId,
   useProfileByUserId,
-  useStudentsAndRequestsByTeacherIdAndTable,
-  useTasksByUserId,
-  useTeachersFromTeachersStudents,
   useUserDataByUserId,
 } from "./QueriesAndMutations/QueryHooks";
 import Notifications from "./pages/LoggedInUser/Notifications";
@@ -74,15 +72,18 @@ import TeacherTasks from "./pages/LoggedInUser/TeacherTasks";
 import StudentTasks from "./pages/LoggedInUser/StudentTasks";
 import TeacherPostsInStudentTeacher from "./pages/LoggedInUser/TeacherPostsInStudentTeacher";
 import clsx from "clsx";
-import PageWrapper from "./components/PageWrapper";
+import { useTranslation } from "react-i18next";
+import EducationalContent from "./pages/LoggedInUser/EducationalContent";
+import StageLessonsTree from "./pages/LoggedInUser/StageLessonsTree";
 
 export default function App() {
   const { getSession, session } = useSession();
   const { getCurrentUser, currentUser } = useCurrentUser();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
   const { isDarkMode, getMode } = useDarkMode();
+  const { isArabic, getLanguage } = useLanguage();
+  const [t, i18n] = useTranslation("global");
 
   useEffect(() => {
     document.documentElement.setAttribute(
@@ -91,113 +92,74 @@ export default function App() {
     );
   }, [isDarkMode]);
 
-  // const {
-  //   data: userData,
-  //   isLoading: userDataLoading,
-  //   isError: userDataError,
-  // } = useUserDataByUserId(currentUser?.id, "teachers");
-
-  const { data: notifications } = useNotificationsByUserId(currentUser?.id);
-
-  const unReadNotifications = notifications?.filter(
-    (notification) => !notification.isRead
-  );
-
-  const { data: exams } = useExamsByTeacherId(currentUser?.id, "all");
-
-  const { data: requests } = useStudentsAndRequestsByTeacherIdAndTable(
-    currentUser?.id,
-    "teachers_requests"
-  );
-
-  const { data: students } = useStudentsAndRequestsByTeacherIdAndTable(
-    currentUser?.id,
-    "teachers_students"
-  );
-
-  const { data: studentTeachers } = useTeachersFromTeachersStudents(
-    currentUser?.id
-  );
-
-  const { data: tasks } = useTasksByUserId(currentUser?.id);
-
-  const { data: postsInTeacherPosts } = usePostsByTeacherId(currentUser?.id);
-
-  const { data: joinCodes } = useJoinCodes(currentUser?.id);
-
   const navLinks = [
     {
       path: "/",
       icon: <FontAwesomeIcon icon={faHome} />,
-      text: "الرئيسية",
+      text: t("app.navLinks.home"),
       user: "both",
-      number: null,
+    },
+    {
+      path: "/teacherLessonsTree",
+      icon: <FontAwesomeIcon icon={faFolderTree} />,
+      text: "المحتوى التعليمي",
+      user: "teacher",
     },
     {
       path: "/posts",
       icon: <FontAwesomeIcon icon={faNewspaper} />,
-      text: "المنشورات",
+      text: t("app.navLinks.posts"),
       user: "both",
-      number: postsInTeacherPosts?.length || null,
     },
     {
       path: "/tasks",
       icon: <FontAwesomeIcon icon={faTasks} />,
-      text: "المهام",
+      text: t("app.navLinks.tasks"),
       user: "both",
-      number: currentUser?.type === "teacher" ? tasks?.length || null : null,
     },
     {
       path: "/studentTeachers",
       icon: <FontAwesomeIcon icon={faChalkboardTeacher} />,
-      text: "معلميني",
+      text: t("app.navLinks.studentTeachers"),
       user: "student",
-      number: studentTeachers?.length || null,
     },
     {
       path: "/exams",
       icon: <FontAwesomeIcon icon={faFileAlt} />,
-      text: "الاختبارات",
+      text: t("app.navLinks.exams"),
       user: "teacher",
-      number: exams?.length || null,
     },
     {
       path: "/createTest",
       icon: <FontAwesomeIcon icon={faPlusCircle} />,
-      text: "إنشاء اختبار",
+      text: t("app.navLinks.createTest"),
       user: "teacher",
       number: null,
     },
     {
       path: "/requests",
       icon: <FontAwesomeIcon icon={faUserPlus} />,
-      text: "طلبات الانضمام",
+      text: t("app.navLinks.requests"),
       user: "teacher",
-      number: requests?.length || null,
     },
     {
       path: "/stages",
       icon: <FontAwesomeIcon icon={faUsers} />,
-      text: "المجموعات",
+      text: t("app.navLinks.stages"),
       user: "teacher",
-      number: students?.length || null,
     },
     {
       path: "/joinCodes",
       icon: <FontAwesomeIcon icon={faLock} />,
-      text: "اكواد الانضمام",
+      text: t("app.navLinks.joinCodes"),
       user: "teacher",
-      number: joinCodes?.length || null,
     },
   ];
 
   // Close sidebar when route changes
   useEffect(() => {
     setIsSidebarOpen(false);
-    // getMode(true);
   }, [location.pathname]);
-
-  console.log("isDarkMood", isDarkMode);
 
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
@@ -226,17 +188,17 @@ export default function App() {
   } = useUserDataByUserId(session?.user?.id, userTable);
 
   useEffect(() => {
-    if (userData) {
+    if (!isUserDataLoading || isProfileLoading) {
       getCurrentUser(userData);
     }
   }, [userData]);
 
   if (isProfileLoading || isUserDataLoading) {
-    return <Loader message="جاري التحقق من الجلسة..." />;
+    return <Loader message={t("app.loaders.session")} />;
   }
 
   if (profileError || userDataError) {
-    return <ErrorPlaceHolder message={"حدث خطأ ما، أعد المحاولة"} />;
+    return <ErrorPlaceHolder message={t("app.errors.session")} />;
   }
 
   // If no session, show the Landing page with routes for auth
@@ -268,7 +230,7 @@ export default function App() {
     );
   }
 
-  if (!currentUser) return <Loader message="جري تحميل الاختبارات" />;
+  if (!currentUser) return null;
 
   return (
     <div
@@ -278,14 +240,28 @@ export default function App() {
           ? "bg-gradient-to-bl from-slate-900 to-slate-950 text-white"
           : "bg-white text-black"
       )}
-      dir="rtl"
+      dir={isArabic ? "rtl" : "ltr"}
     >
-      <button
-        onClick={() => getMode(isDarkMode ? false : true)}
-        className="fixed left-3 top-3 z-50"
-      >
-        <FontAwesomeIcon icon={isDarkMode ? faMoon : faSun} />
-      </button>
+      <div className="fixed end-3 top-3 z-50 flex gap-2">
+        <button
+          onClick={() => {
+            getLanguage(!isArabic); // بدل اللغة في الـ Store
+            localStorage.setItem("isArabic", !isArabic);
+            i18n.changeLanguage(isArabic ? "en" : "ar"); // فعليًا غير اللغة
+          }}
+        >
+          {isArabic ? "english" : "العربية"}
+        </button>
+
+        <button
+          onClick={() => {
+            getMode(!isDarkMode);
+            localStorage.setItem("isDarkMode", !isDarkMode);
+          }}
+        >
+          <FontAwesomeIcon icon={isDarkMode ? faMoon : faSun} />
+        </button>
+      </div>
       <header
         className={clsx(
           "border-e-2 overflow-hidden p-3 space-y-4 flex md:flex-col justify-between h-full max-md:px-10 max-md:space-y-0 max-md:border-b max-md:border-e-0 max-sm:hidden",
@@ -298,7 +274,9 @@ export default function App() {
         <div className="max-md:flex max-md:w-full">
           <div className="flex gap-2 items-center justify-center bg-blue-500/20 text-blue-500 py-3 text-lg rounded-2xl max-md:px-3">
             <FontAwesomeIcon icon={faWater} />
-            <h1 className="font-bold max-xl:hidden">بحور</h1>
+            <h1 className="font-bold max-xl:hidden">
+              {t("app.content.header.name")}
+            </h1>
           </div>
 
           {/* nav links */}
@@ -414,7 +392,9 @@ export default function App() {
               //   <Route path=":stageId" element={<PostsInTeacherPosts />} />
               // </Route>
             )}
-            <Route path="/searchTeachers" element={<SearchTeachers />} />
+            <Route path="/teacherLessonsTree" element={<EducationalContent />}>
+              <Route path=":id" element={<StageLessonsTree />} />
+            </Route>
             <Route path="/studentTeachers" element={<StudentTeachers />} />
             <Route path="/studentTeachers/:id" element={<StudentTeacher />}>
               <Route index element={<TeacherExams />} />

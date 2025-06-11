@@ -18,10 +18,12 @@ import {
   useCheckTaskMutation,
 } from "../../QueriesAndMutations/mutationsHooks";
 import PageWrapper from "../../components/PageWrapper";
+import { useTranslation } from "react-i18next";
 
 export default function StudentTasks() {
   const { currentUser } = useCurrentUser();
   const myId = currentUser?.id;
+  const [t] = useTranslation("global");
 
   const {
     data: mySubsciptions,
@@ -83,7 +85,7 @@ export default function StudentTasks() {
     isStagesDataLoading ||
     isDoneTasksLoading
   ) {
-    return <Loader message="جاري التحميل" />;
+    return <Loader message={t("tasks.student.studentTasks.loader")} />;
   }
 
   if (
@@ -98,20 +100,25 @@ export default function StudentTasks() {
   }
 
   return (
-    <PageWrapper title={"قائمة المهام"}>
+    <PageWrapper title={t("tasks.student.studentTasks.content.title")}>
       <div>
         <div className="mb-4">
-          <h1 className="text-3xl font-bold">إضافة مهمة جديدة</h1>
+          <h1 className="text-3xl font-bold">
+            {t("tasks.student.studentTasks.content.addNewTask")}
+          </h1>
         </div>
 
         <AddNewTaskForm />
 
         {allTasks.length === 0 ? (
-          <NoDataPlaceHolder message={"لا يوجد مهام حاليا"} icon={faTasks} />
+          <NoDataPlaceHolder
+            message={t("tasks.student.studentTasks.noData")}
+            icon={faTasks}
+          />
         ) : (
           <>
             <h2 className="text-2xl font-semibold text-blue-400 mb-3">
-              المهام المضافة
+              {t("tasks.student.studentTasks.content.addedTasks")}
             </h2>
             <div className="space-y-2">
               {myTasks?.map((task) => {
@@ -141,7 +148,9 @@ export default function StudentTasks() {
 
 function AddNewTaskForm() {
   const { currentUser } = useCurrentUser();
+  const { isDarkMode } = useDarkMode();
   const { mutate: addNewTask } = useAddNewTaskMutation();
+  const [t] = useTranslation("global");
 
   const handleAddNewTask = (e) => {
     e.preventDefault();
@@ -179,11 +188,16 @@ function AddNewTaskForm() {
               type="text"
               name="task"
               // id="task"
-              placeholder="اكتب مهمتك هنا..."
-              className="w-full px-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 placeholder-slate-400"
+              placeholder={t(
+                "tasks.student.addNewTaskForm.formInputPlaceHolder"
+              )}
+              className={clsx(
+                "w-full px-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 placeholder-slate-400",
+                isDarkMode ? "border-blue-500/50" : "border-slate-300"
+              )}
             />
             <button className="w-max shrink-0 px-5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg duration-200 cursor-pointer transition-colors active:bg-blue-600">
-              إضافة المهمة
+              {t("tasks.student.addNewTaskForm.addTaskButton")}
             </button>
           </form>
         </div>
@@ -196,6 +210,7 @@ function StudentTask({ task, teacher, usersIds, isDone }) {
   const [isChecked, setIsChecked] = React.useState(false);
   const { isDarkMode } = useDarkMode();
   const { currentUser } = useCurrentUser();
+  const [t] = useTranslation("global");
 
   useEffect(() => {
     setIsChecked(isDone);
@@ -249,8 +264,17 @@ function StudentTask({ task, teacher, usersIds, isDone }) {
 
           {task.isTeacher ? (
             <div className="mt-0.5 space-x-1">
-              <span className="text-sm text-blue-500">
-                بواسطة {teacher?.gender === "male" ? "الأستاذ" : "الأستاذة"}:
+              <span
+                className={clsx(
+                  "text-sm",
+                  isChecked ? "text-green-500" : "text-blue-500"
+                )}
+              >
+                {t("tasks.student.studentTask.taskBy")}{" "}
+                {teacher?.gender === "male"
+                  ? t("tasks.student.studentTask.teacher.male")
+                  : t("tasks.student.studentTask.teacher.female")}
+                :
               </span>
               <span className="text-gray-500 text-sm">
                 {teacher?.name} - {teacher?.subject}
@@ -263,7 +287,7 @@ function StudentTask({ task, teacher, usersIds, isDone }) {
                 isChecked ? "text-green-500" : "text-blue-500"
               )}
             >
-              مهمة شخصية
+              {t("tasks.student.studentTask.personalTask")}
             </p>
           )}
         </div>

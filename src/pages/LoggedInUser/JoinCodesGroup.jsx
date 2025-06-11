@@ -43,8 +43,6 @@ export default function JoinCodesGroup() {
     isFetchingNextPage,
   } = useJoinCodes(currentUser?.id, isPublic);
 
-  console.log(joinCodes);
-
   const groupJoinCodes = joinCodes?.pages.flatMap((page) => page.data);
   console.log(groupJoinCodes);
 
@@ -67,6 +65,7 @@ export default function JoinCodesGroup() {
     const random4 = nanoid(4);
     const random5 = nanoid(12);
     const randomCode = `${random1}-${random2}-${random3}-${random4}-${random5}`;
+    console.log(selectedStage);
     generateCode({
       teacherId: currentUser?.id,
       value: randomCode,

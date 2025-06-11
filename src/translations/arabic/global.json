@@ -1,0 +1,149 @@
+{
+  "app": {
+    "navLinks": {
+      "home": "الرئيسية",
+      "posts": "المنشورات",
+      "tasks": "المهام",
+      "studentTeachers": "معلميني",
+      "exams": "الاختبارات",
+      "createTest": "إنشاء اختبار",
+      "requests": "طلبات الانضمام",
+      "stages": "المجموعات",
+      "joinCodes": "اكواد الانضمام"
+    },
+    "loaders": {
+      "session": "جاري التحقق من الجلسة"
+    },
+    "errors": {
+      "session": "حدث خطأ ما، أعد المحاولة"
+    },
+    "content": {
+      "header": {
+        "name": "بحور"
+      }
+    }
+  },
+  "student": {
+    "messages": {
+      "60percentage": "محتاج تركز أكتر، حاول تراجع الاختبارات اللي فاتت.",
+      "85percentage": "أداءك جيد، بس تقدر تحسنه.",
+      "above85Percentage": "ممتاز! استمر على نفس المستوى يا بطل!"
+    },
+    "loaders": {
+      "mainLoader": "جاري تحميل الصفحة الرئيسية"
+    },
+    "errors": {
+      "mainError": "حدث خطأ أثناء تحميل الملف الشخصي، اعد المحاولة"
+    },
+    "content": {
+      "title": "الصفحة الرئيسية",
+      "welcome": "أهلاً",
+      "overview": "دي نظرة سريعة على أدائك",
+      "stateBoxOneLabel": "عدد الاختبارات",
+      "stateBoxTwoLabel": "متوسط درجاتك",
+      "stateBoxThreeLabel": "أعلى درجة",
+      "stateBoxFourLabel": "أقل درجة",
+      "stateBoxPlaceHolder": "ستظهر بعض المعلومات هنا بعد اتمامك لأول اختبار",
+      "link": "الذهاب لصفحة المعلمين"
+    }
+  },
+  "posts": {
+    "student": {
+      "studentPosts": {
+        "loaders": {
+          "mainLoader": "جاري تحميل المنشورات",
+          "fetchingButton": "تحميل المزيد",
+          "fetchingButtonLoading": "جاري التحميل..."
+        },
+        "error": "حدث خطأ أثناء جلب المنشورات، أعد المحاولة",
+        "noData": "لا يوجد منشورات حالياً",
+        "contentTitle": "المنشورات"
+      },
+      "postInStudentPosts": {
+        "error": "حدث خطأ أثناء جلب المراحل الدراسية، أعد المحاولة",
+        "post": {
+          "showMore": "المزيد",
+          "showLess": "إخفاء"
+        }
+      }
+    }
+  },
+  "tasks": {
+    "student": {
+      "studentTasks": {
+        "loader": "جاري تحميل المهام",
+        "noData": "لا يوجد مهام حاليا",
+        "content": {
+          "title": "قائمة المهام",
+          "addNewTask": "إضافة مهمة جديدة",
+          "addedTasks": "المهام المضافة"
+        }
+      },
+      "addNewTaskForm": {
+        "formInputPlaceHolder": "اكتب مهمتك هنا...",
+        "addTaskButton": "إضافة المهمة"
+      },
+      "studentTask": {
+        "taskBy": "بواسطة",
+        "teacher": {
+          "male": "الأستاذ",
+          "female": "الأستاذة"
+        },
+        "personalTask": "مهمة شخصية"
+      }
+    }
+  },
+  "studentTeachers": {
+    "loader": "جاري تحميل الصفحة الرئيسية",
+    "noData": {
+      "message": "لا يوجد معلمين لديك، انضم الآن",
+      "button": "انضم الآن"
+    },
+    "content": {
+      "title": "معلميني",
+      "teachersList": "قائمة المعلمين",
+      "search": "بحث"
+    }
+  },
+  "studentTeacher": {
+    "notInTeacherListAndNotRequested": {
+      "title": "انضمام إلى",
+      "gender": {
+        "male": "الأستاذ",
+        "female": "الأستاذة"
+      }
+    },
+    "notInTeachersListButRequested": {
+      "message": "سيصلك إشعار في حال قبول أو رفض انضمامك إلى المعلم"
+    },
+    "content": {
+      "title": "ملف معلم",
+      "folders": {
+        "tests": "الاختبارات",
+        "posts": "المنشورات",
+        "profile": "الملف الشخصي"
+      }
+    }
+  },
+  "teacherExamsList": {
+    "publicExam": "(اختبار عام)",
+    "noData": "لا يوجد اختبارات حالياً",
+    "content": {
+      "examTitle": "عنوان الاختبار",
+      "date": "التاريخ",
+      "controlButtons": "ازرار التحكم",
+      "information": "معلومات",
+      "delete": "حذف",
+      "showAnswers": "عرض الاجابات الصحيحة ليتمكن الطلاب من رؤيتها بعد تسليم الاختبار",
+      "undoPublish": "إلعاء النشر",
+      "alertBox": {
+        "title": "حذف",
+        "message": "هذه الخطوة لا يمكن التراجع عنها",
+        "firstOptionDesc": "سيتم حذف هذا الاختبار مع الحفاظ على النتائج",
+        "secondOptionTitle": "حذف شامل",
+        "secondOptionDesc": "سيؤدي هذا الاختيار لحذف الاختبار وجميع النتائج المتعلقة به"
+      },
+      "show": "عرض"
+    }
+  }
+}

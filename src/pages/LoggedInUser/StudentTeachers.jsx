@@ -12,10 +12,13 @@ import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import PageWrapper from "../../components/PageWrapper";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 
 export default function StudentTeachers() {
   const { currentUser } = useCurrentUser();
   const { isDarkMode } = useDarkMode();
+
+  const [t] = useTranslation("global");
 
   const {
     data: studentTeachers,
@@ -36,11 +39,7 @@ export default function StudentTeachers() {
   }
 
   if (isStudentTeachersError || isTeachersError) {
-    return (
-      <ErrorPlaceHolder
-        message={"حدث خطأ أثناء تحميل الملف الشخصي، اعد المحاولة"}
-      />
-    );
+    return <ErrorPlaceHolder />;
   }
 
   if (
@@ -50,9 +49,9 @@ export default function StudentTeachers() {
     teachers.length === 0
   ) {
     return (
-      <PageWrapper title={"معلميني"}>
+      <PageWrapper title={t("studentTeachers.content.title")}>
         <NoDataPlaceHolder
-          message={"لا يوجد معلمين لديك، انضم الآن"}
+          message={t("studentTeachers.noData.message")}
           icon={faUser}
         />
         <div className="mt-5 flex justify-end items-stretch h-fit">
@@ -60,7 +59,7 @@ export default function StudentTeachers() {
             to="/searchTeachers"
             className="h-10 px-4 flex items-center justify-center rounded-lg bg-blue-500 text-white hover:bg-blue-600"
           >
-            انضم الآن
+            {t("studentTeachers.noData.button")}
           </Link>
         </div>
       </PageWrapper>
@@ -68,10 +67,12 @@ export default function StudentTeachers() {
   }
 
   return (
-    <PageWrapper title={"معلميني"}>
+    <PageWrapper title={t("studentTeachers.content.title")}>
       <div className="rounded-xl overflow-hidden">
         <div className="flex justify-between">
-          <h1 className="text-3xl font-bold">قائمة المعلمين</h1>
+          <h1 className="text-3xl font-bold">
+            {t("studentTeachers.content.teachersList")}
+          </h1>
           <Link
             to="/searchTeachers"
             className={clsx(
@@ -81,7 +82,7 @@ export default function StudentTeachers() {
                 : "bg-gray-200"
             )}
           >
-            <span>بحث</span>
+            <span>{t("studentTeachers.content.search")}</span>
           </Link>
         </div>
 
@@ -95,7 +96,9 @@ export default function StudentTeachers() {
               <Link
                 className={clsx(
                   "flex gap-3 items-center p-2 rounded-lg transition-colors",
-                  isDarkMode ? "bg-blue-500/5 hover:bg-blue-500/15" : "hover:bg-gray-200"
+                  isDarkMode
+                    ? "bg-blue-500/5 hover:bg-blue-500/15"
+                    : "hover:bg-gray-200"
                 )}
                 to={teacher.id}
                 key={teacher.id}

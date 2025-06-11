@@ -13,10 +13,12 @@ import { formatTime } from "../utils/getDate";
 import { isToday } from "../utils/isToday";
 import clsx from "clsx";
 import Loader from "./Loader";
+import { useTranslation } from "react-i18next";
 
 export function PostInStudentPosts({ post, isAllPosts }) {
   const { currentUser } = useCurrentUser();
   const { isDarkMode } = useDarkMode();
+  const [t] = useTranslation("global");
 
   const [expanded, setExpanded] = useState(false);
   const [fileDisplayed, setFileDisplayed] = useState(null);
@@ -33,11 +35,9 @@ export function PostInStudentPosts({ post, isAllPosts }) {
     "teachers"
   );
 
-  const {
-    data: reactions,
-    isLoading: isReactionsLoading,
-    error: reactionsError,
-  } = useReactionsByPostId(post.id);
+  const { data: reactions, error: reactionsError } = useReactionsByPostId(
+    post.id
+  );
 
   console.log(reactions);
 
@@ -58,16 +58,8 @@ export function PostInStudentPosts({ post, isAllPosts }) {
     });
   }
 
-  if (isReactionsLoading) {
-    return;
-  }
-
   if (teacherError || reactionsError) {
-    return (
-      <ErrorPlaceHolder
-        message={"حدث خطأ أثناء جلب المراحل الدراسية، أعد المحاولة"}
-      />
-    );
+    return <ErrorPlaceHolder />;
   }
 
   return (
@@ -103,7 +95,8 @@ export function PostInStudentPosts({ post, isAllPosts }) {
                 isDarkMode ? "text-blue-400" : "text-gray-600"
               )}
             >
-              {teacher?.name} ({teacher?.subject})
+              <span>{teacher?.name}</span>
+              <span> ({teacher?.subject})</span>
             </Link>
           )}
           <p
@@ -139,7 +132,9 @@ export function PostInStudentPosts({ post, isAllPosts }) {
               className="text-blue-500 hover:text-blue-700 font-semibold ml-1"
               onClick={() => setExpanded(!expanded)}
             >
-              {expanded ? "إخفاء" : "المزيد"}
+              {expanded
+                ? t("posts.student.postInStudentPosts.post.showLess")
+                : t("posts.student.postInStudentPosts.post.showMore")}
             </button>
           )}
         </p>

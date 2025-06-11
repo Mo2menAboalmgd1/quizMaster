@@ -1,6 +1,11 @@
 import { supabase } from "../config/supabase";
 import { publicStage } from "../store/useStore";
 
+export const signOut = async () => {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw new Error(error.message);
+};
+
 export const register = async (userData) => {
   const { error, data } = await supabase.auth.signUp({
     email: userData.email,
@@ -151,6 +156,7 @@ export const joinTeacherWithJoinCode = async ({
   stage,
   studentId,
 }) => {
+  console.log({ value, teacher, stage, studentId });
   if (value === "directJoin") {
     const { error: addStudentError } = await supabase
       .from("teachers_students")
@@ -190,7 +196,11 @@ export const joinTeacherWithJoinCode = async ({
   }
 
   // check stage if only code.stage exists
-  if (code.stage_id && code.stage_id !== stage.id) {
+  if (
+    code.stage_id &&
+    code.stage_id !== publicStage &&
+    code.stage_id !== stage
+  ) {
     throw new Error("كود الانضمام غير متوافق مع المرحلة");
   }
 
@@ -200,7 +210,7 @@ export const joinTeacherWithJoinCode = async ({
     .insert({
       teacherId: teacher.id,
       studentId,
-      stage_id: stage.id || code.stage_id,
+      stage_id: stage,
     });
 
   if (addStudentError) throw new Error(addStudentError.message);
@@ -401,6 +411,19 @@ export const getAllexams = async (teacherId) => {
     .from("exams")
     .select("*")
     .eq("teacherId", teacherId);
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
+export const getLessons = async (teacherId, stageId) => {
+  const { error, data } = await supabase
+    .from("lessons_tree")
+    .select("*")
+    .eq("teacher_id", teacherId)
+    .eq("stage_id", stageId)
+    .order("created_at", { ascending: true });
 
   if (error) throw new Error(error.message);
 
@@ -1236,4 +1259,59 @@ export const getExamsResultsByStudentId = async (studentId) => {
 
   if (error) throw new Error(error.message);
   return data;
+};
+
+export const addNewLesson = async (data) => {
+  const { error: uploadAnswerError } = await supabase
+    .from("lessons_tree")
+    .insert({
+      teacher_id: data.teacherId,
+      title: data.title,
+      parent_id: data.parentId,
+      type: "folder",
+      stage_id: data.stage_id,
+      content: data.content,
+    });
+
+  if (uploadAnswerError) throw new Error(uploadAnswerError.message);
+
+  return {
+    teacherId: data.teacherId,
+    title: data.title,
+    type: data.type,
+  };
+};
+
+export const deleteLesson = async ({ lessonId, teacherId }) => {
+  const { error } = await supabase
+    .from("lessons_tree")
+    .delete()
+    .eq("id", lessonId);
+
+  if (error) throw new Error(error.message);
+
+  return teacherId;
+};
+
+export const createNewLesson = async ({
+  parentId,
+  teacherId,
+  stageId,
+  title,
+  type,
+  content = null,
+}) => {
+  console.log({ parentId, teacherId, stageId, title, type });
+  const { error } = await supabase.from("lessons_tree").insert({
+    parent_id: parentId,
+    teacher_id: teacherId,
+    stage_id: stageId,
+    title,
+    type,
+    content,
+  });
+
+  if (error) throw new Error(error.message);
+
+  return teacherId;
 };

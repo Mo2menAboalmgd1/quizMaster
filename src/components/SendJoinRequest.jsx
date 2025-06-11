@@ -30,13 +30,13 @@ export default function SendJoinRequest({
       return;
     }
 
+    console.log({
+      value: joinCode,
+      teacher,
+      stage: selectedStage,
+      studentId,
+    });
     if (hasJoinCode) {
-      console.log({
-        value: joinCode,
-        teacher,
-        stage: selectedStage,
-        studentId,
-      });
       await joinTeacherWithJoinCode({
         value: joinCode,
         teacher,
@@ -89,12 +89,7 @@ export default function SendJoinRequest({
               name="stage"
               id="stage"
               value={selectedStage?.id || ""} // ✅ اضافة value property
-              onChange={(e) => {
-                const selected = stages.find(
-                  (stage) => stage.id === e.target.value
-                );
-                setSelectedStage(selected);
-              }}
+              onChange={(e) => setSelectedStage(e.target.value)}
             >
               <option value="" disabled>
                 اختر المرحلة الدراسية

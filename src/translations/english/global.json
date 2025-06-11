@@ -1,0 +1,149 @@
+{
+  "app": {
+    "navLinks": {
+      "home": "Home",
+      "posts": "Posts",
+      "tasks": "Tasks",
+      "studentTeachers": "My Teachers",
+      "exams": "Exams",
+      "createTest": "Create Test",
+      "requests": "Join Requests",
+      "stages": "Groups",
+      "joinCodes": "Join Codes"
+    },
+    "loaders": {
+      "session": "Verifying session"
+    },
+    "errors": {
+      "session": "Something went wrong, please try again"
+    },
+    "content": {
+      "header": {
+        "name": "Buhour"
+      }
+    }
+  },
+  "student": {
+    "messages": {
+      "60percentage": "You need to focus more. Consider reviewing your previous tests",
+      "85percentage": "You're doing well, but there's still room for improvement",
+      "above85Percentage": "Excellent! Keep up the great work, champ!"
+    },
+    "loaders": {
+      "mainLoader": "Loading the homepage..."
+    },
+    "errors": {
+      "mainError": "An error occurred while loading your profile. Please try again."
+    },
+    "content": {
+      "title": "home",
+      "welcome": "welcome",
+      "overview": "Here's a quick overview of your performance.",
+      "stateBoxOneLabel": "Number of Tests",
+      "stateBoxTwoLabel": "Average Score",
+      "stateBoxThreeLabel": "Highest Score",
+      "stateBoxFourLabel": "Lowest Score",
+      "stateBoxPlaceHolder": "Some information will appear here after you complete your first test.",
+      "link": "Go to the Teachers Page"
+    }
+  },
+  "posts": {
+    "student": {
+      "studentPosts": {
+        "loaders": {
+          "mainLoader": "Loading posts...",
+          "fetchingButton": "Load more",
+          "fetchingButtonLoading": "Loading..."
+        },
+        "error": "An error occurred while fetching posts. Please try again.",
+        "noData": "No posts available at the moment.",
+        "contentTitle": "Posts"
+      },
+      "postInStudentPosts": {
+        "error": "An error occurred while fetching educational stages. Please try again.",
+        "post": {
+          "showMore": "more",
+          "showLess": "less"
+        }
+      }
+    }
+  },
+  "tasks": {
+    "student": {
+      "studentTasks": {
+        "loader": "Loading tasks...",
+        "noData": "No tasks available currently",
+        "content": {
+          "title": "Task List",
+          "addNewTask": "Add New Task",
+          "addedTasks": "Added Tasks"
+        }
+      },
+      "addNewTaskForm": {
+        "formInputPlaceHolder": "Write your task here...",
+        "addTaskButton": "Add Task"
+      },
+      "studentTask": {
+        "taskBy": "By",
+        "teacher": {
+          "male": "Mr",
+          "female": "Ms"
+        },
+        "personalTask": "Personal Task"
+      }
+    }
+  },
+  "studentTeachers": {
+    "loader": "Loading the main interface",
+    "noData": {
+      "message": "No teachers assigned yet. Join now to get started.",
+      "button": "Join Now"
+    },
+    "content": {
+      "title": "My Instructors",
+      "teachersList": "Instructor Directory",
+      "search": "Search"
+    }
+  },
+  "studentTeacher": {
+    "notInTeacherListAndNotRequested": {
+      "title": "Join",
+      "gender": {
+        "male": "Mr.",
+        "female": "Ms."
+      }
+    },
+    "notInTeachersListButRequested": {
+      "message": "You will be notified once your request to join the teacher is approved or declined."
+    },
+    "content": {
+      "title": "Instructor page",
+      "folders": {
+        "tests": "Tests",
+        "posts": "Posts",
+        "profile": "Profile"
+      }
+    }
+  },
+  "teacherExamsList": {
+    "publicExam": "(Public Exam)",
+    "noData": "No exams available currently",
+    "content": {
+      "examTitle": "Exam Title",
+      "date": "Date",
+      "controlButtons": "Control Buttons",
+      "information": "Information",
+      "delete": "Delete",
+      "showAnswers": "Show correct answers so students can view them after submitting the exam",
+      "undoPublish": "Unpublish",
+      "alertBox": {
+        "title": "Delete",
+        "message": "This action cannot be undone",
+        "firstOptionDesc": "This will delete the exam but keep the results",
+        "secondOptionTitle": "Full Delete",
+        "secondOptionDesc": "This option will delete the exam and all related results"
+      },
+      "show": "Show"
+    }
+  }
+}

@@ -6,12 +6,14 @@ import {
   faCopy,
   faEdit,
   faPhone,
+  faSignOut,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import clsx from "clsx";
 import toast from "react-hot-toast";
-import { useEditUserdataMutation } from "../QueriesAndMutations/mutationsHooks";
+import { useEditUserdataMutation, useSignOut } from "../QueriesAndMutations/mutationsHooks";
 import AlertBox from "../components/AlertBox";
+import { signOut } from "../api/AllApiFunctions";
 
 export default function UserProfileDataComponent({ user }) {
   const { currentUser } = useCurrentUser();
@@ -21,16 +23,36 @@ export default function UserProfileDataComponent({ user }) {
   const isMyAccount = user.id === currentUser.id;
   const isTeacher = user.type === "teacher";
 
+  const { mutate: signOut } = useSignOut();
+
   return (
     <div className="relative rounded-3xl flex items-center justify-between">
       {!isEdit && <ShowUserData user={user} isTeacher={isTeacher} />}
       {isMyAccount && !isEdit && (
-        <button
-          onClick={() => setIsEdit(true)}
-          className="py-2 px-4 bg-gray-200 rounded-lg font-bold"
-        >
-          تعديل البيانات
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setIsEdit(true)}
+            className="py-2 px-4 bg-gray-200 rounded-lg font-bold cursor-pointer"
+          >
+            <span className="max-lg:hidden max-lg:h-10 max-lg:w-10">
+              تعديل البيانات
+            </span>
+            <span className="lg:hidden max-lg:h-10 max-lg:w-10">
+              <FontAwesomeIcon icon={faEdit} />
+            </span>
+          </button>
+          <button
+            onClick={signOut}
+            className="py-2 px-4 bg-red-600 text-white rounded-lg font-bold cursor-pointer"
+          >
+            <span className="max-lg:hidden max-lg:h-10 max-lg:w-10">
+              تسجيل الخروج
+            </span>
+            <span className="lg:hidden max-lg:h-10 max-lg:w-10">
+              <FontAwesomeIcon icon={faSignOut} />
+            </span>
+          </button>
+        </div>
       )}
       {isEdit && (
         <EditUserData user={user} isTeacher={isTeacher} setIsEdit={setIsEdit} />
@@ -39,9 +61,8 @@ export default function UserProfileDataComponent({ user }) {
   );
 }
 
-function ShowUserData({ user, isTeacher }) {
+function ShowUserData({ user }) {
   const [isCopy, setIsCopy] = useState(false);
-  const isMale = user.gender === "male";
 
   const handleCopy = async (text) => {
     navigator.clipboard.writeText(text);

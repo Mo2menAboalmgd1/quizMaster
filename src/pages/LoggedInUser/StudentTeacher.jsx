@@ -14,10 +14,12 @@ import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import PageWrapper from "../../components/PageWrapper";
 import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
 import { faBell } from "@fortawesome/free-solid-svg-icons";
+import { useTranslation } from "react-i18next";
 
 export default function StudentTeacher() {
   const { id: teacherId } = useParams();
   const { currentUser } = useCurrentUser(); // Assuming you have a useCurrentUser hook to get the current use
+  const [t] = useTranslation("global");
 
   const {
     data: stages,
@@ -52,7 +54,7 @@ export default function StudentTeacher() {
     isStudentsLoading ||
     isTeacherDataLoading
   ) {
-    return <Loader message="جاري التحميل" />;
+    return <Loader />;
   }
 
   if (studentsError) {
@@ -76,7 +78,7 @@ export default function StudentTeacher() {
   }
 
   if (teacherDataError) {
-    return <ErrorPlaceHolder message={"حدث خطأ ما، أعد المحاولة"} />;
+    return <ErrorPlaceHolder />;
   }
 
   const isCurrentUserInTeacherStudents = students.some(
@@ -89,11 +91,14 @@ export default function StudentTeacher() {
   );
   "isCurrentUserInTeacherRequests", isCurrentUserInTeacherRequests;
 
+  // if not in teachers list and not requested yet
   if (!isCurrentUserInTeacherStudents && !isCurrentUserInTeacherRequests) {
     return (
       <PageWrapper
-        title={`انضمام إلى ${
-          teacherData?.gender === "male" ? "الأستاذ" : "الأستاذة"
+        title={`${t("studentTeacher.notInTeacherListAndNotRequested.title")} ${
+          teacherData?.gender === "male"
+            ? t("studentTeacher.notInTeacherListAndNotRequested.gender.male")
+            : t("studentTeacher.notInTeacherListAndNotRequested.gender.female")
         } ${teacherData?.name}`}
       >
         <Join stages={stages} teacher={teacherData} student={currentUser} />
@@ -104,12 +109,14 @@ export default function StudentTeacher() {
   if (!isCurrentUserInTeacherStudents && isCurrentUserInTeacherRequests) {
     return (
       <PageWrapper
-        title={`انضمام إلى ${
-          teacherData?.gender === "male" ? "الأستاذ" : "الأستاذة"
+        title={`${t("studentTeacher.notInTeacherListAndNotRequested.title")} ${
+          teacherData?.gender === "male"
+            ? t("studentTeacher.notInTeacherListAndNotRequested.gender.male")
+            : t("studentTeacher.notInTeacherListAndNotRequested.gender.female")
         } ${teacherData?.name}`}
       >
         <NoDataPlaceHolder
-          message={"سيصلك إشعار في حال قبول أو رفض انضمامك إلى المعلم"}
+          message={t("studentTeacher.notInTeachersListButRequested.message")}
           icon={faBell}
         />
       </PageWrapper>
@@ -117,7 +124,7 @@ export default function StudentTeacher() {
   }
 
   return (
-    <PageWrapper title={`ملف معلم`}>
+    <PageWrapper title={t("studentTeacher.content.title")}>
       <div className="flex flex-col items-center mb-5 gap-2">
         <img
           src={
@@ -131,13 +138,25 @@ export default function StudentTeacher() {
           <h2 className="text-blue-500 font-bold text-xl">
             {teacherData.name}
           </h2>
-          <p className="text-gray-600" dir="ltr">@{teacherData.userName}</p>
+          <p className="text-gray-600" dir="ltr">
+            @{teacherData.userName}
+          </p>
         </div>
       </div>
       <div className="flex gap-5 justify-center flex-wrap">
-        <Folder path={""} text={"الاختبارات"} isEnd={true} />
-        <Folder path={"posts"} text={"المنشورات"} />
-        <Folder path={`/userProfile/${teacherId}`} text={"الملف الشخصي"} />
+        <Folder
+          path={""}
+          text={t("studentTeacher.content.folders.tests")}
+          isEnd={true}
+        />
+        <Folder
+          path={"posts"}
+          text={t("studentTeacher.content.folders.posts")}
+        />
+        <Folder
+          path={`/userProfile/${teacherId}`}
+          text={t("studentTeacher.content.folders.profile")}
+        />
       </div>
       <div className="pt-4">
         <Outlet />

@@ -1,10 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   acceptRequest,
+  addNewLesson,
   addNewStage,
   checkTask,
   createNewExam,
+  createNewLesson,
   deleteExam,
+  deleteLesson,
   deleteNotification,
   deleteQuestion,
   deleteStage,
@@ -31,6 +34,7 @@ import {
   saveResult,
   sendNotification,
   signIn,
+  signOut,
   unJoinTeacher,
   updateStageName,
   uploadAnswer,
@@ -71,17 +75,27 @@ export const useRegister = (isStudent) => {
   });
 };
 
+export const useSignOut = () => {
+  const navigate = useNavigate();
+  return useMutation({
+    mutationFn: signOut,
+    onError: (error) => {
+      toast.error(error.message);
+    },
+    onSuccess: () => {
+      navigate("/");
+    },
+  });
+};
+
 export const useSignIn = () => {
   const navigate = useNavigate();
   return useMutation({
     mutationFn: signIn,
     onError: (error) => {
-      toast.dismiss();
       toast.error(error.message);
     },
     onSuccess: () => {
-      toast.dismiss();
-      toast.success("مرحبا بك مجدداً");
       navigate("/");
     },
   });
@@ -295,9 +309,8 @@ export const useReactToPost = () => {
 };
 
 export const useCreateNewPostMutation = () => {
-  
   return useMutation({
-    mutationFn: async ({action, update}) => {
+    mutationFn: async ({ action, update }) => {
       // upload question images and get their urls back
       let uploadedQuestionImageUrls = [];
       if (update.images?.length > 0) {
@@ -409,7 +422,6 @@ export const useCheckTaskMutation = () => {
     },
   });
 };
-
 
 export const useInsertQuestionMutation = (
   setQuestionText,
@@ -677,6 +689,50 @@ export const useSaveStudentResult = () => {
     onError: () => {
       toast.dismiss();
       toast.error("حدث خطأ أثناء حفظ النتيجة");
+    },
+  });
+};
+
+export const useAddNewLessonMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: addNewLesson,
+    onSuccess: (data) => {
+      toast.dismiss();
+      toast.success(
+        `تم إنشاء ${data.type === "folder" ? "مجلد" : "لينك لـ"} ${data.title}`
+      );
+      queryClient.invalidateQueries(["lessons", data.teacherId]);
+    },
+    onError: () => {
+      toast.dismiss();
+      toast.error("حدث خطأ أعد المحاولة");
+    },
+  });
+};
+
+export const useDeleteLessonMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteLesson,
+    onError: () => {
+      toast.error("حدث خطأ، أعد المحاولة");
+    },
+    onSuccess: (teacherId) => {
+      queryClient.invalidateQueries(["lessons"], teacherId);
+    },
+  });
+};
+
+export const useCreateNewLesson = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createNewLesson,
+    onError: () => {
+      toast.error("حدث خطأ، أعد المحاولة");
+    },
+    onSuccess: (teacherId) => {
+      queryClient.invalidateQueries(["lessons"], teacherId);
     },
   });
 };

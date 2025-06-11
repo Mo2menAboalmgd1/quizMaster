@@ -9,16 +9,18 @@ import NoDataPlaceHolder from "../../components/NoDataPlaceHolder";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import UserProfileDataComponent from "../../components/UserProfileDataComponent";
-import { useCurrentUser } from "../../store/useStore";
+import { useCurrentUser, useDarkMode } from "../../store/useStore";
 import StudentTeachersInOwnProfile from "../../components/StudentTeachersInOwnProfile";
 import Loader from "../../components/Loader";
 import GradesChart from "../../components/StudentGradesChart";
 import StudentGradesOverview from "../../components/StudentGradesOverview";
 import PageWrapper from "../../components/PageWrapper";
+import clsx from "clsx";
 
 export default function UserProfile() {
   const { id: userId } = useParams();
   const { currentUser } = useCurrentUser();
+  const { isDarkMode } = useDarkMode();
 
   const {
     data: profile,
@@ -64,6 +66,8 @@ export default function UserProfile() {
     );
   }
 
+  // const isMyProfile = currentUser.id === user.id;
+
   const isCurrentUserTeacher = currentUser.type === "teacher";
 
   const isCurrentUserStudent = currentUser.type === "student";
@@ -83,13 +87,7 @@ export default function UserProfile() {
   // const isCurrentUserWatchingHisOwnProfile = currentUser.id === user.id;
 
   return (
-    <PageWrapper title={isViewedProfileStudent ? (
-        "حساب طالب"
-      ) : (
-        "حساب معلم"
-      )}>
-      
-
+    <PageWrapper title={isViewedProfileStudent ? "حساب طالب" : "حساب معلم"}>
       <div>
         <UserProfileDataComponent
           profile={profile}
@@ -107,8 +105,13 @@ export default function UserProfile() {
       )}
 
       {isCurrentUserStudentVeiwingOwnProfile && (
-        <div className="bg-white rounded-xl overflow-hidden">
-          <h2 className="my-3 text-xl font-bold text-blue-500 py-4 text-center bg-blue-50">
+        <div className="mt-5">
+          <h2
+            className={clsx(
+              "text-xl font-bold text-blue-500 py-4 text-center rounded-lg rounded-b-none",
+              isDarkMode ? "bg-blue-500/20 border border-blue-500/50 border-b-0" : "bg-blue-50"
+            )}
+          >
             معلميني
           </h2>
           <StudentTeachersInOwnProfile student={currentUser} />

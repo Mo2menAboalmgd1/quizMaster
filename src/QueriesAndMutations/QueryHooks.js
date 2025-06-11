@@ -38,6 +38,7 @@ import {
   getStudentPosts,
   getStudentExams,
   getSingleExamResult,
+  getLessons,
   // getData,
 } from "../api/AllApiFunctions";
 
@@ -348,6 +349,15 @@ export const useAllTeacherExams = (teacherId) => {
     queryFn: () => getAllexams(teacherId),
     staleTime: 5 * 60 * 1000,
     enabled: !!teacherId,
+  });
+};
+
+export const useLessonsByTeacherIdAndStageId = (teacherId, stageId) => {
+  return useQuery({
+    queryKey: ["lessons", teacherId, stageId],
+    queryFn: () => getLessons(teacherId, stageId),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!teacherId && !!stageId,
   });
 };
 

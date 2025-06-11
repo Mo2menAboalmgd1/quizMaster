@@ -48,9 +48,9 @@ export default function SignUp({ initialType = "student" }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white rounded-lg overflow-hidden"
+      className="bg-white"
     >
-      <div className="space-y-2 p-1">
+      <div className="space-y-3">
         <div className="flex justify-center gap-6 mb-2">
           <div className="flex items-center gap-2">
             <input
@@ -59,7 +59,7 @@ export default function SignUp({ initialType = "student" }) {
               type="radio"
               name="type"
               id="student"
-              className="text-blue-500 focus:ring-blue-400"
+              className="text-blue-500 focus:ring-blue-400 rounded-full"
             />
             <label htmlFor="student" className="text-gray-700 font-medium">
               طالب
@@ -73,7 +73,7 @@ export default function SignUp({ initialType = "student" }) {
               type="radio"
               name="type"
               id="teacher"
-              className="text-blue-500 focus:ring-blue-400"
+              className="text-blue-500 focus:ring-blue-400 rounded-full"
             />
             <label htmlFor="teacher" className="text-gray-700 font-medium">
               مُعلم
@@ -90,7 +90,7 @@ export default function SignUp({ initialType = "student" }) {
             id="name"
             name="name"
             placeholder={isStudent ? "محمد أحمد إبراهيم" : "محمد أحمد"}
-            className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+            className="w-full h-11 rounded-xl border border-gray-300 px-4 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
           />
         </div>
 
@@ -103,7 +103,7 @@ export default function SignUp({ initialType = "student" }) {
             id="userName"
             name="userName"
             placeholder="mohammed223"
-            className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+            className="w-full h-11 rounded-xl border border-gray-300 px-4 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
           />
         </div>
 
@@ -114,7 +114,7 @@ export default function SignUp({ initialType = "student" }) {
               name="gender"
               id="male"
               value="male"
-              className="text-blue-500 focus:ring-blue-400"
+              className="text-blue-500 focus:ring-blue-400 rounded-full"
             />
             <label htmlFor="male" className="text-gray-700 font-medium">
               ذكر
@@ -127,7 +127,7 @@ export default function SignUp({ initialType = "student" }) {
               name="gender"
               id="female"
               value="female"
-              className="text-blue-500 focus:ring-blue-400"
+              className="text-blue-500 focus:ring-blue-400 rounded-full"
             />
             <label htmlFor="female" className="text-gray-700 font-medium">
               أنثى
@@ -148,7 +148,7 @@ export default function SignUp({ initialType = "student" }) {
               id="subject"
               name="subject"
               placeholder="العلوم"
-              className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+              className="w-full h-11 rounded-xl border border-gray-300 px-4 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
             />
           </div>
         )}
@@ -165,7 +165,7 @@ export default function SignUp({ initialType = "student" }) {
             id="phoneNumber"
             name="phoneNumber"
             placeholder="01067605444"
-            className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+            className="w-full h-11 rounded-xl border border-gray-300 px-4 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
           />
         </div>
 
@@ -178,7 +178,7 @@ export default function SignUp({ initialType = "student" }) {
             id="email"
             name="email"
             placeholder="example@gmail.com"
-            className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+            className="w-full h-11 rounded-xl border border-gray-300 px-4 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
           />
         </div>
 
@@ -187,17 +187,17 @@ export default function SignUp({ initialType = "student" }) {
             كلمة المرور:
           </label>
           <input
-            type="text"
+            type="password"
             id="password"
             name="password"
             placeholder="Strong_Password_123"
-            className="w-full h-9 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
+            className="w-full h-11 rounded-xl border border-gray-300 px-4 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
           />
         </div>
 
         <button
           type="submit"
-          className="w-full py-3 mt-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+          className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
         >
           <svg
             className="w-5 h-5"

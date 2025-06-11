@@ -1,13 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useCurrentUser, useDarkMode } from "../../store/useStore";
+import { useCurrentUser, useDarkMode, useLanguage } from "../../store/useStore";
 import { useExamsResultsByStudentId } from "../../QueriesAndMutations/QueryHooks";
 import Loader from "../../components/Loader";
 import ErrorPlaceHolder from "../../components/ErrorPlaceHolder";
 import clsx from "clsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import PageWrapper from "../../components/PageWrapper";
+import { useTranslation } from "react-i18next";
 
 function StatBox({ label, value }) {
   const { isDarkMode } = useDarkMode();
@@ -16,7 +17,9 @@ function StatBox({ label, value }) {
       className={clsx(
         "rounded-lg p-3",
         !value && "w-full",
-        isDarkMode ? "bg-blue-500/10 text-blue-400" : "bg-gray-200 textj-gray-700"
+        isDarkMode
+          ? "bg-blue-500/10 text-blue-400"
+          : "bg-gray-200 textj-gray-700"
       )}
     >
       <p className="font-medium">{label}</p>
@@ -27,6 +30,8 @@ function StatBox({ label, value }) {
 
 export default function StudentDashboard() {
   const { currentUser } = useCurrentUser();
+  const { isArabic } = useLanguage();
+  const [t] = useTranslation("global");
 
   const {
     data: studentExams,
@@ -46,53 +51,58 @@ export default function StudentDashboard() {
 
   let message = "";
   if (averageGrade < 60) {
-    message = "محتاج تركز أكتر، حاول تراجع الاختبارات اللي فاتت.";
+    message = t("student.messages.60percentage");
   } else if (averageGrade < 85) {
-    message = "أداءك جيد، بس تقدر تحسنه.";
+    message = t("student.messages.85percentage");
   } else {
-    message = "ممتاز! استمر على نفس المستوى يا بطل!";
+    message = t("student.messages.above85Percentage");
   }
 
   if (!currentUser || isTeacherExamsLoading) {
-    return <Loader message="جاري تحميل الصفحة الرئيسية" />;
+    return <Loader message={t("student.loaders.mainLoader")} />;
   }
 
   if (teacherExamsError) {
-    return (
-      <ErrorPlaceHolder
-        message={"حدث خطأ أثناء تحميل الملف الشخصي، اعد المحاولة"}
-      />
-    );
+    return <ErrorPlaceHolder message={t("student.errors.mainError")} />;
   }
 
   const studentNameArray = currentUser?.name.split(" ");
 
   return (
-    <PageWrapper title={"الصفحة الرئيسية"}>
+    <PageWrapper title={t("student.content.title")}>
       {/* Welcome */}
       <div className="rounded-2xl">
         <h2 className="text-3xl font-semibold">
-          أهلاً {studentNameArray[0]}{" "}
+          {t("student.content.welcome")} {studentNameArray[0]}{" "}
           {studentNameArray[studentNameArray.length - 1]}
         </h2>
-        <p className="text-blue-500 font-bold mt-2">دي نظرة سريعة على أدائك</p>
+        <p className="text-blue-500 font-bold mt-2">{t("student.content.overview")}</p>
       </div>
 
       {/* Stats Grid */}
       <div className="mt-5">
         {studentExams.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <StatBox label="عدد الاختبارات" value={studentExams.length} />
             <StatBox
-              label="متوسط درجاتك"
+              label={t("student.content.stateBoxOneLabel")}
+              value={studentExams.length}
+            />
+            <StatBox
+              label={t("student.content.stateBoxTwoLabel")}
               value={`${averageGrade.toFixed()}%`}
             />
-            <StatBox label="أعلى درجة" value={`${highestGrade}%`} />
-            <StatBox label="أقل درجة" value={`${lowestGrade}%`} />
+            <StatBox
+              label={t("student.content.stateBoxThreeLabel")}
+              value={`${highestGrade}%`}
+            />
+            <StatBox
+              label={t("student.content.stateBoxFourLabel")}
+              value={`${lowestGrade}%`}
+            />
           </div>
         ) : (
           <div>
-            <StatBox label="ستظهر بعض المعلومات هنا بعد اتمامك لأول اختبار" />
+            <StatBox label={t("student.content.stateBoxPlaceHolder")} />
           </div>
         )}
       </div>
@@ -106,8 +116,8 @@ export default function StudentDashboard() {
           to="/studentTeachers"
           className="flex items-center gap-1 font-bold text-blue-500 hover:text-gray-800 transition-colors"
         >
-          <span>الذهاب لصفحة المعلمين</span>
-          <FontAwesomeIcon icon={faArrowLeft} />
+          <span>{t("student.content.link")}</span>
+          <FontAwesomeIcon icon={isArabic ? faArrowLeft : faArrowRight} />
         </Link>
       </div>
     </PageWrapper>

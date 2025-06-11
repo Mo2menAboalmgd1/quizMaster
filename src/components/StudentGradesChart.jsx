@@ -20,7 +20,8 @@ import { faFileAlt, faPrint } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { supabase } from "../config/supabase";
 import toast from "react-hot-toast";
-import { useCurrentUser } from "../store/useStore";
+import { useCurrentUser, useDarkMode } from "../store/useStore";
+import clsx from "clsx";
 
 const getExamName = async (examId) => {
   const { data: exam, error } = await supabase
@@ -46,13 +47,13 @@ const CustomTooltip = ({ active, payload }) => {
         <div className="mt-1 pt-1 border-t border-gray-100">
           <p className="text-sm">
             <span className="text-gray-600">Grade:</span>
-            <span className="font-medium ml-1">{data.correct}</span>
+            <span className="font-medium ml-1 text-black">{data.correct}</span>
             <span className="text-gray-500 mx-1">of</span>
-            <span className="font-medium">{data.total}</span>
+            <span className="font-medium text-black">{data.total}</span>
           </p>
           <p className="text-sm mt-1">
             <span className="text-gray-600">Percentage:</span>
-            <span className="font-medium ml-1 text-green-600">
+            <span className="font-medium ml-1 text-blue-600">
               {data.percentage}%
             </span>
           </p>
@@ -68,6 +69,7 @@ export default function GradesChart({ teacher, student }) {
   const [chartData, setChartData] = useState([]);
   const [isLoadingNames, setIsLoadingNames] = useState(true);
   const chartRef = useRef(null);
+  const { isDarkMode } = useDarkMode();
   const printFrameRef = useRef(null);
   const { currentUser } = useCurrentUser();
 
@@ -226,7 +228,11 @@ export default function GradesChart({ teacher, student }) {
   }
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden border border-gray-300">
+    <div
+      className={clsx(
+        "rounded-xl overflow-hidden",
+      )}
+    >
       <div className="flex justify-between items-center">
         {student.id !== currentUser.id && (
           <button
@@ -241,7 +247,7 @@ export default function GradesChart({ teacher, student }) {
 
       <div
         ref={chartRef}
-        className="bg-gray-50 p-4"
+        className="p-4"
         // style={{ height: "300px", maxHeight: "300px" }}
       >
         <ResponsiveContainer height={250} className="mt-3">
@@ -249,21 +255,30 @@ export default function GradesChart({ teacher, student }) {
             data={chartData}
             margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="examName" stroke="#666" tick={{ fontSize: 12 }} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              // stroke={clsx(isDarkMode ? "#0099ff90" : "#00bb11")}
+              className={clsx(isDarkMode ? "stroke-blue-500/50" : "stroke-gray-300")}
+            />
+            <XAxis
+              dataKey="examName"
+              stroke={clsx(isDarkMode ? "#ffffff" : "#666")}
+              tick={{ fontSize: 12 }}
+            />
             <YAxis
               unit="%"
               domain={[0, 100]}
-              stroke="#666"
+              stroke={clsx(isDarkMode ? "#ffffff" : "#666")}
               tick={{ fontSize: 12 }}
               width={35}
             />
             <Tooltip content={<CustomTooltip />} />
             <Bar
               dataKey="percentage"
-              fill="#4ade80"
-              radius={[4, 4, 0, 0]}
-              barSize={40}
+              // fill="#4ade80"
+              className={clsx(isDarkMode ? "fill-blue-500" : "fill-blue-500")}
+              radius={[10, 10, 0, 0]}
+              barSize={50}
             />
           </BarChart>
         </ResponsiveContainer>

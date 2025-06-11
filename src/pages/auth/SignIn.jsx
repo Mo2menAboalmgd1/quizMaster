@@ -1,9 +1,11 @@
 import React from "react";
 import { useSignIn } from "../../QueriesAndMutations/mutationsHooks";
 import toast from "react-hot-toast";
+import Loader from "../../components/Loader";
 
 export default function SignIn() {
   const { mutateAsync } = useSignIn();
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,19 +16,24 @@ export default function SignIn() {
       password: formdata.get("password"),
     };
     if (!userData.email || !userData.password) {
-      toast.error("الرجاء ملئ جميع الحقول");
+      toast.error("الرجاء ملء جميع الحقول");
       return;
     }
-    toast.loading("جاري تسجيل الدخول");
-    await mutateAsync(userData);
+    setIsLoading(true);
+    await mutateAsync(userData, {
+      onSuccess: () => {
+        setIsLoading(false);
+        e.target.reset();
+      },
+    });
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-md mx-auto bg-white rounded-lg overflow-hidden"
-    >
-      <div className="p-1 space-y-6">
+    <form onSubmit={handleSubmit} className="bg-white overflow-hidden relative">
+      {/* <div className="h-full w-full bg-white/20 absolute inset-0">
+        <Loader message="جاري تسجيل الدخول" />
+      </div> */}
+      <div className=" space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="email" className="block text-gray-700 font-medium">
@@ -37,7 +44,7 @@ export default function SignIn() {
               id="email"
               name="email"
               placeholder="example@gmail.com"
-              className="w-full h-10 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all outline-none"
+              className="w-full h-11 rounded-xl border border-gray-300 px-4 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
             />
           </div>
 
@@ -49,18 +56,18 @@ export default function SignIn() {
               كلمة المرور:
             </label>
             <input
-              type="text"
+              type="password"
               id="password"
               name="password"
               placeholder="Strong_Password_123"
-              className="w-full h-10 rounded-lg border border-gray-300 px-3 focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all outline-none"
+              className="w-full h-11 rounded-xl border border-gray-300 px-4 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all outline-none"
             />
           </div>
         </div>
 
         <button
           type="submit"
-          className="w-full py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+          className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
         >
           <svg
             className="w-5 h-5"

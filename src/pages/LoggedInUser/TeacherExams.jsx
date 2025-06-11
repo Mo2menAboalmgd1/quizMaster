@@ -30,6 +30,8 @@ export default function TeacherExams() {
   )?.stage_id;
   "CurrentStudentStage", CurrentStudentStage;
 
+  console.log(CurrentStudentStage)
+
   console.log("CurrentStudentStage", CurrentStudentStage);
 
   const {
